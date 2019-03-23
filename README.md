@@ -15,7 +15,7 @@ We took the dataset of 104 programming problems, which comprises of 52000 cpp fi
 
 ## Requirements
 - python==3.6
-- PyTorch>=0.2
+- Tensorflow>=1.8
 
 ## Run 
 Train and test the GGNN:
