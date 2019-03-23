@@ -3,7 +3,7 @@
 This is a Tensorflow implementation of the Gated Graph Sequence Neural Networks (GGNN) as described in the paper [Gated Graph Sequence Neural Networks](https://arxiv.org/abs/1511.05493) by Y. Li, D. Tarlow, M. Brockschmidt, and R. Zemel.
 For a pytorch version, please refer to: https://github.com/bdqnghi/ggnn_graph_classification.
 
-Som parts of this implementation are taken from https://github.com/Microsoft/gated-graph-neural-network-samples with lots of modification for our purpose.
+Some parts of this implementation are taken from https://github.com/Microsoft/gated-graph-neural-network-samples with lots of modification for our purpose.
 
 This implementation focuses on the Graph Level output, which hasn't been exploiting from the original code base. Concretely, we focus the Program Classification task, in which each program is represented in a form of a graph.
 
