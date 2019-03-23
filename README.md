@@ -7,8 +7,6 @@ This implementation focuses on the Graph Level output, which hasn't been exploit
 
 We took the dataset of 104 programming problems, which comprises of 52000 cpp files from the paper [Convolutional Neural Networks over Tree Structures for Programming Language Processing](https://arxiv.org/abs/1409.5718) and parse the cpp files into the graph representation based on the details of the paper [Learning to Represent Programs with Graphs](https://arxiv.org/abs/1711.00740).
 
-<img src="images/ggnn.png">    
-
 ## What is GGNN?
 - Solve graph-structured data and problems
 - A gated propagation model to compute node representations
