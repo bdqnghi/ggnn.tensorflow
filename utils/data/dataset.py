@@ -45,13 +45,13 @@ def lookup_vector(node_type, embeddings):
     nodes.append(embeddings[int(n)])
 
 
-def load_program_graphs_from_directory(directory, is_train=True,n_classes=3, data_percentage=1.0):
+def load_program_graphs_from_directory(directory, is_training=True, is_testing=True, n_classes=3):
 
     node_id_data_list = []
     node_type_data_list = []
-    if is_train == True:
+    if is_training == True:
         dir_path =  os.path.join(directory,"train")
-    else:
+    if is_testing == True:
         dir_path =  os.path.join(directory,"test")
     filenames = []
     for f in listdir(dir_path):
@@ -61,9 +61,9 @@ def load_program_graphs_from_directory(directory, is_train=True,n_classes=3, dat
     ordered_filenames = sorted(int_filenames)
     lookup = {}
     for i in range(1, 1+len(ordered_filenames)):
-        if is_train == True:
+        if is_training:
            lookup[i] = join(dir_path, "train_%s.txt" % str(ordered_filenames[i-1]))
-        else:
+        if is_testing:
            lookup[i] = join(dir_path, "test_%s.txt" % str(ordered_filenames[i-1]))
     for i in trange(1, 1+n_classes):
         path = lookup[i]
@@ -75,7 +75,7 @@ def load_program_graphs_from_directory(directory, is_train=True,n_classes=3, dat
         node_type_edge_list_class_i = []
         target_list_class_i = []
 
-        print("--------------------------")
+        # print("--------------------------")
         with open(path,'r') as f:
             for line in f: 
                 if len(line.strip()) == 0:
@@ -91,7 +91,7 @@ def load_program_graphs_from_directory(directory, is_train=True,n_classes=3, dat
                     line_tokens = line.split(" ")
                     
                     if line_tokens[0] == "?":
-
+                        # print(label)
                         target_list_class_i.append([label])
                     else:
 
@@ -191,7 +191,6 @@ def convert_program_data(data_list):
         for target in target_list:
             task_type = target[0]
             task_output = target[-1]
-          
             class_data_list.append([edge_list, task_output])
     return class_data_list
 
@@ -240,19 +239,22 @@ def _onehot(i, total):
    
 class MonoLanguageProgramData():
    
-    def __init__(self, opt):
+    def __init__(self, opt, is_training=True, is_testing=False):
         base_name = os.path.basename(opt.path)
-        # if opt.is_train:
-        saved_input_filename = "%s/%s-%d-train.pkl" % (opt.path, base_name, opt.n_classes)
-        # else:
-           # saved_input_filename = "%s/%s-%d-test.pkl" % (opt.path, base_name, opt.n_classes)
+        self.is_training = is_training
+        self.is_testing = is_testing
+        if is_training:
+            saved_input_filename = "%s/%s-%d-train.pkl" % (opt.path, base_name, opt.n_classes)
+        if is_testing:
+            saved_input_filename = "%s/%s-%d-test.pkl" % (opt.path, base_name, opt.n_classes)
+
         if os.path.exists(saved_input_filename): 
            input_file = open(saved_input_filename, 'rb')
            buf = input_file.read()
            all_data_node_id, all_data_node_type = pyarrow.deserialize(buf)
            input_file.close()
         else:
-           all_data_node_id, all_data_node_type = load_program_graphs_from_directory(path, is_train,n_classes,opt.data_percentage)
+           all_data_node_id, all_data_node_type = load_program_graphs_from_directory(opt.path, is_training, is_testing, opt.n_classes)
            all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
            all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
            buf = pyarrow.serialize((all_data_node_id, all_data_node_type)).to_buffer()
@@ -267,7 +269,7 @@ class MonoLanguageProgramData():
 
         self.label_lookup = label_lookup
         # if is_train == True:
-        print("Number of all training data : " + str(len(all_data_node_id)))
+        print("Number of all data : " + str(len(all_data_node_id)))
         # else:
             # print("Number of all testing data : " + str(len(all_data_node_id)))
         self.n_edge_types =  find_max_edge_id(all_data_node_id)
@@ -292,20 +294,8 @@ class MonoLanguageProgramData():
         self.all_data_node_id = all_data_node_id
         self.all_data_node_type = all_data_node_type
 
-        # for i in range(len(self.all_data_node_id)):
-        #     graph = self.all_data_node_id[i][0]
-        #     num_nodes = find_num_nodes_of_graph(graph)
-        #     print(round(num_nodes / 100)*100)
-
-        # data = (buckets, bucket_sizes, bucket_at_step)
         self.data = self.process_raw_graphs()
-        # buckets, bucket_sizes, bucket_at_step = data
-        # for k,v in self.buckets.items():
-        #     print("--------")
-        #     print(k)
-        #     print(len(v))
-
-  
+    
 
     # ----- Data preprocessing and chunking into minibatches:
     def process_raw_graphs(self):
@@ -322,8 +312,9 @@ class MonoLanguageProgramData():
             # print("--------------")
             graph = self.all_data_node_id[i][0]
             label = self.all_data_node_id[i][1]
+
             label_one_hot = self.label_lookup[label-1]
-         
+
             graph_node_type = self.all_data_node_type[i][0]
             
 
@@ -386,8 +377,9 @@ class MonoLanguageProgramData():
             total = total + len(v)
         
 
-        bucket_at_step = [[bucket_idx for _ in range(len(bucket_data)// self.batch_size)]
+        bucket_at_step = [[bucket_idx for _ in range(len(bucket_data))]
                           for bucket_idx, bucket_data in buckets.items()]
+
         # print("Bucket at step : " + str(bucket_at_step))
         # print(len(bucket_at_step))
         bucket_at_step = [x for y in bucket_at_step for x in y]
@@ -483,32 +475,59 @@ class MonoLanguageProgramData():
         (buckets, bucket_sizes, bucket_at_step) = self.data
         bucket_counters = defaultdict(int)
         
-        np.random.shuffle(bucket_at_step)
-        for _, buckets_data in buckets.items():
-            np.random.shuffle(buckets_data)
+
+        if self.is_training:
+            print("Shuffling training data...........")
+            # np.random.shuffle(bucket_at_step)
+            for _, buckets_data in buckets.items():
+                np.random.shuffle(buckets_data)
+
+        for bucket_idx, bucket_data in buckets.items():
+
+            elements = []
+            samples = 0
+            for i, element in enumerate(bucket_data):
+                elements.append(element)
+                samples += 1
+                if (samples >= self.batch_size) or ((i == len(bucket_data)-1)):
+                    batch_data, batch_max_node = self.make_batch(elements)
+                    # print("00000000000000000000000000000000")
+                    # print(batch_data['labels'])
+                    num_graphs = len(batch_data['init'])
+                    initial_representations = batch_data['init']
+                    batch = {
+                        "initial_representations": initial_representations,
+                        "num_graphs": num_graphs,
+                        "num_vertices": batch_max_node + 1,
+                        "adjacency_matrix": batch_data['adjacency_matrix'],
+                        "labels": batch_data['labels']
+                    }
+
+                    yield batch
+                    elements = []
+                    samples = 0
+
+        # for step in range(len(bucket_at_step)):
+        #     # print("-------------")
+        #     bucket = bucket_at_step[step]
+        #     start_idx = bucket_counters[bucket] * self.batch_size
+        #     end_idx = (bucket_counters[bucket] + 1) * self.batch_size
+        #     elements = buckets[bucket][start_idx:end_idx]
+
+        #     batch_data, batch_max_node = self.make_batch(elements)
+        #     num_graphs = len(batch_data['init'])
+        #     initial_representations = batch_data['init']
+
+        #     batch = {
+        #         "initial_representations": initial_representations,
+        #         "num_graphs": num_graphs,
+        #         "num_vertices": batch_max_node + 1,
+        #         "adjacency_matrix": batch_data['adjacency_matrix'],
+        #         "labels": batch_data['labels']
+        #     }
 
 
-        for step in range(len(bucket_at_step)):
-            # print("-------------")
-            bucket = bucket_at_step[step]
-            start_idx = bucket_counters[bucket] * self.batch_size
-            end_idx = (bucket_counters[bucket] + 1) * self.batch_size
-            elements = buckets[bucket][start_idx:end_idx]
-
-            batch_data, batch_max_node = self.make_batch(elements)
-            num_graphs = len(batch_data['init'])
-            initial_representations = batch_data['init']
-
-            batch = {
-                "initial_representations": initial_representations,
-                "num_graphs": num_graphs,
-                "num_vertices": batch_max_node + 1,
-                "adjacency_matrix": batch_data['adjacency_matrix'],
-                "labels": batch_data['labels']
-            }
-
-
-            yield batch
+        #     yield batch
 
 
     def __len__(self):
