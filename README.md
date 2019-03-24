@@ -5,7 +5,7 @@ For a pytorch version, please refer to: https://github.com/bdqnghi/ggnn_graph_cl
 
 This implementation focuses on the Graph Level classification task. Concretely, we focus the Program Classification, in which each program is represented in a form of a graph.
 
-# A Tensorflow Implementation of GGNN for Graph Classification
+# Dataset
 
 - Dataset 1: 10 sorting problems, collected from Github
 
