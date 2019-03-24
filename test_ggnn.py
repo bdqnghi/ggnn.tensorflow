@@ -29,9 +29,9 @@ parser.add_argument('--path', default="program_data/github_java_sort_function_ba
 parser.add_argument('--model_path', default="model", help='path to save the model')
 parser.add_argument('--n_hidden', type=int, default=50, help='number of hidden layers')
 parser.add_argument('--size_vocabulary', type=int, default=59, help='maximum number of node types')
-# parser.add_argument('--training', action="store_true",help='is training')
-# parser.add_argument('--testing', action="store_true",help='is testing')
 parser.add_argument('--log_path', default="logs/" ,help='log path for tensorboard')
+parser.add_argument('--aggregation', type=int, default=1, choices=range(0,4), help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
+parser.add_argument('--distributed_function', type=int, default=0, choices=range(0,2), help='0 for softmax, 1 for sigmoid')
 parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
 opt = parser.parse_args()

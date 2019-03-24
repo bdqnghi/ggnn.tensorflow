@@ -42,7 +42,9 @@ h:      GNN hidden size
 
 class DenseGGNNModel():
     def __init__(self, opt):
-        self.h_dim = opt.state_dim
+        self.h_dim = opt.node_dim
+        self.aggregation_type = opt.aggregation
+        self.distributed_function = opt.distributed_function
         self.num_labels = opt.n_classes
         self.num_edge_types = opt.n_edge_types
         self.num_timesteps= opt.n_steps
@@ -51,8 +53,13 @@ class DenseGGNNModel():
 
         self.prepare_specific_graph_model()
         self.nodes_representation = self.compute_nodes_representation()
-        self.graph_representation = self.pooling_layer(self.nodes_representation)
-        self.logits = self.hidden_layer(self.graph_representation, self.h_dim, self.num_labels)
+        # self.graph_representation = self.pooling_layer(self.nodes_representation)
+
+        graph_representation, attention_scores = self.aggregation_layer(self.nodes_representation, self.aggregation_type, self.distributed_function)
+
+        self.graph_representation = graph_representation
+        self.attention_scores = attention_scores
+        self.logits = self.hidden_layer(self.graph_representation)
         self.loss = self.loss_layer(self.logits)
         self.softmax_values = self.softmax(self.logits)
 
@@ -75,6 +82,12 @@ class DenseGGNNModel():
         self.weights['edge_weights'] = tf.Variable(glorot_init([self.num_edge_types, h_dim, h_dim]),name='edge_weights')
         self.weights['edge_biases'] = tf.Variable(glorot_init([self.num_edge_types, 1, h_dim]).astype(np.float32),name='edge_biases')
         
+        xavier_initializer = tf.contrib.layers.xavier_initializer()
+        self.weights["hidden_layer_weights"] = tf.Variable(xavier_initializer([self.h_dim, self.num_labels]), name='hidden_layer_weights')
+        self.weights["hidden_layer_biases"] = tf.Variable(xavier_initializer([self.num_labels,]), name='hidden_layer_biases')
+
+
+        self.weights['attention_weights'] = tf.Variable(glorot_init([self.h_dim,1]).astype(np.float32),name='attention_weights')
         
 
         with tf.variable_scope("gru_scope"):
@@ -115,12 +128,11 @@ class DenseGGNNModel():
             pooled = tf.reduce_max(nodes_representation, axis=1)
             return pooled
 
-    def hidden_layer(self, pooled, input_size, output_size):
+    def hidden_layer(self, pooled):
         """Create a hidden feedforward layer."""
         with tf.name_scope("hidden"):
-            initializer = tf.contrib.layers.xavier_initializer()
-            weights = tf.Variable(initializer([input_size, output_size]), name='weights')
-            biases = tf.Variable(initializer([output_size,]), name='biases')
+            weights = self.weights["hidden_layer_weights"]
+            biases = self.weights["hidden_layer_biases"]
             return tf.nn.leaky_relu(tf.matmul(pooled, weights) + biases)
 
     def loss_layer(self, logits_node):
@@ -134,6 +146,43 @@ class DenseGGNNModel():
 
             loss = tf.reduce_mean(cross_entropy, name='cross_entropy_mean')
             return loss
+
+    def aggregation_layer(self, nodes_representation, aggregation_type, distributed_function):
+        # nodes_representation is (batch_size, max_graph_size, self.h_dim)
+        w_attention = self.weights['attention_weights']
+        with tf.name_scope("global_attention"):
+            batch_size = tf.shape(nodes_representation)[0]
+            max_tree_size = tf.shape(nodes_representation)[1]
+
+            # (batch_size * max_graph_size, self.h_dim)
+            flat_nodes_representation = tf.reshape(nodes_representation, [-1, self.h_dim])
+            aggregated_vector = tf.matmul(flat_nodes_representation, w_attention)
+
+            attention_score = tf.reshape(aggregated_vector, [-1, max_tree_size, 1])
+
+            """A note here: softmax will distributed the weights to all of the nodes (sum of node weghts = 1),
+            an interesting finding is that for some nodes, the attention score will be very very small, i.e e-12, 
+            thus making parts of aggregated vector becomes near zero and affect on the learning (very slow nodes_representationergence
+            - Better to use sigmoid"""
+
+            if distributed_function == 0:
+                attention_weights = tf.nn.softmax(attention_score, dim=1)
+            if distributed_function == 1:
+                attention_weights = tf.nn.sigmoid(attention_score)
+
+            # TODO: reduce_max vs reduce_sum vs reduce_mean
+            if aggregation_type == 1:
+                print("Using tf.reduce_sum...........")
+                weighted_average_nodes = tf.reduce_sum(tf.multiply(nodes_representation, attention_weights), axis=1)
+            if aggregation_type == 2:
+                print("Using tf.reduce_max...........")
+                weighted_average_nodes = tf.reduce_max(tf.multiply(nodes_representation, attention_weights), axis=1)
+            if aggregation_type == 3:
+                print("Using tf.reduce_mean...........")
+                weighted_average_nodes = tf.reduce_mean(tf.multiply(nodes_representation, attention_weights), axis=1)
+
+            return weighted_average_nodes, attention_weights
+
 
     def softmax(self, logits_node):
         """Apply softmax to the output layer."""

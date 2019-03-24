@@ -243,6 +243,8 @@ class MonoLanguageProgramData():
         base_name = os.path.basename(opt.path)
         self.is_training = is_training
         self.is_testing = is_testing
+        self.node_dim = opt.node_dim
+        self.state_dim = opt.state_dim
         if is_training:
             saved_input_filename = "%s/%s-%d-train.pkl" % (opt.path, base_name, opt.n_classes)
         if is_testing:
@@ -307,7 +309,7 @@ class MonoLanguageProgramData():
         
 
         buckets = defaultdict(list)
-        x_dim = 30
+        x_dim = self.state_dim
         for i in range(len(self.all_data_node_id)):
             # print("--------------")
             graph = self.all_data_node_id[i][0]
@@ -322,7 +324,7 @@ class MonoLanguageProgramData():
             chosen_bucket_idx = np.argmax(bucket_sizes > max([v for e in graph for v in [e[0], e[2]]]))
             chosen_bucket_size = bucket_sizes[chosen_bucket_idx]
             # print(chosen_bucket_size)
-            n_active_nodes = 30
+            n_active_nodes = self.state_dim
 
             num_nodes = find_num_nodes_of_graph(graph)
 
@@ -384,47 +386,6 @@ class MonoLanguageProgramData():
         # print(len(bucket_at_step))
         bucket_at_step = [x for y in bucket_at_step for x in y]
 
-        # print("Bucket at step : " + str(bucket_at_step))
-
-        # np.random.shuffle(bucket_at_step)
-        # for _, buckets_data in buckets.items():
-            # np.random.shuffle(buckets_data)
-
-        # print("Bucket at step : " + str(bucket_at_step))
-
-        # def chunking(list_data, chunk_size):
-        #     chunks = [] 
-        #     for i in range(0, len(list_data), chunk_size):
-        #         chunks.append(list_data[i:i + chunk_size])
-
-        #--------------------------------
-        # batch_data = {}
-        # start_idx = 0
-        # end_idx = 0
-
-        # for bucket_idx, buckets_data in buckets.items():
-        #     batch_data[bucket_idx] = {}
-
-        #     samples = 0
-        #     chunk_idx = 0
-
-
-        #     for data in buckets_data:
-                
-        #         batch_data[bucket_idx][chunk_idx] = {}
-        #         if samples >= self.batch_size:
-        #             print("samples : " + str(samples))
-        #             start_idx = chunk_idx * self.batch_size
-
-        #             end_idx = (chunk_idx + 1) * self.batch_size
-        #             batch_data[bucket_idx][chunk_idx]["start_idx"] = start_idx
-        #             batch_data[bucket_idx][chunk_idx]["end_idx"] = end_idx
-        #             samples = 0
-        #             chunk_idx+=1
-        #         samples += 1
-
-        #     start_idx = 0
-        #     end_idx = 0
         #--------------------------------
             
 
@@ -438,6 +399,11 @@ class MonoLanguageProgramData():
             initial_node_representations[i] = np.concatenate((initial_node_representations[i],np.zeros([remaining,30])), axis=0)
 
         return initial_node_representations
+
+    def pad_annotations(self, initial_node_representations):
+        return  np.pad(initial_node_representations,
+                       pad_width=[[0, 0], [0, 0], [0, self.node_dim - self.state_dim]],
+                       mode='constant')
 
 
     def make_batch(self, elements):
@@ -491,10 +457,10 @@ class MonoLanguageProgramData():
                 samples += 1
                 if (samples >= self.batch_size) or ((i == len(bucket_data)-1)):
                     batch_data, batch_max_node = self.make_batch(elements)
-                    # print("00000000000000000000000000000000")
-                    # print(batch_data['labels'])
                     num_graphs = len(batch_data['init'])
                     initial_representations = batch_data['init']
+                    initial_representations = self.pad_annotations(initial_representations)
+                    # print(initial_representations.shape)
                     batch = {
                         "initial_representations": initial_representations,
                         "num_graphs": num_graphs,
