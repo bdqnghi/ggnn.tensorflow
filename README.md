@@ -31,6 +31,7 @@ python3 test_ggnn.py
 ```
 
 ## References
+- [GGNN Implementation for learning properties of chemical molecules](https://github.com/Microsoft/gated-graph-neural-network-samples)
+- [Neural Message Passing for Quantum Chemistry](https://arxiv.org/pdf/1704.01212.pdf), ICML 2017
 - [Gated Graph Sequence Neural Networks](https://arxiv.org/abs/1511.05493), ICLR 2016
-- [yujiali/ggnn](https://github.com/yujiali/ggnn)
 - [Learning to Represent Programs with Graphs](https://arxiv.org/abs/1711.00740), ICLR 2018
