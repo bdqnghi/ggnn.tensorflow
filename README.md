@@ -5,6 +5,10 @@ For a pytorch version, please refer to: https://github.com/bdqnghi/ggnn_graph_cl
 
 This implementation focuses on the Graph Level classification task. Concretely, we focus the Program Classification, in which each program is represented in a form of a graph.
 
+Tricks to improve training time:
+- Batch graphs with similar size together instead of randomly shuffling and batch.
+- Use dense graph representation for small graphs, and sparse graph representation for large graphs.
+
 # Dataset
 
 - Dataset 1: 10 sorting problems, collected from Github
