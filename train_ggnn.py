@@ -35,6 +35,7 @@ parser.add_argument('--size_vocabulary', type=int, default=59, help='maximum num
 parser.add_argument('--training_percentage', type=float, default=1.0 ,help='percentage of data use for training')
 parser.add_argument('--log_path', default="logs/" ,help='log path for tensorboard')
 parser.add_argument('--checkpoint_every', type=int, default=100 ,help='check point to save model')
+parser.add_argument('--best_accuracy', type=float, default=0.0 ,help='best accuracy to save model')
 parser.add_argument('--aggregation', type=int, default=1, choices=range(0,4), help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
 parser.add_argument('--distributed_function', type=int, default=0, choices=range(0,2), help='0 for softmax, 1 for sigmoid')
 parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
@@ -96,7 +97,7 @@ def main(opt):
             for i, var in enumerate(saver._var_list):
                 print('Var {}: {}'.format(i, var))
 
-        best_accuracy = 0.0
+        best_accuracy = opt.best_accuracy
         for epoch in range(1,  opt.epochs + 1):
             train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=5)
 
