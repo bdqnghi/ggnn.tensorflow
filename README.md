@@ -3,9 +3,13 @@
 This is a Tensorflow implementation of the Gated Graph Sequence Neural Networks (GGNN) as described in the paper [Gated Graph Sequence Neural Networks](https://arxiv.org/abs/1511.05493) by Y. Li, D. Tarlow, M. Brockschmidt, and R. Zemel.
 For a pytorch version, please refer to: https://github.com/bdqnghi/ggnn_graph_classification.
 
-Some parts of this implementation are taken from https://github.com/Microsoft/gated-graph-neural-network-samples with lots of modifications for our purpose. This implementation focuses on the Graph Level classification, which hasn't been exploiting from the original code base. Concretely, we focus the Program Classification task, in which each program is represented in a form of a graph.
+This implementation focuses on the Graph Level classification task. Concretely, we focus the Program Classification, in which each program is represented in a form of a graph.
 
-# A Tensorflow Implementation of GGNN for Graph Classification
+Tricks to improve training time:
+- Batch graphs with similar size together instead of randomly shuffling and batch.
+- Use dense graph representation for small graphs, and sparse graph representation for large graphs.
+
+# Dataset
 
 - Dataset 1: 10 sorting problems, collected from Github
 
@@ -31,6 +35,7 @@ python3 test_ggnn.py
 ```
 
 ## References
+- [GGNN Implementation for learning properties of chemical molecules](https://github.com/Microsoft/gated-graph-neural-network-samples)
+- [Neural Message Passing for Quantum Chemistry](https://arxiv.org/pdf/1704.01212.pdf), ICML 2017
 - [Gated Graph Sequence Neural Networks](https://arxiv.org/abs/1511.05493), ICLR 2016
-- [yujiali/ggnn](https://github.com/yujiali/ggnn)
 - [Learning to Represent Programs with Graphs](https://arxiv.org/abs/1711.00740), ICLR 2018
