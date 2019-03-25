@@ -86,6 +86,9 @@ def main(opt):
     with tf.Session() as sess:
         sess.run(init)
 
+        print("List of available devices..........")
+        print(tf.test.gpu_device_name())
+
         if ckpt and ckpt.model_checkpoint_path:
             print("Continue training with old model")
             print("Checkpoint path : " + str(ckpt.model_checkpoint_path))
