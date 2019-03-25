@@ -19,6 +19,8 @@ parser.add_argument('--train_batch_size', type=int, default=10, help='input batc
 parser.add_argument('--test_batch_size', type=int, default=5, help='input batch size')
 parser.add_argument('--state_dim', type=int, default=30, help='GGNN hidden state dimension size')
 parser.add_argument('--node_dim', type=int, default=100, help='node dimension size')
+parser.add_argument('--hidden_layer_size', type=int, default=100, help='size of hidden layer')
+parser.add_argument('--num_hidden_layer', type=int, default=1, help='number of hidden layer')
 parser.add_argument('--n_steps', type=int, default=10, help='propogation steps number of GGNN')
 parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
@@ -105,6 +107,7 @@ def main(opt):
             correct_labels.extend(np.argmax(batch_data['labels'],axis=1))
             predictions.extend(np.argmax(softmax_values_data[0],axis=1))
 
+        print("Num target : " + str(len(correct_labels)))
         print(correct_labels)
         print(predictions)
         target_names = [str(i) for i in range(1,11)]

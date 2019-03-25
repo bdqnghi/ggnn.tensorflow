@@ -42,7 +42,9 @@ h:      GNN hidden size
 
 class DenseGGNNModel():
     def __init__(self, opt):
-        self.h_dim = opt.node_dim
+        self.node_dim = opt.node_dim
+        self.hidden_layer_size = opt.hidden_layer_size
+        self.num_hidden_layer = opt.num_hidden_layer
         self.aggregation_type = opt.aggregation
         self.distributed_function = opt.distributed_function
         self.num_labels = opt.n_classes
@@ -59,19 +61,26 @@ class DenseGGNNModel():
 
         self.graph_representation = graph_representation
         self.attention_scores = attention_scores
-        self.logits = self.hidden_layer(self.graph_representation)
+        
+        if self.num_hidden_layer == 1:
+            self.logits = self.hidden_layer(self.graph_representation, self.node_dim, self.num_labels)
+        else:
+            self.logits = self.hidden_layer(self.graph_representation, self.node_dim, self.hidden_layer_size)
+            for i in range(1, self.num_hidden_layer):
+                self.logits = self.hidden_layer(self.logits, self.hidden_layer_size, self.num_labels)
+
         self.loss = self.loss_layer(self.logits)
         self.softmax_values = self.softmax(self.logits)
 
 
     def prepare_specific_graph_model(self) -> None:
-        h_dim = self.h_dim
+        node_dim = self.node_dim
 
         # initializer = tf.contrib.layers.xavier_initializer()
         # inputs
         # self.placeholders['graph_state_keep_prob'] = tf.placeholder(tf.float32, None, name='graph_state_keep_prob')
         # self.placeholders['edge_weight_dropout_keep_prob'] = tf.placeholder(tf.float32, None, name='edge_weight_dropout_keep_prob')
-        self.placeholders['initial_node_representation'] = tf.placeholder(tf.float32, [None, None, self.h_dim], name='node_features')
+        self.placeholders['initial_node_representation'] = tf.placeholder(tf.float32, [None, None, self.node_dim], name='node_features')
         self.placeholders['num_vertices'] = tf.placeholder(tf.int32, (),  name='num_vertices')
         self.placeholders['labels'] = tf.placeholder(tf.int32, (None, self.num_labels))
 
@@ -79,27 +88,26 @@ class DenseGGNNModel():
         self.__adjacency_matrix = tf.transpose(self.placeholders['adjacency_matrix'], [1, 0, 2, 3])                    # [e, b, v, v]
 
         # weights
-        self.weights['edge_weights'] = tf.Variable(glorot_init([self.num_edge_types, h_dim, h_dim]),name='edge_weights')
-        self.weights['edge_biases'] = tf.Variable(glorot_init([self.num_edge_types, 1, h_dim]).astype(np.float32),name='edge_biases')
+        self.weights['edge_weights'] = tf.Variable(glorot_init([self.num_edge_types, node_dim, node_dim]),name='edge_weights')
+        self.weights['edge_biases'] = tf.Variable(glorot_init([self.num_edge_types, 1, node_dim]).astype(np.float32),name='edge_biases')
         
-        xavier_initializer = tf.contrib.layers.xavier_initializer()
-        self.weights["hidden_layer_weights"] = tf.Variable(xavier_initializer([self.h_dim, self.num_labels]), name='hidden_layer_weights')
-        self.weights["hidden_layer_biases"] = tf.Variable(xavier_initializer([self.num_labels,]), name='hidden_layer_biases')
+        self.xavier_initializer = tf.contrib.layers.xavier_initializer()
+        # self.weights["hidden_layer_weights"] = tf.Variable(xavier_initializer([self.node_dim, self.num_labels]), name='hidden_layer_weights')
+        # self.weights["hidden_layer_biases"] = tf.Variable(xavier_initializer([self.num_labels,]), name='hidden_layer_biases')
 
-
-        self.weights['attention_weights'] = tf.Variable(glorot_init([self.h_dim,1]).astype(np.float32),name='attention_weights')
+        self.weights['attention_weights'] = tf.Variable(glorot_init([self.node_dim,1]).astype(np.float32),name='attention_weights')
         
 
         with tf.variable_scope("gru_scope"):
-            cell = tf.contrib.rnn.GRUCell(h_dim)
+            cell = tf.contrib.rnn.GRUCell(node_dim)
             # cell = tf.nn.rnn_cell.DropoutWrapper(cell, state_keep_prob=self.placeholders['graph_state_keep_prob'])
             self.weights['node_gru'] = cell
 
     def compute_nodes_representation(self):
-        h_dim = self.h_dim
+        node_dim = self.node_dim
         v = self.placeholders['num_vertices']
         h = self.placeholders['initial_node_representation']                                                # [b, v, h]
-        h = tf.reshape(h, [-1, h_dim])
+        h = tf.reshape(h, [-1, node_dim])
 
         with tf.variable_scope("gru_scope") as scope:
             for i in range(self.num_timesteps):
@@ -109,17 +117,17 @@ class DenseGGNNModel():
                     # print("edge type : " + str(edge_type))
                     m = tf.matmul(h, self.weights['edge_weights'][edge_type])                               # [b*v, h]
 
-                    m = tf.reshape(m, [-1, v, h_dim])                                                       # [b, v, h]
+                    m = tf.reshape(m, [-1, v, node_dim])                                                       # [b, v, h]
                     m += self.weights['edge_biases'][edge_type]                                             # [b, v, h]
 
                     if edge_type == 0:
                         acts = tf.matmul(self.__adjacency_matrix[edge_type], m)
                     else:
                         acts += tf.matmul(self.__adjacency_matrix[edge_type], m)
-                acts = tf.reshape(acts, [-1, h_dim])                                                        # [b*v, h]
+                acts = tf.reshape(acts, [-1, node_dim])                                                        # [b*v, h]
 
                 h = self.weights['node_gru'](acts, h)[1]                                                    # [b*v, h]
-            last_h = tf.reshape(h, [-1, v, h_dim])
+            last_h = tf.reshape(h, [-1, v, node_dim])
         return last_h
 
     def pooling_layer(self, nodes_representation):
@@ -128,11 +136,14 @@ class DenseGGNNModel():
             pooled = tf.reduce_max(nodes_representation, axis=1)
             return pooled
 
-    def hidden_layer(self, pooled):
+    def hidden_layer(self, pooled, input_size, output_size):
         """Create a hidden feedforward layer."""
+        # self.weights["hidden_layer_weights"] = tf.Variable(xavier_initializer([self.node_dim, self.num_labels]), name='hidden_layer_weights')
+        # self.weights["hidden_layer_biases"] = tf.Variable(xavier_initializer([self.num_labels,]), name='hidden_layer_biases')
+
         with tf.name_scope("hidden"):
-            weights = self.weights["hidden_layer_weights"]
-            biases = self.weights["hidden_layer_biases"]
+            weights = tf.Variable(self.xavier_initializer([input_size, output_size]))
+            biases = tf.Variable(self.xavier_initializer([output_size,]))
             return tf.nn.leaky_relu(tf.matmul(pooled, weights) + biases)
 
     def loss_layer(self, logits_node):
@@ -148,14 +159,14 @@ class DenseGGNNModel():
             return loss
 
     def aggregation_layer(self, nodes_representation, aggregation_type, distributed_function):
-        # nodes_representation is (batch_size, max_graph_size, self.h_dim)
+        # nodes_representation is (batch_size, max_graph_size, self.node_dim)
         w_attention = self.weights['attention_weights']
         with tf.name_scope("global_attention"):
             batch_size = tf.shape(nodes_representation)[0]
             max_tree_size = tf.shape(nodes_representation)[1]
 
-            # (batch_size * max_graph_size, self.h_dim)
-            flat_nodes_representation = tf.reshape(nodes_representation, [-1, self.h_dim])
+            # (batch_size * max_graph_size, self.node_dim)
+            flat_nodes_representation = tf.reshape(nodes_representation, [-1, self.node_dim])
             aggregated_vector = tf.matmul(flat_nodes_representation, w_attention)
 
             attention_score = tf.reshape(aggregated_vector, [-1, max_tree_size, 1])

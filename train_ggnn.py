@@ -15,12 +15,14 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=2)
-parser.add_argument('--train_batch_size', type=int, default=10, help='input batch size')
+parser.add_argument('--train_batch_size', type=int, default=12, help='input batch size')
 parser.add_argument('--test_batch_size', type=int, default=5, help='input batch size')
 parser.add_argument('--state_dim', type=int, default=30, help='GGNN hidden state dimension size')
 parser.add_argument('--node_dim', type=int, default=100, help='node dimension size')
+parser.add_argument('--hidden_layer_size', type=int, default=100, help='size of hidden layer')
+parser.add_argument('--num_hidden_layer', type=int, default=1, help='number of hidden layer')
 parser.add_argument('--n_steps', type=int, default=10, help='propogation steps number of GGNN')
-parser.add_argument('--epochs', type=int, default=300, help='number of epochs to train for')
+parser.add_argument('--epochs', type=int, default=500, help='number of epochs to train for')
 parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
 parser.add_argument('--cuda', default="0",type=str, help='enables cuda')
 parser.add_argument('--verbal', type=bool, default=True, help='print training info or not')
@@ -40,10 +42,12 @@ parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretr
 opt = parser.parse_args()
 os.environ['CUDA_VISIBLE_DEVICES'] = opt.cuda
 
+print(opt)
 # Create model path folder if not exists
 if not os.path.exists(opt.model_path):
     os.mkdir(opt.model_path)
 
+opt.model_path = os.path.join(opt.model_path,"sum_softmax" + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer)) + "_node_dim_" + str(opt.node_dim)
 
 def main(opt):
     with open(opt.pretrained_embeddings_url, 'rb') as fh:
@@ -89,7 +93,7 @@ def main(opt):
             for i, var in enumerate(saver._var_list):
                 print('Var {}: {}'.format(i, var))
 
-        best_accuracy = 0.7942857142857143
+        best_accuracy = 0.0
         for epoch in range(1,  opt.epochs + 1):
             train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=5)
 
@@ -138,6 +142,7 @@ def main(opt):
                         correct_labels.extend(np.argmax(test_batch_data['labels'],axis=1))
                         predictions.extend(np.argmax(softmax_values_data[0],axis=1))
 
+                    print("Num target : " + str(len(correct_labels)))
                     print(correct_labels)
                     print(predictions)
                     target_names = [str(i) for i in range(1,11)]

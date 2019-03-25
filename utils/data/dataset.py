@@ -428,8 +428,6 @@ class MonoLanguageProgramData():
         batch_data['adjacency_matrix'] = np.array(batch_data['adjacency_matrix'])[0:len(batch_data['adjacency_matrix'])]
         batch_data['init'] = np.array(batch_data['init'])[0:len(batch_data['init'])]
         
-        
-
         batch_data['labels'] = np.array(batch_data['labels'])[0:len(batch_data['labels'])]
 
         # print("adj shape : " + str(batch_data['adjacency_matrix'].shape))
