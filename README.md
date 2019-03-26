@@ -11,7 +11,7 @@ Tricks to improve training time:
 
 # Dataset
 
-- Dataset 1: 10 sorting problems, collected from Github
+- Dataset 1: 10 sorting problems, collected from Github, which are: insertion-sort, merge-sort, topological-sort, heap-sort, bubble-sort, radix-sort, shell-sort, quick-sort, selection-sort, bucket-sort
 
 - Dataset 2: 104 programming problems, which comprises of 52000 cpp files from the paper [Convolutional Neural Networks over Tree Structures for Programming Language Processing](https://arxiv.org/abs/1409.5718).
 
