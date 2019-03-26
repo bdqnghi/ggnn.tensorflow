@@ -5,7 +5,7 @@ For a pytorch version, please refer to: https://github.com/bdqnghi/ggnn_graph_cl
 
 This implementation focuses on the Graph Level classification task. Concretely, we focus the Program Classification, in which each program is represented in the form of a graph.
 
-Tricks to improve training time:
+Tricks to improve training time and faster convergence:
 - Batch graphs with similar size together instead of randomly shuffling and batch.
 - Use dense graph representation for small graphs, and sparse graph representation for large graphs.
 
