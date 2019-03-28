@@ -15,7 +15,6 @@ Options:
 """
 
 from typing import Sequence, Any
-from docopt import docopt
 from collections import defaultdict
 import numpy as np
 import tensorflow as tf
