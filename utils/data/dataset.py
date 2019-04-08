@@ -121,6 +121,53 @@ def load_program_graphs_from_directory(directory, is_training=True, is_testing=T
 
     return node_id_data_list, node_type_data_list
 
+def load_single_program(path):
+  
+    node_id_data_list_class_i = []
+    node_type_data_list_class_i = []
+    node_id_edge_list_class_i = []
+    node_type_edge_list_class_i = []
+    target_list_class_i = []
+
+    # print("--------------------------")
+    with open(path,'r') as f:
+        for line in f: 
+            if len(line.strip()) == 0:
+                # print(edge_list_class_i)
+                node_id_data_list_class_i.append([node_id_edge_list_class_i,target_list_class_i])
+                node_type_data_list_class_i.append([node_type_edge_list_class_i,target_list_class_i])
+                node_id_edge_list_class_i = []
+                node_type_edge_list_class_i = []
+                target_list_class_i = []
+            else:
+                node_id_digits = []
+                node_type_digits = []
+                line_tokens = line.split(" ")
+                
+                if line_tokens[0] == "?":
+                    # print(label)
+                    splits = line_tokens[2].split("/")
+                    print(splits)
+                    label = int(splits[len(splits)-2])
+
+                    target_list_class_i.append([label])
+                else:
+
+                    for j in range(len(line_tokens)):
+                        if "," in line_tokens[j]:
+                            splits = line_tokens[j].split(",")
+                            node_id = splits[0]
+                            node_type = splits[1]
+                            node_id_digits.append(int(node_id))
+                            node_type_digits.append(int(node_type))
+                        else:
+                            node_id_digits.append(int(line_tokens[j]))
+                            node_type_digits.append(int(line_tokens[j]))
+
+                    node_id_edge_list_class_i.append(node_id_digits)
+                    node_type_edge_list_class_i.append(node_type_digits)
+    return node_id_data_list_class_i, node_type_data_list_class_i
+
 def find_max_edge_id(data_list):
     max_edge_id = 0
     for data in data_list:
@@ -239,30 +286,42 @@ def _onehot(i, total):
    
 class MonoLanguageProgramData():
    
-    def __init__(self, opt, is_training=True, is_testing=False):
-        base_name = os.path.basename(opt.path)
-        self.is_training = is_training
-        self.is_testing = is_testing
+    def __init__(self, opt, is_training=True, is_testing=False, live_test=False):
+
         self.node_dim = opt.node_dim
         self.state_dim = opt.state_dim
-        if is_training:
-            saved_input_filename = "%s/%s-%d-train.pkl" % (opt.path, base_name, opt.n_classes)
-        if is_testing:
-            saved_input_filename = "%s/%s-%d-test.pkl" % (opt.path, base_name, opt.n_classes)
 
-        if os.path.exists(saved_input_filename): 
-           input_file = open(saved_input_filename, 'rb')
-           buf = input_file.read()
-           all_data_node_id, all_data_node_type = pyarrow.deserialize(buf)
-           input_file.close()
-        else:
-           all_data_node_id, all_data_node_type = load_program_graphs_from_directory(opt.path, is_training, is_testing, opt.n_classes)
-           all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
-           all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
-           buf = pyarrow.serialize((all_data_node_id, all_data_node_type)).to_buffer()
-           out = pyarrow.OSFile(saved_input_filename, 'wb')
-           out.write(buf)
-           out.close()
+        self.is_training = is_training
+        self.is_testing = is_testing
+
+        if live_test:
+       
+
+            all_data_node_id, all_data_node_type = load_single_program(opt.test_graph_path)
+            all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
+            all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
+
+        else:      
+            base_name = os.path.basename(opt.path)
+           
+            if is_training:
+                saved_input_filename = "%s/%s-%d-train.pkl" % (opt.path, base_name, opt.n_classes)
+            if is_testing:
+                saved_input_filename = "%s/%s-%d-test.pkl" % (opt.path, base_name, opt.n_classes)
+
+            if os.path.exists(saved_input_filename): 
+               input_file = open(saved_input_filename, 'rb')
+               buf = input_file.read()
+               all_data_node_id, all_data_node_type = pyarrow.deserialize(buf)
+               input_file.close()
+            else:
+               all_data_node_id, all_data_node_type = load_program_graphs_from_directory(opt.path, is_training, is_testing, opt.n_classes)
+               all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
+               all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
+               buf = pyarrow.serialize((all_data_node_id, all_data_node_type)).to_buffer()
+               out = pyarrow.OSFile(saved_input_filename, 'wb')
+               out.write(buf)
+               out.close()
         
         self.pretrained_embeddings = opt.pretrained_embeddings
         self.batch_size = opt.train_batch_size
@@ -314,6 +373,7 @@ class MonoLanguageProgramData():
             # print("--------------")
             graph = self.all_data_node_id[i][0]
             label = self.all_data_node_id[i][1]
+            print(label)
 
             label_one_hot = self.label_lookup[label-1]
 

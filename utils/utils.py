@@ -4,6 +4,9 @@ import numpy as np
 import tensorflow as tf
 import queue
 import threading
+import numpy as np
+from sklearn import preprocessing
+import os, itertools
 
 SMALL_NUMBER = 1e-7
 
@@ -11,6 +14,45 @@ SMALL_NUMBER = 1e-7
 def glorot_init(shape):
     initialization_range = np.sqrt(6.0 / (shape[-2] + shape[-1]))
     return np.random.uniform(low=-initialization_range, high=initialization_range, size=shape).astype(np.float32)
+
+def scale_attention_score(attention_array, top_node):
+    attention_array = np.array(attention_array)
+  
+    top_n_idx = np.argsort(attention_array)[-top_node:][::-1]
+    top_n_values = [attention_array[i] for i in top_n_idx]
+
+    max_point = max(top_n_values)
+    min_point = min(top_n_values)
+
+    norm_data = []
+    for i, point in enumerate(attention_array):
+        if i in top_n_idx:
+            point_norm = float((point - min_point)/(max_point - min_point))
+
+            # Means to scale from 0 to 1
+            point_scaled = point_norm * (1.0 - 0.0) + 0.0
+            norm_data.append(point_scaled)
+        else:
+            norm_data.append(0.0)
+
+    return norm_data
+
+
+def scale_attention_score_by_group(attention_array):
+
+    attention_array = np.array(attention_array)
+    clusters = [list(g) for _, g in itertools.groupby(attention_array, lambda x: x)]
+    average = float(1/len(clusters))
+
+    scaled_attention_array = []
+    for score in attention_array:
+        for i, cluster in enumerate(clusters):
+            if score in cluster:
+                temp_score = average * (len(clusters) - i)
+                scaled_attention_array.append(round(temp_score,5))
+
+    return scaled_attention_array
+
 
 
 class ThreadedIterator:
