@@ -1,6 +1,6 @@
-# A Tensorflow Implementation of GGNN for Graph Classification
+# A Tensorflow Implementation of Gated Graph Neural Networks (GGNN) for Graph Classification
 
-This is a Tensorflow implementation of the Gated Graph Sequence Neural Networks (GGNN) as described in the paper [Gated Graph Sequence Neural Networks](https://arxiv.org/abs/1511.05493) by Y. Li, D. Tarlow, M. Brockschmidt, and R. Zemel.
+This is a Tensorflow implementation of the Gated Graph Neural Networks (GGNN) as described in the paper [Gated Graph Sequence Neural Networks](https://arxiv.org/abs/1511.05493) by Y. Li, D. Tarlow, M. Brockschmidt, and R. Zemel.
 For a pytorch version, please refer to: https://github.com/bdqnghi/ggnn_graph_classification.
 
 This implementation focuses on the Graph Level classification task. Concretely, we focus the Program Classification, in which each program is represented in the form of a graph.
