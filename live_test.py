@@ -39,9 +39,11 @@ parser.add_argument('--log_path', default="logs/" ,help='log path for tensorboar
 parser.add_argument('--aggregation', type=int, default=1, choices=range(0,4), help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
 parser.add_argument('--distributed_function', type=int, default=0, choices=range(0,2), help='0 for softmax, 1 for sigmoid')
 parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
-
+parser.add_argument('argv', nargs="+", help='filenames')
 opt = parser.parse_args()
 
+if len(opt.argv) == 1:
+    opt.test_file = opt.argv[0]
 # Create model path folder if not exists
 if not os.path.exists(opt.model_path):
     os.mkdir(opt.model_path)

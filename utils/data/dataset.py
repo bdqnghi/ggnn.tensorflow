@@ -148,7 +148,10 @@ def load_single_program(path):
                     # print(label)
                     splits = line_tokens[2].split("/")
                     print(splits)
-                    label = int(splits[len(splits)-2])
+                    try: 
+                        label = int(splits[len(splits)-2])
+                    except:
+                        label = 1 # in case the file is not in a folder, assume it to be in the 1st cluster
 
                     target_list_class_i.append([label])
                 else:
