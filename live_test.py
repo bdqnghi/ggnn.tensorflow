@@ -2,6 +2,7 @@ import argparse
 import random
 
 import gzip
+import pycurl
 import pickle
 
 import tensorflow as tf
@@ -47,7 +48,7 @@ if len(opt.argv) == 1:
     opt.test_file = opt.argv[0]
 # Create model path folder if not exists
 if not os.path.exists(opt.model_path):
-    os.mkdir(opt.model_path)
+    os.makedirs(opt.model_path)
 
 def generate_visualization(pb_path, attention_path):
     # attention_path = os.path.join(pb_path.split(".")[0] + ".csv")
@@ -111,19 +112,35 @@ def generate_attention_scores(attention_scores):
 
     return attention_path
 
+def fetch_data_from_github(filename):
+    if not os.path.exists(os.path.dirname(filename)):
+        os.makedirs(os.path.dirname(filename))
+    fp = open(filename, "wb") 
+    curl = pycurl.Curl()
+    curl.setopt(pycurl.URL, os.path.join("https://raw.githubusercontent.com/bdqnghi/ggnn.tensorflow/master/", filename))
+    curl.setopt(pycurl.WRITEDATA, fp)
+    curl.perform()
+    curl.close()
+    fp.close()   
+
 def main(opt):
     
 
     generate_files(opt.test_file)
 
+    if not os.path.exists(opt.pretrained_embeddings_url):
+        fetch_data_from_github(opt.pretrained_embeddings_url)
     with gzip.open(opt.pretrained_embeddings_url, 'rb') as fh:
         embeddings, embed_lookup = pickle.load(fh,encoding='latin1')
-
         opt.pretrained_embeddings = embeddings
         opt.pretrained_embed_lookup = embed_lookup
 
-    
-    checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')   
+    checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')    
+    for f in ['checkpoint', 'cnn_tree.ckpt.index', 'cnn_tree.ckpt.meta', 'cnn_tree.ckpt.data-00000-of-00001']:
+        filename = os.path.join(opt.model_path, f)
+        if not os.path.exists(filename):
+            fetch_data_from_github(filename)
+
     ckpt = tf.train.get_checkpoint_state(opt.model_path)
     
     test_dataset = MonoLanguageProgramData(opt, False, False, True)
