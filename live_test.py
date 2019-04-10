@@ -80,7 +80,7 @@ def generate_attention_scores(opt, attention_scores):
 
     return attention_path
 
-def fetch_data_from_github(opt, filename):
+def fetch_data_from_github(filename):
     if not os.path.exists(os.path.dirname(filename)):
         os.makedirs(os.path.dirname(filename))
     fp = open(filename, "wb") 
