@@ -18,38 +18,6 @@ import operator
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--workers', type=int, help='number of data loading workers', default=2)
-parser.add_argument('--train_batch_size', type=int, default=10, help='input batch size')
-parser.add_argument('--test_batch_size', type=int, default=5, help='input batch size')
-parser.add_argument('--state_dim', type=int, default=30, help='GGNN hidden state dimension size')
-parser.add_argument('--node_dim', type=int, default=200, help='node dimension size')
-parser.add_argument('--hidden_layer_size', type=int, default=200, help='size of hidden layer')
-parser.add_argument('--num_hidden_layer', type=int, default=1, help='number of hidden layer')
-parser.add_argument('--n_steps', type=int, default=10, help='propogation steps number of GGNN')
-parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
-parser.add_argument('--cuda', action='store_true', help='enables cuda')
-parser.add_argument('--verbal', type=bool, default=True, help='print training info or not')
-parser.add_argument('--manualSeed', type=int, help='manual seed')
-parser.add_argument('--test_file', default="program_data/test_data/5/100_dead_code_1.java", help="test program")
-parser.add_argument('--n_classes', type=int, default=10, help='manual seed')
-parser.add_argument('--path', default="program_data/github_java_sort_function_babi", help='program data')
-parser.add_argument('--model_path', default="model/sum_softmax_hidden_layer_size_200_num_hidden_layer_1_node_dim_200", help='path to save the model')
-parser.add_argument('--n_hidden', type=int, default=50, help='number of hidden layers')
-parser.add_argument('--size_vocabulary', type=int, default=59, help='maximum number of node types')
-parser.add_argument('--log_path', default="logs/" ,help='log path for tensorboard')
-parser.add_argument('--aggregation', type=int, default=1, choices=range(0,4), help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
-parser.add_argument('--distributed_function', type=int, default=0, choices=range(0,2), help='0 for softmax, 1 for sigmoid')
-parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl.gz", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
-parser.add_argument('argv', nargs="+", help='filenames')
-opt = parser.parse_args()
-
-if len(opt.argv) == 1:
-    opt.test_file = opt.argv[0]
-# Create model path folder if not exists
-if not os.path.exists(opt.model_path):
-    os.makedirs(opt.model_path)
-
 def generate_visualization(pb_path, attention_path):
     # attention_path = os.path.join(pb_path.split(".")[0] + ".csv")
     normal_html_path = os.path.join(pb_path.split(".")[0] + ".html")
@@ -57,7 +25,7 @@ def generate_visualization(pb_path, attention_path):
     os.system(normal_node_id_cmd)
     return normal_html_path
 
-def generate_graph_files(path):
+def generate_graph_files(opt, path):
     fbs_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast -S -G " + path + " " + path.split(".")[0] + ".fbs"
     ggnn_cmd = "docker run -v $(pwd):/e --entrypoint ggnn -it yijun/fast " + path.split(".")[0] + ".fbs" + " " + path.split(".")[0] + "_train.txt" + " " + path.split(".")[0] + ".txt"
 
@@ -75,12 +43,12 @@ def generate_pb(src_path):
     os.system(cmd)
     return pb_path
 
-def generate_files(path):
-    generate_graph_files(path)
+def generate_files(opt, path):
+    generate_graph_files(opt, path)
     pb_path = generate_pb(path)
     opt.pb_path = pb_path
 
-def generate_attention_scores(attention_scores):
+def generate_attention_scores(opt, attention_scores):
     attention_score_map = {}
     for i, score in enumerate(attention_scores):
         attention_score_map[i] = float(score)
@@ -112,7 +80,7 @@ def generate_attention_scores(attention_scores):
 
     return attention_path
 
-def fetch_data_from_github(filename):
+def fetch_data_from_github(opt, filename):
     if not os.path.exists(os.path.dirname(filename)):
         os.makedirs(os.path.dirname(filename))
     fp = open(filename, "wb") 
@@ -123,10 +91,40 @@ def fetch_data_from_github(filename):
     curl.close()
     fp.close()   
 
-def main(opt):
-    
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--workers', type=int, help='number of data loading workers', default=2)
+    parser.add_argument('--train_batch_size', type=int, default=10, help='input batch size')
+    parser.add_argument('--test_batch_size', type=int, default=5, help='input batch size')
+    parser.add_argument('--state_dim', type=int, default=30, help='GGNN hidden state dimension size')
+    parser.add_argument('--node_dim', type=int, default=200, help='node dimension size')
+    parser.add_argument('--hidden_layer_size', type=int, default=200, help='size of hidden layer')
+    parser.add_argument('--num_hidden_layer', type=int, default=1, help='number of hidden layer')
+    parser.add_argument('--n_steps', type=int, default=10, help='propogation steps number of GGNN')
+    parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
+    parser.add_argument('--cuda', action='store_true', help='enables cuda')
+    parser.add_argument('--verbal', type=bool, default=True, help='print training info or not')
+    parser.add_argument('--manualSeed', type=int, help='manual seed')
+    parser.add_argument('--test_file', default="program_data/test_data/5/100_dead_code_1.java", help="test program")
+    parser.add_argument('--n_classes', type=int, default=10, help='manual seed')
+    parser.add_argument('--path', default="program_data/github_java_sort_function_babi", help='program data')
+    parser.add_argument('--model_path', default="model/sum_softmax_hidden_layer_size_200_num_hidden_layer_1_node_dim_200", help='path to save the model')
+    parser.add_argument('--n_hidden', type=int, default=50, help='number of hidden layers')
+    parser.add_argument('--size_vocabulary', type=int, default=59, help='maximum number of node types')
+    parser.add_argument('--log_path', default="logs/" ,help='log path for tensorboard')
+    parser.add_argument('--aggregation', type=int, default=1, choices=range(0,4), help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
+    parser.add_argument('--distributed_function', type=int, default=0, choices=range(0,2), help='0 for softmax, 1 for sigmoid')
+    parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl.gz", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
+    parser.add_argument('argv', nargs="+", help='filenames')
+    opt = parser.parse_args()
 
-    generate_files(opt.test_file)
+    if len(opt.argv) == 1:
+        opt.test_file = opt.argv[0]
+    # Create model path folder if not exists
+    if not os.path.exists(opt.model_path):
+        os.makedirs(opt.model_path)
+    
+    generate_files(opt, opt.test_file)
 
     if not os.path.exists(opt.pretrained_embeddings_url):
         fetch_data_from_github(opt.pretrained_embeddings_url)
@@ -198,7 +196,7 @@ def main(opt):
         print(correct_labels[0])
         print(predictions[0])
     
-        attention_path = generate_attention_scores(attention_scores_data[0])
+        attention_path = generate_attention_scores(opt, attention_scores_data[0])
         print(attention_path)
         print(opt.pb_path)
         generate_visualization(opt.pb_path,attention_path)
@@ -206,4 +204,4 @@ def main(opt):
     # print(train_dataset.bucketed)
 
 if __name__ == "__main__":
-    main(opt)
+    main()
