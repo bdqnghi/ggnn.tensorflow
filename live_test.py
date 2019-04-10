@@ -117,7 +117,7 @@ def fetch_data_from_github(filename):
         os.makedirs(os.path.dirname(filename))
     fp = open(filename, "wb") 
     curl = pycurl.Curl()
-    curl.setopt(pycurl.URL, os.path.join("https://raw.githubusercontent.com/bdqnghi/ggnn.tensorflow/master/", filename))
+    curl.setopt(pycurl.URL, os.path.join("https://raw.githubusercontent.com/bdqnghi/ggnn.tensorflow/master", filename))
     curl.setopt(pycurl.WRITEDATA, fp)
     curl.perform()
     curl.close()
