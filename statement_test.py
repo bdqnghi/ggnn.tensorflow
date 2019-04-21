@@ -25,7 +25,37 @@ def generate_visualization(pb_path, attention_path):
     os.system(normal_node_id_cmd)
     return normal_html_path
 
-def generate_graph_files(opt, path):
+def generate_statement_file(pb_path):
+    stmt_ids_path = os.path.join(pb_path.split(".")[0] + "_stmt_ids.txt")
+    generate_stmt_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast --node_types=statements.csv " + pb_path + " " + "temp.pb" + " > " + stmt_ids_path
+    os.system(generate_stmt_cmd)
+    return stmt_ids_path
+
+def delete_statements(stmt_ids_path, pb_path):
+
+    stmt_java_paths = []
+    stmt_ids = []
+    with open(stmt_ids_path,"r") as f:
+        data = f.readlines()
+        for line in data:
+            stmt_ids.append(line.replace("\n",""))
+
+    for stmt_id in stmt_ids:
+
+        delete_stmt_path_pb = os.path.join(pb_path.split(".")[0] + "_st_" + stmt_id + ".pb")
+        delete_stmt_path_code = os.path.join(pb_path.split(".")[0] + "_st_" + stmt_id + ".java")
+        delete_stmt_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast --delete_tree=" + stmt_id + " " + pb_path + " " + delete_stmt_path_pb
+        stmt_to_java_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast" + " " + delete_stmt_path_pb + " " + delete_stmt_path_code
+    
+        os.system(delete_stmt_cmd)
+        os.system(stmt_to_java_cmd)
+
+        stmt_java_paths.append(delete_stmt_path_code)
+
+    return stmt_java_paths
+
+def generate_graph_files(opt):
+    path = opt.test_file
     fbs_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast -S -G " + path + " " + path.split(".")[0] + ".fbs"
     ggnn_cmd = "docker run -v $(pwd):/e --entrypoint ggnn -it yijun/fast " + path.split(".")[0] + ".fbs" + " " + path.split(".")[0] + "_train.txt" + " " + path.split(".")[0] + ".txt"
 
@@ -43,10 +73,43 @@ def generate_pb(src_path):
     os.system(cmd)
     return pb_path
 
-def generate_files(opt, path):
-    generate_graph_files(opt, path)
-    pb_path = generate_pb(path)
+def generate_files(opt):
+    generate_graph_files(opt)
+    pb_path = generate_pb(opt.test_file)
     opt.pb_path = pb_path
+    return pb_path
+
+def generate_subtree(opt, stmt_ids_path,  attention_score_dict):
+    pb_path = opt.path
+    stmt_ids = []
+    with open(stmt_ids_path,"r") as f:
+        data = f.readlines()
+        for line in data:
+            stmt_ids.append(line.replace("\n",""))
+
+    for stmt_id in stmt_ids:
+        subtree_ids_path =   os.path.join(pb_path.split(".")[0] + "_subtree_" + str(stmt_id))
+        cmd = "docker run -v $(pwd):/e yijun/fast -CA " +  str(stmt_id) + " " + pb_path + " > " + subtree_ids_path        
+
+        with open(subtree_ids_path,"r") as f1:
+            data = f1.readlines()
+            subtree_score = 0
+            for line in data:
+                subtree_score = line.replace("\n","")
+                score = attention_score_dict[subtree_id]
+                subtree_score += score
+
+            for line in data:
+                attention_score_dict[subtree_id] = subtree_score
+
+    attention_score_hierrachical_path = os.path.join(opt.test_file.split(".")[0] + "_hierarchical.csv")
+    for node_id, score in attention_score_dict.items():
+        line = str(node_id) + "," + str(score)
+        with open(attention_score_hierrachical_path,"a") as f2:
+            f2.write(line)
+            f2.wrtie("\n")
+
+    return attention_score_dict
 
 def generate_attention_scores(opt, attention_scores):
     attention_score_map = {}
@@ -57,12 +120,13 @@ def generate_attention_scores(opt, attention_scores):
     attention_score_sorted.reverse()
 
     node_ids = []
-    attention_score = []
+    attention_scores = []
+    raw_attention_score_dict = {}
     for element in attention_score_sorted:
         node_ids.append(element[0])
-        attention_score.append(element[1])
-
-    attention_score_scaled = scale_attention_score_by_group(attention_score)
+        attention_scores.append(element[1])
+        raw_attention_score_dict[element[0]] = element[1]
+    attention_score_scaled = scale_attention_score_by_group(attention_scores)
 
     attention_score_scaled_map = {}
     for i, score in enumerate(attention_score_scaled):
@@ -77,8 +141,8 @@ def generate_attention_scores(opt, attention_scores):
         for k, v in attention_score_scaled_map.items():
             f.write(str(k) + "," + str(v))
             f.write("\n")
-
-    return attention_path
+ 
+    return attention_path, raw_attention_score_dict
 
 def fetch_data_from_github(filename):
     if not os.path.exists(os.path.dirname(filename)):
@@ -124,7 +188,12 @@ def main():
     if not os.path.exists(opt.model_path):
         os.makedirs(opt.model_path)
     
-    generate_files(opt, opt.test_file)
+    pb_path = generate_files(opt)
+
+    stmt_ids_path = generate_statement_file(pb_path)
+
+    statement_paths = delete_statements(stmt_ids_path, pb_path)
+   
 
     if not os.path.exists(opt.pretrained_embeddings_url):
         fetch_data_from_github(opt.pretrained_embeddings_url)
@@ -142,17 +211,12 @@ def main():
     ckpt = tf.train.get_checkpoint_state(opt.model_path)
     
     test_dataset = MonoLanguageProgramData(opt, False, False, True)
-    # opt.n_edge_types = test_dataset.n_edge_types
-    opt.n_edge_types = 7
+    opt.n_edge_types = test_dataset.n_edge_types
 
     ggnn = DenseGGNNModel(opt)
 
-    # For debugging purpose
-    nodes_representation = ggnn.nodes_representation
-    graph_representation = ggnn.graph_representation
-    logits = ggnn.logits
-    softmax_values = ggnn.softmax_values
-    attention_scores = ggnn.attention_scores
+    
+    original_file = opt.test_file
 
     saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
     init = tf.global_variables_initializer()
@@ -167,42 +231,85 @@ def main():
             for i, var in enumerate(saver._var_list):
                 print('Var {}: {}'.format(i, var))
 
-        correct_labels = []
-        predictions = []
-        print('Computing training accuracy...')
-      
-        batch_iterator = ThreadedIterator(test_dataset.make_minibatch_iterator(), max_queue_size=5)
-        for step, batch_data in enumerate(batch_iterator):
-            # print(batch_data["labels"])
-
-            softmax_values_data, attention_scores_data = sess.run(
-                [softmax_values, attention_scores],
-                feed_dict={
-                    ggnn.placeholders["initial_node_representation"]: batch_data["initial_representations"],
-                    ggnn.placeholders["num_vertices"]: batch_data["num_vertices"],
-                    ggnn.placeholders["adjacency_matrix"]:  batch_data['adjacency_matrix'],
-                    ggnn.placeholders["labels"]:  batch_data['labels']
-                }
-            )
-
-            print(softmax_values_data)
-            # print(attention_scores_data)
-            # print(len(attention_scores_data[0]))
-            
-            correct_labels.extend(np.argmax(batch_data['labels'],axis=1))
-            predictions.extend(np.argmax(softmax_values_data,axis=1))
-
-
-        print("Num target : " + str(len(correct_labels)))
-        print(correct_labels[0])
-        print(predictions[0])
     
-        attention_path = generate_attention_scores(opt, attention_scores_data[0])
-        print(attention_path)
-        print(opt.pb_path)
-        generate_visualization(opt.pb_path,attention_path)
+            original_softmax_values_data, _, correct_label , prediction = making_prediction(test_dataset, ggnn, sess, opt)
+            statement_test_file = os.path.join(original_file + "_statement_test.csv")
+            with open(statement_test_file,"a") as f:
+                line = original_file + ";" + str(original_softmax_values_data[0].tolist()) + ";" + correct_label + ";" + prediction + ";"
+                f.write(line)
+                f.write("\n")
+
+
+            for stmt_path in statement_paths:
+                opt.test_file = stmt_path
+                generate_files(opt)
+                # print("Test file : " + opt.test_file)
+                test_dataset = MonoLanguageProgramData(opt, False, False, True)
+                opt.n_edge_types = test_dataset.n_edge_types
+                softmax_values_data, argmax, correct_label, prediction = making_prediction(test_dataset, ggnn, sess, opt)
+                
+                delta = original_softmax_values_data[0][int(correct_label)] - softmax_values_data[0][int(correct_label)]
+
+                # statement_test_file = os.path.join(original_file + "_statement_test.csv")
+                with open(statement_test_file,"a") as f:
+                    line = stmt_path + ";" + str(softmax_values_data[0].tolist()) + ";" + correct_label + ";" + prediction + ";" + str(delta)
+                    f.write(line)
+                    f.write("\n")
 
     # print(train_dataset.bucketed)
+
+def making_prediction(test_dataset, ggnn, sess, opt):
+
+     # For debugging purpose
+    nodes_representation = ggnn.nodes_representation
+    graph_representation = ggnn.graph_representation
+    logits = ggnn.logits
+    softmax_values = ggnn.softmax_values
+    attention_scores = ggnn.attention_scores
+
+    batch_iterator = ThreadedIterator(test_dataset.make_minibatch_iterator(), max_queue_size=5)
+
+    correct_labels = []
+    predictions = []
+    print("--------------------------------------")
+    print('Computing training accuracy...')
+
+    for step, batch_data in enumerate(batch_iterator):
+        # print(batch_data["labels"])
+
+        print(batch_data['labels'])
+        softmax_values_data, attention_scores_data = sess.run(
+            [softmax_values, attention_scores],
+            feed_dict={
+                ggnn.placeholders["initial_node_representation"]: batch_data["initial_representations"],
+                ggnn.placeholders["num_vertices"]: batch_data["num_vertices"],
+                ggnn.placeholders["adjacency_matrix"]:  batch_data['adjacency_matrix'],
+                ggnn.placeholders["labels"]:  batch_data['labels']
+            }
+        )
+
+        
+        # print(attention_scores_data)
+        # print(len(attention_scores_data[0]))
+        
+        correct_labels.extend(np.argmax(batch_data['labels'],axis=1))
+        argmax = np.argmax(softmax_values_data,axis=1)
+        predictions.extend(np.argmax(softmax_values_data,axis=1))
+
+    print("Probability : " + str(softmax_values_data))
+    print("Probability max : " + str(np.argmax(softmax_values_data,axis=1)))
+    print("Correct class " + str(correct_labels[0]))
+    print("Predicted class : " + str(predictions[0]))
+
+    attention_path = generate_attention_scores(opt, attention_scores_data[0])
+
+    generate_subtree(opt, stmt_ids_path, )
+
+    print(attention_path)
+    print(opt.pb_path)
+    generate_visualization(opt.pb_path,attention_path)
+
+    return softmax_values_data, argmax, str(correct_labels[0]), str(predictions[0])
 
 if __name__ == "__main__":
     main()
