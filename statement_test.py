@@ -14,16 +14,17 @@ from utils.dense_ggnn import DenseGGNNModel
 import os
 import sys
 
+import copy
 import operator
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
-def generate_visualization(pb_path, attention_path):
+def generate_visualization(pb_path, scaled_attention_path, output_path):
     # attention_path = os.path.join(pb_path.split(".")[0] + ".csv")
-    normal_html_path = os.path.join(pb_path.split(".")[0] + ".html")
-    normal_node_id_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast -H 0 -t -x " + attention_path + " " + pb_path  + " > " + normal_html_path
+    
+    normal_node_id_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast -H 0 -t -x " + scaled_attention_path + " " + pb_path  + " > " + output_path
     os.system(normal_node_id_cmd)
-    return normal_html_path
+    # return normal_html_path
 
 def generate_statement_file(pb_path):
     stmt_ids_path = os.path.join(pb_path.split(".")[0] + "_stmt_ids.txt")
@@ -80,7 +81,10 @@ def generate_files(opt):
     return pb_path
 
 def generate_subtree(opt, stmt_ids_path,  attention_score_dict):
-    pb_path = opt.path
+    # print(attention_score_dict)
+    # print(len(attention_score_dict.keys()))
+    clone_attention_score_dict = copy.deepcopy(attention_score_dict)
+    pb_path = opt.pb_path
     stmt_ids = []
     with open(stmt_ids_path,"r") as f:
         data = f.readlines()
@@ -88,28 +92,66 @@ def generate_subtree(opt, stmt_ids_path,  attention_score_dict):
             stmt_ids.append(line.replace("\n",""))
 
     for stmt_id in stmt_ids:
-        subtree_ids_path =   os.path.join(pb_path.split(".")[0] + "_subtree_" + str(stmt_id))
-        cmd = "docker run -v $(pwd):/e yijun/fast -CA " +  str(stmt_id) + " " + pb_path + " > " + subtree_ids_path        
-
+        subtree_ids_path =   os.path.join(pb_path.split(".")[0] + "_subtree_" + str(stmt_id) + ".csv")
+        generate_subtree_ids_cmd = "docker run -v $(pwd):/e yijun/fast -CA " +  str(stmt_id) + " " + pb_path + " > " + subtree_ids_path        
+        os.system(generate_subtree_ids_cmd)
+      
         with open(subtree_ids_path,"r") as f1:
             data = f1.readlines()
             subtree_score = 0
             for line in data:
-                subtree_score = line.replace("\n","")
+                subtree_id = int(line.replace("\n",""))
                 score = attention_score_dict[subtree_id]
                 subtree_score += score
 
             for line in data:
-                attention_score_dict[subtree_id] = subtree_score
+                subtree_id = int(line.replace("\n",""))
+                clone_attention_score_dict[subtree_id] = subtree_score
 
     attention_score_hierrachical_path = os.path.join(opt.test_file.split(".")[0] + "_hierarchical.csv")
-    for node_id, score in attention_score_dict.items():
+    print(clone_attention_score_dict)
+    if os.path.exists(attention_score_hierrachical_path):
+        os.remove(attention_score_hierrachical_path)
+    for node_id, score in clone_attention_score_dict.items():
         line = str(node_id) + "," + str(score)
+
         with open(attention_score_hierrachical_path,"a") as f2:
             f2.write(line)
-            f2.wrtie("\n")
+            f2.write("\n")
 
+    html_path = os.path.join(attention_score_hierrachical_path.split(".")[0] + "_hierarchical.html")
+    hierrachical_scaled_attention_path = os.path.join(opt.test_file.split(".")[0] + "_hierrachical_scaled.csv")
+
+    scaled_attention_scores(clone_attention_score_dict, hierrachical_scaled_attention_path)
+    generate_visualization(pb_path, hierrachical_scaled_attention_path, html_path)
     return attention_score_dict
+
+def scaled_attention_scores(attention_score_map, scaled_attention_output_path):
+    attention_score_sorted = sorted(attention_score_map.items(), key=operator.itemgetter(1))
+    attention_score_sorted.reverse()
+
+    node_ids = []
+    attention_scores = []
+    raw_attention_score_dict = {}
+    for element in attention_score_sorted:
+        node_ids.append(element[0])
+        attention_scores.append(element[1])
+        raw_attention_score_dict[element[0]] = element[1]
+    attention_score_scaled = scale_attention_score_by_group(attention_scores)
+
+    attention_score_scaled_map = {}
+    for i, score in enumerate(attention_score_scaled):
+        key = str(node_ids[i])
+        attention_score_scaled_map[key] = float(score)
+
+    # scaled_attention_path = os.path.join(opt.test_file.split(".")[0] + "_scaled.csv")
+    if os.path.exists(scaled_attention_output_path):
+        os.remove(scaled_attention_output_path)
+
+    with open(scaled_attention_output_path,"a") as f:
+        for k, v in attention_score_scaled_map.items():
+            f.write(str(k) + "," + str(v))
+            f.write("\n")
 
 def generate_attention_scores(opt, attention_scores):
     attention_score_map = {}
@@ -133,16 +175,25 @@ def generate_attention_scores(opt, attention_scores):
         key = str(node_ids[i])
         attention_score_scaled_map[key] = float(score)
 
-    attention_path = os.path.join(opt.test_file.split(".")[0] + ".csv")
-    if os.path.exists(attention_path):
-        os.remove(attention_path)
+    scaled_attention_path = os.path.join(opt.test_file.split(".")[0] + "_scaled.csv")
+    if os.path.exists(scaled_attention_path):
+        os.remove(scaled_attention_path)
 
-    with open(attention_path,"a") as f:
+    with open(scaled_attention_path,"a") as f:
         for k, v in attention_score_scaled_map.items():
             f.write(str(k) + "," + str(v))
             f.write("\n")
- 
-    return attention_path, raw_attention_score_dict
+
+    raw_attention_path = os.path.join(opt.test_file.split(".")[0] + "_raw.csv")
+    if os.path.exists(raw_attention_path):
+        os.remove(raw_attention_path)
+
+    with open(raw_attention_path,"a") as f:
+        for k, v in raw_attention_score_dict.items():
+            f.write(str(k) + "," + str(v))
+            f.write("\n")
+     
+    return scaled_attention_path, raw_attention_path, raw_attention_score_dict
 
 def fetch_data_from_github(filename):
     if not os.path.exists(os.path.dirname(filename)):
@@ -191,7 +242,7 @@ def main():
     pb_path = generate_files(opt)
 
     stmt_ids_path = generate_statement_file(pb_path)
-
+    opt.stmt_ids_path = stmt_ids_path
     statement_paths = delete_statements(stmt_ids_path, pb_path)
    
 
@@ -232,7 +283,7 @@ def main():
                 print('Var {}: {}'.format(i, var))
 
     
-            original_softmax_values_data, _, correct_label , prediction = making_prediction(test_dataset, ggnn, sess, opt)
+            original_softmax_values_data, _, correct_label , prediction = making_prediction(test_dataset, ggnn, sess, opt, True)
             statement_test_file = os.path.join(original_file + "_statement_test.csv")
             with open(statement_test_file,"a") as f:
                 line = original_file + ";" + str(original_softmax_values_data[0].tolist()) + ";" + correct_label + ";" + prediction + ";"
@@ -243,14 +294,14 @@ def main():
             for stmt_path in statement_paths:
                 opt.test_file = stmt_path
                 generate_files(opt)
-                # print("Test file : " + opt.test_file)
+               
                 test_dataset = MonoLanguageProgramData(opt, False, False, True)
                 opt.n_edge_types = test_dataset.n_edge_types
-                softmax_values_data, argmax, correct_label, prediction = making_prediction(test_dataset, ggnn, sess, opt)
+                softmax_values_data, argmax, correct_label, prediction = making_prediction(test_dataset, ggnn, sess, opt, False)
                 
                 delta = original_softmax_values_data[0][int(correct_label)] - softmax_values_data[0][int(correct_label)]
 
-                # statement_test_file = os.path.join(original_file + "_statement_test.csv")
+   
                 with open(statement_test_file,"a") as f:
                     line = stmt_path + ";" + str(softmax_values_data[0].tolist()) + ";" + correct_label + ";" + prediction + ";" + str(delta)
                     f.write(line)
@@ -258,7 +309,7 @@ def main():
 
     # print(train_dataset.bucketed)
 
-def making_prediction(test_dataset, ggnn, sess, opt):
+def making_prediction(test_dataset, ggnn, sess, opt, original=False):
 
      # For debugging purpose
     nodes_representation = ggnn.nodes_representation
@@ -301,13 +352,16 @@ def making_prediction(test_dataset, ggnn, sess, opt):
     print("Correct class " + str(correct_labels[0]))
     print("Predicted class : " + str(predictions[0]))
 
-    attention_path = generate_attention_scores(opt, attention_scores_data[0])
+    scaled_attention_path, raw_attention_path, raw_attention_score_dict = generate_attention_scores(opt, attention_scores_data[0])
 
-    generate_subtree(opt, stmt_ids_path, )
+    if original:
+        generate_subtree(opt, opt.stmt_ids_path, raw_attention_score_dict)
 
-    print(attention_path)
-    print(opt.pb_path)
-    generate_visualization(opt.pb_path,attention_path)
+    # print(attention_path)
+    # print(opt.pb_path)
+
+    html_path = os.path.join(scaled_attention_path.split(".")[0] + ".html")
+    generate_visualization(opt.pb_path,scaled_attention_path,html_path)
 
     return softmax_values_data, argmax, str(correct_labels[0]), str(predictions[0])
 

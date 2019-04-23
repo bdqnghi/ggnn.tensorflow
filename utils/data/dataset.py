@@ -272,6 +272,7 @@ def create_embedding_matrix(node_id_edges, node_type_edges, n_nodes, pretrained_
 
 def graph_to_adj_mat(graph, max_n_vertices, num_edge_types, tie_fwd_bkwd=True):
     bwd_edge_offset = 0 if tie_fwd_bkwd else (num_edge_types // 2)
+    # print("Num edge types : " + str(num_edge_types))
     amat = np.zeros((num_edge_types, max_n_vertices, max_n_vertices))
     # print(amat.shape)
     for src, e, dest in graph:
@@ -336,7 +337,8 @@ class MonoLanguageProgramData():
         print("Number of all data : " + str(len(all_data_node_id)))
         # else:
             # print("Number of all testing data : " + str(len(all_data_node_id)))
-        self.n_edge_types =  find_max_edge_id(all_data_node_id)
+        # self.n_edge_types =  find_max_edge_id(all_data_node_id)
+        self.n_edge_types = 7
         # print("Edge types : " + str(self.n_edge_types))
         max_node_id = find_max_node_id(all_data_node_id)
         min_node_id = find_min_node_id(all_data_node_id)
