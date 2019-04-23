@@ -84,6 +84,7 @@ def generate_subtree(opt, stmt_ids_path,  attention_score_dict):
     # print(attention_score_dict)
     # print(len(attention_score_dict.keys()))
     clone_attention_score_dict = copy.deepcopy(attention_score_dict)
+    subtree_score_dict = {}
     pb_path = opt.pb_path
     stmt_ids = []
     with open(stmt_ids_path,"r") as f:
@@ -108,6 +109,8 @@ def generate_subtree(opt, stmt_ids_path,  attention_score_dict):
                 subtree_id = int(line.replace("\n",""))
                 clone_attention_score_dict[subtree_id] = subtree_score
 
+            subtree_score_dict[int(stmt_id)] = subtree_score
+
     attention_score_hierrachical_path = os.path.join(opt.test_file.split(".")[0] + "_hierarchical.csv")
     print(clone_attention_score_dict)
     if os.path.exists(attention_score_hierrachical_path):
@@ -124,7 +127,7 @@ def generate_subtree(opt, stmt_ids_path,  attention_score_dict):
 
     scaled_attention_scores(clone_attention_score_dict, hierrachical_scaled_attention_path)
     generate_visualization(pb_path, hierrachical_scaled_attention_path, html_path)
-    return attention_score_dict
+    return clone_attention_score_dict, subtree_score_dict
 
 def scaled_attention_scores(attention_score_map, scaled_attention_output_path):
     attention_score_sorted = sorted(attention_score_map.items(), key=operator.itemgetter(1))
@@ -284,7 +287,12 @@ def main():
 
     
             original_softmax_values_data, _, correct_label , prediction = making_prediction(test_dataset, ggnn, sess, opt, True)
+            subtree_score_dict = opt.subtree_score_dict 
+
             statement_test_file = os.path.join(original_file + "_statement_test.csv")
+
+            if os.path.exists(statement_test_file):
+                os.remove(statement_test_file)
             with open(statement_test_file,"a") as f:
                 line = original_file + ";" + str(original_softmax_values_data[0].tolist()) + ";" + correct_label + ";" + prediction + ";"
                 f.write(line)
@@ -293,17 +301,22 @@ def main():
 
             for stmt_path in statement_paths:
                 opt.test_file = stmt_path
+
+                splits = stmt_path.split("_")
+                stmt_id = splits[len(splits)-1].replace(".csv","").replace(".java","")
+                score = subtree_score_dict[int(stmt_id)]
                 generate_files(opt)
                
                 test_dataset = MonoLanguageProgramData(opt, False, False, True)
                 opt.n_edge_types = test_dataset.n_edge_types
                 softmax_values_data, argmax, correct_label, prediction = making_prediction(test_dataset, ggnn, sess, opt, False)
                 
+                
+
                 delta = original_softmax_values_data[0][int(correct_label)] - softmax_values_data[0][int(correct_label)]
 
-   
                 with open(statement_test_file,"a") as f:
-                    line = stmt_path + ";" + str(softmax_values_data[0].tolist()) + ";" + correct_label + ";" + prediction + ";" + str(delta)
+                    line = stmt_path + ";" + str(softmax_values_data[0].tolist()) + ";" + correct_label + ";" + prediction + ";" + str(delta) + ";" + str(score)
                     f.write(line)
                     f.write("\n")
 
@@ -354,14 +367,14 @@ def making_prediction(test_dataset, ggnn, sess, opt, original=False):
 
     scaled_attention_path, raw_attention_path, raw_attention_score_dict = generate_attention_scores(opt, attention_scores_data[0])
 
-    if original:
-        generate_subtree(opt, opt.stmt_ids_path, raw_attention_score_dict)
-
-    # print(attention_path)
-    # print(opt.pb_path)
-
     html_path = os.path.join(scaled_attention_path.split(".")[0] + ".html")
     generate_visualization(opt.pb_path,scaled_attention_path,html_path)
+
+    if original:
+        modified_attention_score_dict, subtree_score_dict = generate_subtree(opt, opt.stmt_ids_path, raw_attention_score_dict)
+        opt.subtree_score_dict = subtree_score_dict
+    # print(attention_path)
+    # print(opt.pb_path)
 
     return softmax_values_data, argmax, str(correct_labels[0]), str(predictions[0])
 
