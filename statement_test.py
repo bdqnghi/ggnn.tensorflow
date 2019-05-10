@@ -75,7 +75,7 @@ def generate_pb(src_path):
     return pb_path
 
 def generate_files(opt):
-    generate_graph_files(opt)
+    # generate_graph_files(opt)
     pb_path = generate_pb(opt.test_file)
     opt.pb_path = pb_path
     return pb_path
@@ -242,7 +242,9 @@ def main():
     if not os.path.exists(opt.model_path):
         os.makedirs(opt.model_path)
     
+    generate_graph_files(opt)
     pb_path = generate_files(opt)
+    # generate_graph_files(opt)
 
     stmt_ids_path = generate_statement_file(pb_path)
     opt.stmt_ids_path = stmt_ids_path
@@ -305,20 +307,24 @@ def main():
                 splits = stmt_path.split("_")
                 stmt_id = splits[len(splits)-1].replace(".csv","").replace(".java","")
                 score = subtree_score_dict[int(stmt_id)]
-                generate_files(opt)
+
+                generate_graph_files(opt)
+
+                if os.stat(opt.test_graph_path).st_size != 0:
+                    generate_files(opt)
                
-                test_dataset = MonoLanguageProgramData(opt, False, False, True)
-                opt.n_edge_types = test_dataset.n_edge_types
-                softmax_values_data, argmax, correct_label, prediction = making_prediction(test_dataset, ggnn, sess, opt, False)
-                
-                
+                    test_dataset = MonoLanguageProgramData(opt, False, False, True)
+                    opt.n_edge_types = test_dataset.n_edge_types
+                    softmax_values_data, argmax, correct_label, prediction = making_prediction(test_dataset, ggnn, sess, opt, False)
+                    
+                    
 
-                delta = original_softmax_values_data[0][int(correct_label)] - softmax_values_data[0][int(correct_label)]
+                    delta = original_softmax_values_data[0][int(correct_label)] - softmax_values_data[0][int(correct_label)]
 
-                with open(statement_test_file,"a") as f:
-                    line = stmt_path + ";" + str(softmax_values_data[0].tolist()) + ";" + correct_label + ";" + prediction + ";" + str(delta) + ";" + str(score)
-                    f.write(line)
-                    f.write("\n")
+                    with open(statement_test_file,"a") as f:
+                        line = stmt_path + ";" + str(softmax_values_data[0].tolist()) + ";" + correct_label + ";" + prediction + ";" + str(delta) + ";" + str(score)
+                        f.write(line)
+                        f.write("\n")
 
     # print(train_dataset.bucketed)
 
@@ -335,6 +341,9 @@ def making_prediction(test_dataset, ggnn, sess, opt, original=False):
 
     correct_labels = []
     predictions = []
+
+    attention_scores_data = []
+    softmax_values_data = []
     print("--------------------------------------")
     print('Computing training accuracy...')
 
@@ -360,10 +369,10 @@ def making_prediction(test_dataset, ggnn, sess, opt, original=False):
         argmax = np.argmax(softmax_values_data,axis=1)
         predictions.extend(np.argmax(softmax_values_data,axis=1))
 
-    print("Probability : " + str(softmax_values_data))
-    print("Probability max : " + str(np.argmax(softmax_values_data,axis=1)))
-    print("Correct class " + str(correct_labels[0]))
-    print("Predicted class : " + str(predictions[0]))
+        print("Probability : " + str(softmax_values_data))
+        print("Probability max : " + str(np.argmax(softmax_values_data,axis=1)))
+        print("Correct class " + str(correct_labels))
+        print("Predicted class : " + str(predictions))
 
     scaled_attention_path, raw_attention_path, raw_attention_score_dict = generate_attention_scores(opt, attention_scores_data[0])
 
