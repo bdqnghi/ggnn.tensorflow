@@ -1,0 +1,17 @@
+###########################################################################
+# libssh2 installation details
+###########################################################################
+
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${prefix}/lib/x86_64-linux-gnu
+includedir=${prefix}/include
+
+Name: libssh2
+URL: http://www.libssh2.org/
+Description: Library for SSH-based communication
+Version: 1.5.0
+Requires.private: zlib
+Libs: -L${libdir} -lssh2
+Libs.private:  -lgcrypt -lgpg-error
+Cflags: -I${includedir}
