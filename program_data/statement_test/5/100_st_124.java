@@ -1,6 +1,3 @@
-void bubblesort(int arr[])
-        {
-            int n = arr.length;
-            
-     
-        
+void bubblesort(int arr[]) {
+    int n = arr.length;
+    
