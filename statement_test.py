@@ -84,7 +84,9 @@ def generate_files(opt):
 def generate_subtree(opt, stmt_ids_path,  attention_score_dict):
     # print(attention_score_dict)
     # print(len(attention_score_dict.keys()))
-    clone_attention_score_dict = copy.deepcopy(attention_score_dict)
+    # clone_attention_score_dict = copy.deepcopy(attention_score_dict)
+
+    clone_attention_score_dict = {}
     subtree_score_dict = {}
     pb_path = opt.pb_path
     stmt_ids = []
@@ -112,7 +114,7 @@ def generate_subtree(opt, stmt_ids_path,  attention_score_dict):
 
             subtree_score_dict[int(stmt_id)] = subtree_score
 
-    attention_score_hierrachical_path = os.path.join(opt.test_file.split(".")[0] + "_hierarchical.csv")
+    attention_score_hierrachical_path = os.path.join(opt.test_file.split(".")[0] + "_statement_attention_score.csv")
     print(clone_attention_score_dict)
     if os.path.exists(attention_score_hierrachical_path):
         os.remove(attention_score_hierrachical_path)
@@ -123,8 +125,8 @@ def generate_subtree(opt, stmt_ids_path,  attention_score_dict):
             f2.write(line)
             f2.write("\n")
 
-    html_path = os.path.join(attention_score_hierrachical_path.split(".")[0] + "_hierarchical.html")
-    hierrachical_scaled_attention_path = os.path.join(opt.test_file.split(".")[0] + "_hierrachical_scaled.csv")
+    html_path = os.path.join(opt.pb_path.split(".")[0] + "_statement_by_attention_visualization.html")
+    hierrachical_scaled_attention_path = os.path.join(opt.test_file.split(".")[0] + "_statement_attention_score_scaled.csv")
 
     scale_attention_scores(clone_attention_score_dict, hierrachical_scaled_attention_path)
     generate_visualization(pb_path, hierrachical_scaled_attention_path, html_path)
@@ -233,7 +235,7 @@ def main():
     parser.add_argument('--test_file', default="program_data/test_data/5/100_dead_code_1.java", help="test program")
     parser.add_argument('--n_classes', type=int, default=10, help='manual seed')
     parser.add_argument('--path', default="program_data/github_java_sort_function_babi", help='program data')
-    parser.add_argument('--model_path', default="model/sum_softmax_hidden_layer_size_200_num_hidden_layer_1_node_dim_200", help='path to save the model')
+    parser.add_argument('--model_path', default="model", help='path to save the model')
     parser.add_argument('--n_hidden', type=int, default=50, help='number of hidden layers')
     parser.add_argument('--size_vocabulary', type=int, default=59, help='maximum number of node types')
     parser.add_argument('--log_path', default="logs/" ,help='log path for tensorboard')
@@ -246,8 +248,7 @@ def main():
     if len(opt.argv) == 1:
         opt.test_file = opt.argv[0]
     # Create model path folder if not exists
-    if not os.path.exists(opt.model_path):
-        os.makedirs(opt.model_path)
+    opt.model_path = os.path.join(opt.model_path,"sum_softmax" + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer)) + "_node_dim_" + str(opt.node_dim)
     
     generate_graph_files(opt)
     pb_path = generate_files(opt)
@@ -258,23 +259,19 @@ def main():
     statement_paths, stmt_ids = delete_statements(stmt_ids_path, pb_path)
    
 
-    if not os.path.exists(opt.pretrained_embeddings_url):
-        fetch_data_from_github(opt.pretrained_embeddings_url)
+    # if not os.path.exists(opt.pretrained_embeddings_url):
+    #     fetch_data_from_github(opt.pretrained_embeddings_url)
     with gzip.open(opt.pretrained_embeddings_url, 'rb') as fh:
         embeddings, embed_lookup = pickle.load(fh,encoding='latin1')
         opt.pretrained_embeddings = embeddings
         opt.pretrained_embed_lookup = embed_lookup
 
     checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')    
-    for f in ['checkpoint', 'cnn_tree.ckpt.index', 'cnn_tree.ckpt.meta', 'cnn_tree.ckpt.data-00000-of-00001']:
-        filename = os.path.join(opt.model_path, f)
-        if not os.path.exists(filename):
-            fetch_data_from_github(filename)
-
     ckpt = tf.train.get_checkpoint_state(opt.model_path)
     
     test_dataset = MonoLanguageProgramData(opt, False, False, True)
-    opt.n_edge_types = test_dataset.n_edge_types
+    # opt.n_edge_types = test_dataset.n_edge_types
+    opt.n_edge_types = 7
 
     ggnn = DenseGGNNModel(opt)
 
@@ -298,9 +295,9 @@ def main():
             original_softmax_values_data, _, correct_label , prediction = making_prediction(test_dataset, ggnn, sess, opt, True)
             subtree_score_dict = opt.subtree_score_dict 
 
-            statement_test_file = os.path.join(original_file + "_statement_test.csv")
-            delta_score_file = os.path.join(original_file + "_delta_score.csv")
-            delta_visualization_file = os.path.join(original_file + "_delta_visualization.html")
+            statement_test_file = os.path.join(opt.pb_path.split(".")[0] + "_statement_test_results.csv")
+            delta_score_file = os.path.join(opt.pb_path.split(".")[0] + "_delta_score_scaled.csv")
+            delta_visualization_file = os.path.join(opt.pb_path.split(".")[0] + "_statement_by_delta_visualization.html")
 
             if os.path.exists(statement_test_file):
                 os.remove(statement_test_file)
@@ -344,6 +341,7 @@ def main():
 
                 subtree_ids_path =   os.path.join(pb_path.split(".")[0] + "_subtree_" + str(stmt_ids[i]) + ".csv")
                 # subtree_ids = []
+                delta_score_map[stmt_id] = delta
                 with open(subtree_ids_path, "r") as f1:
                     data = f1.readlines()
                     for line in data:

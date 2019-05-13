@@ -26,14 +26,18 @@ def generate_visualization(pb_path, attention_path):
     return normal_html_path
 
 def generate_graph_files(opt, path):
-    fbs_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast -S -G " + path + " " + path.split(".")[0] + ".fbs"
-    ggnn_cmd = "docker run -v $(pwd):/e --entrypoint ggnn -it yijun/fast " + path.split(".")[0] + ".fbs" + " " + path.split(".")[0] + "_train.txt" + " " + path.split(".")[0] + ".txt"
+    fbs_path = path.split(".")[0] + ".fbs"
+    graph_path = path.split(".")[0] + ".txt"
 
-    print(ggnn_cmd)
-    os.system(fbs_cmd)
-    os.system(ggnn_cmd)
+    if not os.path.exists(fbs_path):
+        fbs_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast -S -G " + path + " " + path.split(".")[0] + ".fbs"
+        ggnn_cmd = "docker run -v $(pwd):/e --entrypoint ggnn -it yijun/fast " + fbs_path + " " + path.split(".")[0] + "_train.txt" + " " + graph_path
 
-    opt.test_graph_path = path.split(".")[0] + ".txt"
+        print(ggnn_cmd)
+        os.system(fbs_cmd)
+        os.system(ggnn_cmd)
+
+    opt.test_graph_path = graph_path
 
 def generate_pb(src_path):
     print("Generating pb with src_path : " + src_path)
