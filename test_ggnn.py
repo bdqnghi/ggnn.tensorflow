@@ -19,7 +19,7 @@ parser.add_argument('--train_batch_size', type=int, default=10, help='input batc
 parser.add_argument('--test_batch_size', type=int, default=5, help='input batch size')
 parser.add_argument('--state_dim', type=int, default=30, help='GGNN hidden state dimension size')
 parser.add_argument('--node_dim', type=int, default=100, help='node dimension size')
-parser.add_argument('--hidden_layer_size', type=int, default=100, help='size of hidden layer')
+parser.add_argument('--hidden_layer_size', type=int, default=200, help='size of hidden layer')
 parser.add_argument('--num_hidden_layer', type=int, default=1, help='number of hidden layer')
 parser.add_argument('--n_steps', type=int, default=10, help='propogation steps number of GGNN')
 parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
@@ -39,9 +39,7 @@ parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretr
 opt = parser.parse_args()
 
 
-# Create model path folder if not exists
-if not os.path.exists(opt.model_path):
-    os.mkdir(opt.model_path)
+opt.model_path = os.path.join(opt.model_path,"sum_softmax" + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer)) + "_node_dim_" + str(opt.node_dim)
 
 
 def main(opt):

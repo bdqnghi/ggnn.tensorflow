@@ -44,9 +44,6 @@ opt = parser.parse_args()
 os.environ['CUDA_VISIBLE_DEVICES'] = opt.cuda
 
 print(opt)
-# Create model path folder if not exists
-if not os.path.exists(opt.model_path):
-    os.mkdir(opt.model_path)
 
 opt.model_path = os.path.join(opt.model_path,"sum_softmax" + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer)) + "_node_dim_" + str(opt.node_dim)
 

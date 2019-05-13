@@ -97,7 +97,7 @@ def main():
     parser.add_argument('--train_batch_size', type=int, default=10, help='input batch size')
     parser.add_argument('--test_batch_size', type=int, default=5, help='input batch size')
     parser.add_argument('--state_dim', type=int, default=30, help='GGNN hidden state dimension size')
-    parser.add_argument('--node_dim', type=int, default=200, help='node dimension size')
+    parser.add_argument('--node_dim', type=int, default=100, help='node dimension size')
     parser.add_argument('--hidden_layer_size', type=int, default=200, help='size of hidden layer')
     parser.add_argument('--num_hidden_layer', type=int, default=1, help='number of hidden layer')
     parser.add_argument('--n_steps', type=int, default=10, help='propogation steps number of GGNN')
@@ -108,7 +108,7 @@ def main():
     parser.add_argument('--test_file', default="program_data/test_data/5/100_dead_code_1.java", help="test program")
     parser.add_argument('--n_classes', type=int, default=10, help='manual seed')
     parser.add_argument('--path', default="program_data/github_java_sort_function_babi", help='program data')
-    parser.add_argument('--model_path', default="model/sum_softmax_hidden_layer_size_200_num_hidden_layer_1_node_dim_200", help='path to save the model')
+    parser.add_argument('--model_path', default="model", help='path to save the model')
     parser.add_argument('--n_hidden', type=int, default=50, help='number of hidden layers')
     parser.add_argument('--size_vocabulary', type=int, default=59, help='maximum number of node types')
     parser.add_argument('--log_path', default="logs/" ,help='log path for tensorboard')
@@ -118,26 +118,29 @@ def main():
     parser.add_argument('argv', nargs="+", help='filenames')
     opt = parser.parse_args()
 
+
+    opt.model_path = os.path.join(opt.model_path,"sum_softmax" + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer)) + "_node_dim_" + str(opt.node_dim)
+
     if len(opt.argv) == 1:
         opt.test_file = opt.argv[0]
     # Create model path folder if not exists
     if not os.path.exists(opt.model_path):
-        os.makedirs(opt.model_path)
+        print("Cannot find path : " + opt.model_path)
     
     generate_files(opt, opt.test_file)
 
-    if not os.path.exists(opt.pretrained_embeddings_url):
-        fetch_data_from_github(opt.pretrained_embeddings_url)
+    # if not os.path.exists(opt.pretrained_embeddings_url):
+    #     fetch_data_from_github(opt.pretrained_embeddings_url)
     with gzip.open(opt.pretrained_embeddings_url, 'rb') as fh:
         embeddings, embed_lookup = pickle.load(fh,encoding='latin1')
         opt.pretrained_embeddings = embeddings
         opt.pretrained_embed_lookup = embed_lookup
 
     checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')    
-    for f in ['checkpoint', 'cnn_tree.ckpt.index', 'cnn_tree.ckpt.meta', 'cnn_tree.ckpt.data-00000-of-00001']:
-        filename = os.path.join(opt.model_path, f)
-        if not os.path.exists(filename):
-            fetch_data_from_github(filename)
+    # for f in ['checkpoint', 'cnn_tree.ckpt.index', 'cnn_tree.ckpt.meta', 'cnn_tree.ckpt.data-00000-of-00001']:
+    #     filename = os.path.join(opt.model_path, f)
+    #     if not os.path.exists(filename):
+    #         fetch_data_from_github(filename)
 
     ckpt = tf.train.get_checkpoint_state(opt.model_path)
     
