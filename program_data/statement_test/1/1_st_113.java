@@ -1,8 +1,4 @@
-public static void insertionSort()
-    
-    {
+public static void insertionSort(){
     int i = 1;
-
-    
 
     
