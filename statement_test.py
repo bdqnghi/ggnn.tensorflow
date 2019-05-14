@@ -70,9 +70,9 @@ def generate_graph_files(opt):
 def generate_pb(src_path):
     print("Generating pb with src_path : " + src_path)
     pb_path = os.path.join(src_path.split(".")[0] + ".pb")
-    # if not os.path.exists(src_path):
-    cmd = "docker run --rm -v $(pwd):/e -it yijun/fast -p " + src_path + " " + pb_path
-    os.system(cmd)
+    if not os.path.exists(src_path):
+        cmd = "docker run --rm -v $(pwd):/e -it yijun/fast -p " + src_path + " " + pb_path
+        os.system(cmd)
     return pb_path
 
 def generate_files(opt):
