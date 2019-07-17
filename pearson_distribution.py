@@ -2,7 +2,6 @@ import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-import numpy as np
 import scipy.stats as stats
 import pylab as pl
 
