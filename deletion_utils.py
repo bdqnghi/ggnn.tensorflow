@@ -84,7 +84,7 @@ def fetch_data_from_github(filename):
     curl.close()
     fp.close()   
 
-def generate_statement_ids(pb_path):
+def generate_component_ids(pb_path):
     # Create model path folder if not exists
     
     # generate_graph_files(opt)
@@ -164,7 +164,7 @@ def generate_attention_scores(test_file_path, attention_scores):
 
 def compute_components_attention_score(subtrees_dict, raw_attention_scores_dict):
     # print(subtrees_dict)
-    # print(raw_attention_scores_dict)
+    print(raw_attention_scores_dict)
     component_scores_dict = {}
     for component_id, subtree_ids in subtrees_dict.items():
         component_scores_dict[component_id] = 0
@@ -216,8 +216,8 @@ def main():
     opt.pb_path = generate_pb_file(opt.test_file)
 
     # Generate statement id and subtree ids
-    stmt_ids = generate_statement_ids(opt.pb_path)
-    subtrees_dict = generate_subtrees(opt.pb_path, stmt_ids)
+    component_ids = generate_component_ids(opt.pb_path)
+    subtrees_dict = generate_subtrees(opt.pb_path, component_ids)
 
     # Init the model
     checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')    

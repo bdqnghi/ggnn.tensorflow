@@ -202,8 +202,8 @@ def main():
 
 
         print("Num target : " + str(len(correct_labels)))
-        print(correct_labels[0])
-        print(predictions[0])
+        print("True label : " + str(correct_labels[0]))
+        print("Predicted label : " + str(predictions[0]))
     
         attention_path = generate_attention_scores(opt, attention_scores_data[0])
         print(attention_path)
