@@ -55,7 +55,7 @@ def delete_component_with_ids(component_ids, pb_path):
     return delete_stmt_path_pb
 
 def find_top_b_components(component_scores_dict, beam_size, reverse=False):
-    # reverse = True mean top highest
+    # reverse = True for top highest, reverse = False for top lowest
     component_scores_dict_sorted = sorted(component_scores_dict.items(), key=operator.itemgetter(1), reverse=reverse)
     component_ids = []
     for c in component_scores_dict_sorted[:beam_size]:
@@ -94,53 +94,66 @@ def beam_search(opt, ggnn, sess, original_pb_path, component_scores_dict, correc
     for c in candidate_components:
         queue.append([c])
 
-        visited_nodes.append([c])
+        # visited_nodes.append(set([c]))
 
     while queue:
         visited_node = queue.pop(0)
         
+        print("Visited so far : " + str(visited_nodes))
+        print("Soluttions so far : " + str(solutions))
         ###################
-        temp_pb_path = delete_component_with_ids(visited_node,original_pb_path)
-        temp_raw_code_path = temp_pb_path.split(".")[0] + "_raw_temp" + ".java"
-        
-        fbs_path =  temp_pb_path.split(".")[0] + ".fbs"
-        graph_dumb = temp_pb_path.split(".")[0] + "_train.txt"
-        graph_path = temp_pb_path.split(".")[0] + ".txt"
+        if not check_if_node_visited(set(visited_node), visited_nodes):
+            temp_pb_path = delete_component_with_ids(visited_node,original_pb_path)
+            temp_raw_code_path = temp_pb_path.split(".")[0] + "_raw_temp" + ".java"
+            
+            fbs_path =  temp_pb_path.split(".")[0] + ".fbs"
+            graph_dumb = temp_pb_path.split(".")[0] + "_train.txt"
+            graph_path = temp_pb_path.split(".")[0] + ".txt"
 
-        component_to_code_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast" + " " + temp_pb_path + " " + temp_raw_code_path
-        fbs_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast -S -G " + temp_raw_code_path + " " + fbs_path
-        ggnn_cmd = "docker run -v $(pwd):/e --entrypoint ggnn -it yijun/fast " + fbs_path + " " + graph_dumb + " " + graph_path
-        os.system(component_to_code_cmd)
-        os.system(fbs_cmd)
-        os.system(ggnn_cmd)
-        predicted_label = making_prediction(graph_path, opt, ggnn, sess)
-        print("Label for components "  + str(visited_node) + " is " + str(predicted_label))
-        print("correct_label : " + str(correct_label))
-        ##################
+            component_to_code_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast" + " " + temp_pb_path + " " + temp_raw_code_path
+            fbs_cmd = "docker run --rm -v $(pwd):/e -it yijun/fast -S -G " + temp_raw_code_path + " " + fbs_path
+            ggnn_cmd = "docker run -v $(pwd):/e --entrypoint ggnn -it yijun/fast " + fbs_path + " " + graph_dumb + " " + graph_path
 
-        if int(correct_label) == int(predicted_label):
+            if not os.path.exists(temp_raw_code_path):
+                os.system(component_to_code_cmd)
 
-        
+            if os.stat(temp_raw_code_path).st_size > 0:
+                if not os.path.exists(fbs_path):
+                    os.system(fbs_cmd)
+                if not os.path.exists(graph_path):
+                    os.system(ggnn_cmd)
+                  
+                
+                predicted_label = making_prediction(graph_path, opt, ggnn, sess)
+                print("Label for components "  + str(visited_node) + " is " + str(predicted_label))
+                print("correct_label : " + str(correct_label))
+                ##################
+                if not check_if_node_visited(set(visited_node), visited_nodes):
+                    visited_nodes.append(set(visited_node))
 
-            temp_component_scores_dict = copy.deepcopy(component_scores_dict)
-            for s in visited_node:
-                temp_component_scores_dict.pop(s, None)
+                if int(correct_label) == int(predicted_label):
 
-            temp_candidate_components = find_top_b_components(temp_component_scores_dict, beam_size)
-            for component in temp_candidate_components:
-                # visited.append(component)
-                node = []
-                # Visiting the next node
-                node.extend(visited_node)
-                node.append(component)
+                    temp_component_scores_dict = copy.deepcopy(component_scores_dict)
+                    for s in visited_node:
+                        temp_component_scores_dict.pop(s, None)
 
-                # if not check_if_node_visited(set(node), visited_nodes):
-                queue.append(node)
-                visited_nodes.append(node)
+                    temp_candidate_components = find_top_b_components(temp_component_scores_dict, beam_size)
+                    for component in temp_candidate_components:
+                        # visited.append(component)
+                        node = []
+                        # Visiting the next node
+                        node.extend(visited_node)
+                        node.append(component)
 
-        else:
-            solutions.append(visited_node)
+                        # if not check_if_node_visited(set(node), visited_nodes):
+                        queue.append(node)
 
+                       
+
+                else:
+                    solutions.append(visited_node)
+
+    print("All solutions.........")
     print(solutions)
 
     longest_solution = max(solutions, key=len)
