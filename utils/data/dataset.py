@@ -378,7 +378,7 @@ class MonoLanguageProgramData():
             # print("--------------")
             graph = self.all_data_node_id[i][0]
             label = self.all_data_node_id[i][1]
-            print(label)
+            # print(label)
 
             label_one_hot = self.label_lookup[label-1]
 
