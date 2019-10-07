@@ -115,84 +115,110 @@ def if_node_contains_use(node):
     # return all_parent_child, num_nodes
 
 def _traverse_tree(root):
-    num_nodes = 1
-    queue = [root]
+    num_nodes = 0
+    queue = [(root,0)]
 
-    root_json = {
-        "node": str(root.kind),
-
-        "children": []
-    }
-    queue_json = [root_json]
-    while queue:
-      
-        current_node = queue.pop(0)
-        num_nodes += 1
-        # print (_name(current_node))
-        current_node_json = queue_json.pop(0)
-
-
-        children = [x for x in current_node.child]
-        queue.extend(children)
-       
-        for child in children:
-            # print "##################"
-            #print child.kind
-
-            child_json = {
-                "node": str(child.kind),
-                "children": []
-            }
-
-            current_node_json['children'].append(child_json)
-            queue_json.append(child_json)
-  
-    return root_json, num_nodes
-
-
-def traverse(tree):
-    nodes = []
-    children = []
+    children_ids = []
     children_types = []
     parent_ids = []
     parent_types = []
-    queue = [(tree, -1)]
-    # print queue
-    while queue:
-        # print "############"
-        node, parent_id = queue.pop(0)
-        print("type :" + str(node["node"]))
-        # print node
-        # print parent_ind
-        node_id = len(nodes)
-        parent_ids.append(node_id)
-        # parent_types.append(node)
 
-        # print "node ind : " + str(node_ind)
-        # add children and the parent index to the queue
-        queue.extend([(child, node_id) for child in node['children']])
-        # create a list to store this node's children indices
-        children.append([])
-        # add this child to its parent's child list
-        if parent_id > -1:
-            children[parent_id].append(node_id)
-        print(len(nodes))
-        nodes.append(1)
+    use_count = 0
+    def_count = 0 
+    def_dict = {}
+    use_dict = {}
+    line_dict = {}
+
+    def_map = {}
+    use_map = {}
+    while queue:
+      
+        current_node, parent_id = queue.pop(0)
+ 
+        node_id = num_nodes
+
+        parent_types.append(current_node.kind)
+
+        queue.extend([(child, node_id) for child in current_node.child])
         
-    
-    print("-------")
-    print(len(parent_ids))
-    print(parent_ids)
-    print(len(children))
-    print(children)
+        children_ids.append([])
+        children_types.append([])
+        
+
+        children_ids[parent_id].append(node_id)
+        children_types[parent_id].append(current_node.kind)
+        
+        if(if_node_contains_def(current_node)):
+            def_count +=1
+            # print current_node
+            def_node = extract_def(current_node)
+            def_key =def_node.text
+          
+            if def_key in def_dict:
+
+                value = def_dict[def_key]
+                value.append(current_node)
+                def_dict[def_key] = value
+            else:
+                arr = []
+                arr.append(current_node)
+                def_dict[def_key] = arr
+
+
+        if(if_node_contains_use(current_node)):
+            use_count +=1
+            # print current_node
+            use_node = extract_use(current_node)
+            use_key = use_node.text
+          
+            if use_key in use_dict:
+
+                value = use_dict[use_key]
+                value.append(current_node)
+                use_dict[use_key] = value
+            else:
+                arr = []
+                arr.append(current_node)
+                use_dict[use_key] = arr
+
+
+
+        num_nodes += 1
+
+    # print(def_dict)
+    # print("--------------")
+    # print(use_dict)
+    # for def_key, def_tree in def_dict.items():
+    #     for use_key, use_tree in use_dict.items():
+    #         if def_key == use_key:
+    #             print("----------------")
+    #             print(def_tree)
+    #             print("#####")
+    #             print(use_tree)
+
+    for def_key, def_tree in def_dict.items():
+        print(len(def_tree))
+
+    for use_key, use_tree in use_dict.items():
+        print(len(use_tree))
     # print(parent_types)
+    # print(parent_ids)
+    # print(children_ids)
+    # print(children_types)
+    # print(len(parent_types))
+    # print(len(parent_ids))
+    # print(len(children_ids))
+    # return root_json, num_nodes
+
 
 data = build_tree(file_path)
 root = data.element
-
-tree, num_nodes = _traverse_tree(root)
+# print(root)
+_traverse_tree(root)
+# tree, num_nodes = _traverse_tree(root)
 # print(tree)
-traverse(tree)
+# print(tree)
+# traverse(tree)
 # root_node = Node("1", 1, root.kind)
 # print(root_node)
 # ids, all_parent_child, num_nodes = traverse_tree(root, root_node)
