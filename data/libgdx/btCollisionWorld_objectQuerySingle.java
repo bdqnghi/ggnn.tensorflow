@@ -1,0 +1,3 @@
+public static void objectQuerySingle(btConvexShape castShape, Matrix4 rayFromTrans, Matrix4 rayToTrans, btCollisionObject collisionObject, btCollisionShape collisionShape, Matrix4 colObjWorldTransform, ConvexResultCallback resultCallback, float allowedPenetration) {
+    CollisionJNI.btCollisionWorld_objectQuerySingle(btConvexShape.getCPtr(castShape), castShape, rayFromTrans, rayToTrans, btCollisionObject.getCPtr(collisionObject), collisionObject, btCollisionShape.getCPtr(collisionShape), collisionShape, colObjWorldTransform, ConvexResultCallback.getCPtr(resultCallback), resultCallback, allowedPenetration);
+}

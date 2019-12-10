@@ -1,0 +1,14 @@
+private void putStash(K key, V value) {
+    if (stashSize == stashCapacity) {
+        // Too many pushes occurred and the stash is full, increase the table size.
+        resize(capacity << 1);
+        put_internal(key, value);
+        return;
+    }
+    // Store key in the stash.
+    int index = capacity + stashSize;
+    keyTable[index] = key;
+    valueTable[index] = value;
+    stashSize++;
+    size++;
+}

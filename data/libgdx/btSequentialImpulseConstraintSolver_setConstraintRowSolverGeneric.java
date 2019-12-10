@@ -1,0 +1,3 @@
+public void setConstraintRowSolverGeneric(SWIGTYPE_p_f_r_btSolverBody_r_btSolverBody_r_q_const__btSolverConstraint__btSimdScalar rowSolver) {
+    DynamicsJNI.btSequentialImpulseConstraintSolver_setConstraintRowSolverGeneric(swigCPtr, this, SWIGTYPE_p_f_r_btSolverBody_r_btSolverBody_r_q_const__btSolverConstraint__btSimdScalar.getCPtr(rowSolver));
+}

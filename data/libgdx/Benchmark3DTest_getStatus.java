@@ -1,0 +1,35 @@
+protected void getStatus(final StringBuilder stringBuilder) {
+    stringBuilder.setLength(0);
+    stringBuilder.append("GL calls: ");
+    stringBuilder.append(GLProfiler.calls);
+    glCallsLabel.setText(stringBuilder);
+    stringBuilder.setLength(0);
+    stringBuilder.append("Draw calls: ");
+    stringBuilder.append(GLProfiler.drawCalls);
+    drawCallsLabel.setText(stringBuilder);
+    stringBuilder.setLength(0);
+    stringBuilder.append("Shader switches: ");
+    stringBuilder.append(GLProfiler.shaderSwitches);
+    shaderSwitchesLabel.setText(stringBuilder);
+    stringBuilder.setLength(0);
+    stringBuilder.append("Texture bindings: ");
+    stringBuilder.append(GLProfiler.textureBindings);
+    textureBindsLabel.setText(stringBuilder);
+    stringBuilder.setLength(0);
+    stringBuilder.append("Vertices: ");
+    stringBuilder.append(GLProfiler.vertexCount.total);
+    vertexCountLabel.setText(stringBuilder);
+    DirectionalLightsAttribute dirLights = (DirectionalLightsAttribute) environment.get(DirectionalLightsAttribute.Type);
+    PointLightsAttribute pointLights = (PointLightsAttribute) environment.get(PointLightsAttribute.Type);
+    stringBuilder.setLength(0);
+    stringBuilder.append("Lights: ");
+    stringBuilder.append((dirLights == null ? 0 : dirLights.lights.size) + (pointLights == null ? 0 : pointLights.lights.size));
+    stringBuilder.append(", Directional: ");
+    stringBuilder.append(dirLights == null ? 0 : dirLights.lights.size);
+    stringBuilder.append(", Point: ");
+    stringBuilder.append(pointLights == null ? 0 : pointLights.lights.size);
+    lightsLabel.setText(stringBuilder);
+    GLProfiler.reset();
+    stringBuilder.setLength(0);
+    super.getStatus(stringBuilder);
+}

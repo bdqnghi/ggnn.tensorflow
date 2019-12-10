@@ -1,0 +1,3 @@
+public float solveGroup(SWIGTYPE_p_p_btCollisionObject bodies, int numBodies, SWIGTYPE_p_p_btPersistentManifold manifold, int numManifolds, SWIGTYPE_p_p_btTypedConstraint constraints, int numConstraints, btContactSolverInfo info, btIDebugDraw debugDrawer, btDispatcher dispatcher) {
+    return DynamicsJNI.btConstraintSolver_solveGroup(swigCPtr, this, SWIGTYPE_p_p_btCollisionObject.getCPtr(bodies), numBodies, SWIGTYPE_p_p_btPersistentManifold.getCPtr(manifold), numManifolds, SWIGTYPE_p_p_btTypedConstraint.getCPtr(constraints), numConstraints, btContactSolverInfo.getCPtr(info), info, btIDebugDraw.getCPtr(debugDrawer), debugDrawer, btDispatcher.getCPtr(dispatcher), dispatcher);
+}

@@ -1,0 +1,3 @@
+void onOK() {
+    setVisible(false);
+}

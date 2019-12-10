@@ -1,0 +1,3 @@
+public void setNearCallback(SWIGTYPE_p_f_r_btBroadphasePair_r_btCollisionDispatcher_r_q_const__btDispatcherInfo__void nearCallback) {
+    CollisionJNI.btCollisionDispatcher_setNearCallback(swigCPtr, this, SWIGTYPE_p_f_r_btBroadphasePair_r_btCollisionDispatcher_r_q_const__btDispatcherInfo__void.getCPtr(nearCallback));
+}
