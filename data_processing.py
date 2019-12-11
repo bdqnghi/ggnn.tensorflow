@@ -2,7 +2,13 @@ import os
 from concurrent.futures import ProcessPoolExecutor
 import copy
 import sys
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--worker", default=10, type=int, help="Num worker")
+parser.add_argument("--path", required=True, type=str, help="Path")
+
+args = parser.parse_args()
 
 
 def generate_fbs(src_path, tgt_path):
@@ -21,9 +27,10 @@ def execute(raw_path, fbs_path, graph_path):
 
 def main():
 	
-	path = sys.argv[1]
+	path = args.path
+	worker = args.worker
 	
-	with ProcessPoolExecutor(max_workers=20) as executor:   
+	with ProcessPoolExecutor(max_workers=worker) as executor:   
 		for subdir , dirs, files in os.walk(path):
 			for file in files:
 				if file.endswith(".java"):
@@ -31,10 +38,10 @@ def main():
 					splits = raw_file_path.split("/")
 
 					splits_fbs = copy.deepcopy(splits)
-					splits_fbs[len(splits_fbs)-4] = "java_small_fbs"
+					splits_fbs[len(splits_fbs)-4] = "java-small-fbs"
 
 					splits_graph = copy.deepcopy(splits)
-					splits_graph[len(splits_graph)-4] = "java_small_graph"
+					splits_graph[len(splits_graph)-4] = "java-small-graph"
 
 					splits_fbs_dir = "/".join(splits_fbs[:len(splits_fbs)-1])
 					splits_graph_dir = "/".join(splits_graph[:len(splits_graph)-1])
