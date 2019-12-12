@@ -83,8 +83,11 @@ def main(opt):
       
         batch_iterator = ThreadedIterator(test_dataset.make_minibatch_iterator(), max_queue_size=5)
         for step, batch_data in enumerate(batch_iterator):
-            # print(batch_data["labels"])
-
+            print("------------")
+            print(batch_data["labels"])
+            print(batch_data["labels"].shape)
+            for label in batch_data["labels"]:
+                print(type(label))
             softmax_values_data = sess.run(
                 [softmax_values],
                 feed_dict={

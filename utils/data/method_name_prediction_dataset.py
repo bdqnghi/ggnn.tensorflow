@@ -45,81 +45,84 @@ def lookup_vector(node_type, embeddings):
     nodes.append(embeddings[int(n)])
 
 
-def load_program_graphs_from_directory(directory, is_training=True, is_testing=True, n_classes=3):
+def process_token(token):
+    excluded_tokens = [",","{",";","}",")","(",'"',"'","`",""," "]
+    for t in excluded_tokens:
+        token = token.replace(t,"")
+    return token
+
+def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup, node_token_lookup, is_training=True, is_testing=True):
 
     node_id_data_list = []
     node_type_data_list = []
-    if is_training == True:
-        dir_path =  os.path.join(directory,"train")
-    if is_testing == True:
-        dir_path =  os.path.join(directory,"test")
-    filenames = []
-    for f in listdir(dir_path):
-      if isfile(join(dir_path, f)):
-         filenames.append(f)
-    int_filenames = [int(re.search('_(.*).txt', x).group(1)) for x in filenames]
-    ordered_filenames = sorted(int_filenames)
-    lookup = {}
-    for i in range(1, 1+len(ordered_filenames)):
-        if is_training:
-           lookup[i] = join(dir_path, "train_%s.txt" % str(ordered_filenames[i-1]))
-        if is_testing:
-           lookup[i] = join(dir_path, "test_%s.txt" % str(ordered_filenames[i-1]))
-    for i in trange(1, 1+n_classes):
-        path = lookup[i]
-        print(path)
-        label = i
-        node_id_data_list_class_i = []
-        node_type_data_list_class_i = []
-        node_id_edge_list_class_i = []
-        node_type_edge_list_class_i = []
-        target_list_class_i = []
+    node_token_data_list = []
+    print(directory)
+    for subdir , dirs, files in os.walk(directory):
+        for file in files:
+            print(file)
+            raw_file_path = os.path.join(subdir,file)
+            name_splits = file.split(".")
+            method_name = name_splits[0].split("_")[1]
+            label_id = int(label_lookup[method_name])
+            with open(raw_file_path,"r") as f:
+                lines = f.readlines()
+                node_id_edge_per_class = []
+                node_type_edge_per_class = []
+                node_token_edge_per_class = []
+                for line in lines:
+                    try:
+                        line = line.replace("\n","")
+                        line = line.replace("'","")
+                        line = " ".join(line.split())
 
-        # print("--------------------------")
-        with open(path,'r') as f:
-            for line in f: 
-                if len(line.strip()) == 0:
-                    # print(edge_list_class_i)
-                    node_id_data_list_class_i.append([node_id_edge_list_class_i,target_list_class_i])
-                    node_type_data_list_class_i.append([node_type_edge_list_class_i,target_list_class_i])
-                    node_id_edge_list_class_i = []
-                    node_type_edge_list_class_i = []
-                    target_list_class_i = []
-                else:
-                    node_id_digits = []
-                    node_type_digits = []
-                    line_tokens = line.split(" ")
-                    
-                    if line_tokens[0] == "?":
-                        # print(label)
-                        target_list_class_i.append([label])
-                    else:
+                        splits = line.split(" ")
+                        source = splits[0]
+                        edge = splits[1]
+                        sink = splits[2]
 
-                        for j in range(len(line_tokens)):
-                            if "," in line_tokens[j]:
-                                splits = line_tokens[j].split(",")
-                                node_id = splits[0]
-                                node_type = splits[1]
-                                node_id_digits.append(int(node_id))
-                                node_type_digits.append(int(node_type))
-                            else:
-                                node_id_digits.append(int(line_tokens[j]))
-                                node_type_digits.append(int(line_tokens[j]))
+                        source_splits = source.split(",")
+                        source_node_id = source_splits[0].split(":")[0]
+                        source_node_type = source_splits[0].split(":")[1]
+                        source_node_type_id = node_type_lookup[source_node_type]
 
-                        node_id_edge_list_class_i.append(node_id_digits)
-                        node_type_edge_list_class_i.append(node_type_digits)
+                        source_token = "captain_america"
+                        sink_token = "captain_america"
 
-        # if data_percentage < 1.0:
-        #     print("Cutting down " + str(data_percentage) + " of all data......")
-        #     slicing = int(len(node_id_data_list_class_i)*data_percentage)
-        #     print("Remaining data : " + str(slicing) + "......")
-        #     node_id_data_list_class_i = node_id_data_list_class_i[:slicing]
+                        if len(source_splits) == 2:
+                            source_token = source_splits[1]
+                            source_token = process_token(source_token)
+
+                        sink_splits = sink.split(",")
+                        sink_node_id = sink_splits[0].split(":")[0]
+                        sink_node_type = sink_splits[0].split(":")[1]
+                        sink_node_type_id = node_type_lookup[sink_node_type]
+                        if len(sink_splits) == 2:
+                            sink_token = sink_splits[1]
+                            sink_token = process_token(sink_token)
+
+                        source_token_id = node_token_lookup[source_token]
+                        sink_token_id = node_token_lookup[sink_token]
+
+                        node_id_edge = [int(source_node_id), int(edge), int(sink_node_id)]
+                        node_type_edge = [int(source_node_type_id), int(edge), int(sink_node_type_id)]
+                        node_token_edge = [int(source_token_id), int(edge), int(sink_token_id)]
+
+                        # node_id_edge_with_label = [node_id_edge, [label_id]]
+                        # node_type_edge_with_label = [node_type_edge, [label_id]]
+                        # node_token_edge_with_label = [node_token_edge, [label_id]]
+
+                        node_id_edge_per_class.append(node_id_edge)
+                        node_type_edge_per_class.append(node_type_edge)
+                        node_token_edge_per_class.append(node_token_edge)
+                    except Exception as e:
+                        print(e)
 
 
-        node_id_data_list.extend(node_id_data_list_class_i)
-        node_type_data_list.extend(node_type_data_list_class_i)
-
-    return node_id_data_list, node_type_data_list
+            node_id_data_list.append([node_id_edge_per_class, label_id])
+            node_type_data_list.append([node_type_edge_per_class, label_id])
+            node_token_data_list.append([node_token_edge_per_class, label_id])
+       
+    return node_id_data_list, node_type_data_list, node_token_data_list
 
 def load_single_program(path):
   
@@ -169,6 +172,7 @@ def load_single_program(path):
 
                     node_id_edge_list_class_i.append(node_id_digits)
                     node_type_edge_list_class_i.append(node_type_digits)
+    print(node_id_data_list_class_i)
     return node_id_data_list_class_i, node_type_data_list_class_i
 
 def find_max_edge_id(data_list):
@@ -237,11 +241,8 @@ def convert_program_data(data_list):
  
     for item in data_list:
         edge_list = item[0]
-        target_list = item[1]
-        for target in target_list:
-            task_type = target[0]
-            task_output = target[-1]
-            class_data_list.append([edge_list, task_output])
+        target = item[1]
+        class_data_list.append([edge_list, target])
     return class_data_list
 
 
@@ -288,79 +289,52 @@ def _onehot(i, total):
     return [1.0 if j == i else 0.0 for j in range(total)]
 
    
-class MonoLanguageProgramData():
+class MethodNamePredictionData():
    
     def __init__(self, opt, is_training=True, is_testing=False, live_test=False):
 
-        self.node_dim = opt.node_dim
+        # self.node_dim = opt.node_dim
         self.state_dim = opt.state_dim
 
         self.is_training = is_training
         self.is_testing = is_testing
 
-        if live_test:
        
-
-            all_data_node_id, all_data_node_type = load_single_program(opt.test_graph_path)
-            all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
-            all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
-
-        else:      
-            base_name = os.path.basename(opt.path)
+            
            
-            if is_training:
-                saved_input_filename = "%s/%s-%d-train.pkl" % (opt.path, base_name, opt.n_classes)
-            if is_testing:
-                saved_input_filename = "%s/%s-%d-test.pkl" % (opt.path, base_name, opt.n_classes)
+        all_data_node_id, all_data_node_type, all_data_node_token = load_program_graphs_from_directory(opt.path, opt.label_lookup, opt.node_type_lookup, opt.node_token_lookup, is_training, is_testing)
+        all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
+        all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
+        all_data_node_token = np.array(all_data_node_token)[0:len(all_data_node_token)]
 
-            if os.path.exists(saved_input_filename): 
-               input_file = open(saved_input_filename, 'rb')
-               buf = input_file.read()
-               all_data_node_id, all_data_node_type = pyarrow.deserialize(buf)
-               input_file.close()
-            else:
-               all_data_node_id, all_data_node_type = load_program_graphs_from_directory(opt.path, is_training, is_testing, opt.n_classes)
-               all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
-               all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
-               buf = pyarrow.serialize((all_data_node_id, all_data_node_type)).to_buffer()
-               out = pyarrow.OSFile(saved_input_filename, 'wb')
-               out.write(buf)
-               out.close()
-        
-        self.pretrained_embeddings = opt.pretrained_embeddings
-        self.batch_size = opt.train_batch_size
+        # print(all_data_node_id)
+        print(all_data_node_type.shape)
+        print(all_data_node_token)
 
-        label_lookup = {label: _onehot(label, opt.n_classes) for label in range(0, opt.n_classes)}
+        num_labels = len(opt.label_lookup.keys())
+        self.num_labels = num_labels
+        label_lookup_onehot = {label: _onehot(label, num_labels) for label in range(0, num_labels)}
 
-        self.label_lookup = label_lookup
-        # if is_train == True:
-        print("Number of all data : " + str(len(all_data_node_id)))
-        # else:
-            # print("Number of all testing data : " + str(len(all_data_node_id)))
-        # self.n_edge_types =  find_max_edge_id(all_data_node_id)
-        self.n_edge_types = 7
-        # print("Edge types : " + str(self.n_edge_types))
+        self.label_lookup_onehot = label_lookup_onehot
+
         max_node_id = find_max_node_id(all_data_node_id)
         min_node_id = find_min_node_id(all_data_node_id)
         print("Max node id in data : " + str(max_node_id))
         print("Min node id in data : " + str(min_node_id))
-        max_node_type = find_max_node_id(all_data_node_type)
-        min_node_type = find_min_node_id(all_data_node_type)
-        print("Max node type in data : " + str(max_node_type))
-        print("Min node type in data : " + str(min_node_type))
-        # print("Max node id : " + str(max_node_id))
-        # print("Max node type : " + str(max_node_type))
-    
-        self.n_node_by_id = max_node_id
-        self.n_node_by_type = max_node_type
-        
-        all_data_node_id = convert_program_data(all_data_node_id)
-        all_data_node_type = convert_program_data(all_data_node_type)
+
+
+        self.n_edge_types = 7
+        # all_data_node_id = convert_program_data(all_data_node_id)
+        # all_data_node_type = convert_program_data(all_data_node_type)
 
         self.all_data_node_id = all_data_node_id
         self.all_data_node_type = all_data_node_type
+        self.all_data_node_token = all_data_node_token
 
         self.data = self.process_raw_graphs()
+        self.batch_size = opt.batch_size
+      
+
     
 
     # ----- Data preprocessing and chunking into minibatches:
@@ -379,10 +353,11 @@ class MonoLanguageProgramData():
             graph = self.all_data_node_id[i][0]
             label = self.all_data_node_id[i][1]
             # print(label)
-
-            label_one_hot = self.label_lookup[label-1]
+            print(label)
+            label_one_hot = self.label_lookup_onehot[label]
 
             graph_node_type = self.all_data_node_type[i][0]
+            graph_node_token = self.all_data_node_token[i][0]
             
 
             # print(max([v for e in d['graph'] for v in [e[0], e[2]]]))
@@ -394,27 +369,36 @@ class MonoLanguageProgramData():
             num_nodes = find_num_nodes_of_graph(graph)
 
             # print("max node : " + str(num_nodes))
-            node_inits = np.zeros([num_nodes+1, 30])
+            # node_inits = np.zeros([num_nodes+1, 30])
 
             # print(node_inits.shape)
+            print(num_nodes)
+            node_type_indices = np.zeros(num_nodes + 1, dtype = int)
+            node_token_indices = np.zeros(num_nodes + 1, dtype = int)
             for k in range(len(graph)):
                 src_node_type = graph_node_type[k][0]
-                # print(src_node_type)
                 tgt_node_type = graph_node_type[k][2]
-                # print(node_type)
+
+                src_node_token = graph_node_token[k][0]
+                tgt_node_token = graph_node_token[k][2]
+              
                 src_node_id = graph[k][0]
                 tgt_node_id = graph[k][2]
+
+                node_type_indices[int(src_node_id-1)] = int(src_node_type)
+                node_type_indices[int(src_node_id-1)] = int(tgt_node_type)
+
+                node_token_indices[int(src_node_id-1)] = int(src_node_token)
+                node_token_indices[int(src_node_id-1)] = int(tgt_node_token)
                 # print("SRC node id : " + str(src_node_id))
 
 
-                node_inits[int(src_node_id)] = self.pretrained_embeddings[int(src_node_type)]
-                node_inits[int(tgt_node_id)] = self.pretrained_embeddings[int(tgt_node_type)]
-
             # adj_mat': graph_to_adj_mat(graph, chosen_bucket_size, self.n_edge_types, True),
-
+            print(node_type_indices)
             buckets[chosen_bucket_idx].append({
                 "graph": graph,
-                "init": node_inits,
+                "node_type_indices": node_type_indices,
+                "node_token_indices": node_token_indices,
                 "labels": label_one_hot
             })
 
@@ -472,7 +456,7 @@ class MonoLanguageProgramData():
 
 
     def make_batch(self, elements):
-        batch_data = {'adjacency_matrix': [], 'init': [], 'labels': []}
+        batch_data = {'adjacency_matrix': [], 'node_type_indices': [], "node_token_indices": [],  'labels': []}
 
         # find graph which has the largest number of nodes in batch
         max_node = find_num_nodes_of_graph(elements[0]["graph"])
@@ -485,13 +469,14 @@ class MonoLanguageProgramData():
         for d in elements:
             adjacency_matrix = graph_to_adj_mat(d["graph"], max_node + 1, self.n_edge_types, True)
             batch_data['adjacency_matrix'].append(adjacency_matrix)
-            batch_data['init'].append(d['init'])
+            batch_data['node_type_indices'].append(d['node_type_indices'])
+            batch_data['node_token_indices'].append(d['node_token_indices'])
             batch_data['labels'].append(d['labels'])
 
-        batch_data["init"] = self.pad_batch(batch_data['init'], max_node + 1)
+        # batch_data["init"] = self.pad_batch(batch_data['init'], max_node + 1)
      
         batch_data['adjacency_matrix'] = np.array(batch_data['adjacency_matrix'])[0:len(batch_data['adjacency_matrix'])]
-        batch_data['init'] = np.array(batch_data['init'])[0:len(batch_data['init'])]
+        # batch_data['init'] = np.array(batch_data['init'])[0:len(batch_data['init'])]
         
         batch_data['labels'] = np.array(batch_data['labels'])[0:len(batch_data['labels'])]
 
@@ -520,13 +505,12 @@ class MonoLanguageProgramData():
                 samples += 1
                 if (samples >= self.batch_size) or ((i == len(bucket_data)-1)):
                     batch_data, batch_max_node = self.make_batch(elements)
-                    num_graphs = len(batch_data['init'])
-                    initial_representations = batch_data['init']
-                    initial_representations = self.pad_annotations(initial_representations)
+                    num_graphs = len(batch_data['node_type_indices'])
                     # print(initial_representations.shape)
                     batch = {
-                        "initial_representations": initial_representations,
                         "num_graphs": num_graphs,
+                        "node_type_indices": batch_data['node_type_indices'],
+                        "node_token_indices": batch_data['node_token_indices'],
                         "num_vertices": batch_max_node + 1,
                         "adjacency_matrix": batch_data['adjacency_matrix'],
                         "labels": batch_data['labels']
