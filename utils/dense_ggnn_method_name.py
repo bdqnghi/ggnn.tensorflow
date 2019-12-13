@@ -39,7 +39,7 @@ v:      number of vertices per graph in this batch
 h:      GNN hidden size
 '''
 
-class DenseGGNNModel2():
+class DenseGGNNModel():
     def __init__(self, opt):
         self.batch_size = opt.batch_size
         self.node_token_dim = opt.node_token_dim
@@ -53,7 +53,7 @@ class DenseGGNNModel2():
         self.num_hidden_layer = opt.num_hidden_layer
         self.aggregation_type = opt.aggregation
         self.distributed_function = opt.distributed_function
-        self.num_labels = 10
+        self.num_labels = opt.num_labels
         self.num_edge_types = opt.n_edge_types
         self.num_timesteps= opt.n_steps
         self.placeholders = {}
@@ -81,7 +81,7 @@ class DenseGGNNModel2():
 
     def prepare_specific_graph_model(self) -> None:
         node_dim = self.node_dim
-        self.placeholders['labels'] = tf.placeholder(tf.int32, (None, self.num_labels))
+        
         # initializer = tf.contrib.layers.xavier_initializer()
         # inputs
         # self.placeholders['graph_state_keep_prob'] = tf.placeholder(tf.float32, None, name='graph_state_keep_prob')
@@ -89,15 +89,15 @@ class DenseGGNNModel2():
         self.node_type_embeddings = tf.Variable(tf.random_uniform([len(self.node_type_lookup.keys()), self.node_type_dim]), name='node_type_embeddings')
         self.node_token_embeddings = tf.Variable(tf.random_uniform([len(self.node_token_lookup.keys()), self.node_token_dim]), name='node_token_embeddings')
 
-        self.placeholders["node_type_indices"] = tf.placeholder(tf.int32, shape=[self.batch_size,], name='node_type_indices')
-        self.placeholders["node_token_indices"] = tf.placeholder(tf.int32, shape=[self.batch_size,], name='node_token_indices')
+        self.placeholders["node_type_indices"] = tf.placeholder(tf.int32, shape=[None,None], name='node_type_indices')
+        self.placeholders["node_token_indices"] = tf.placeholder(tf.int32, shape=[None,None], name='node_token_indices')
         self.node_type_representations = tf.nn.embedding_lookup(self.node_type_embeddings, self.placeholders["node_type_indices"])
         self.node_token_representations = tf.nn.embedding_lookup(self.node_token_embeddings, self.placeholders["node_token_indices"])
         
         # self.placeholders['initial_node_representation'] = tf.placeholder(tf.float32, [None, None, self.node_dim], name='node_features')
         self.placeholders['num_vertices'] = tf.placeholder(tf.int32, (),  name='num_vertices')
         # self.placeholders['labels'] = tf.placeholder(tf.int32, shape=[None,30], name='labels')
-        
+        self.placeholders['labels'] = tf.placeholder(tf.int32, (None, self.num_labels))
 
         self.placeholders['adjacency_matrix'] = tf.placeholder(tf.float32,[None, self.num_edge_types, None, None], name='adjacency_matrix')     # [b, e, v, v]
         self.__adjacency_matrix = tf.transpose(self.placeholders['adjacency_matrix'], [1, 0, 2, 3])                    # [e, b, v, v]

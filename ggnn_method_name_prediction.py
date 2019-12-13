@@ -6,7 +6,7 @@ import pickle
 import tensorflow as tf
 from utils.data.method_name_prediction_dataset import MethodNamePredictionData
 from utils.utils import ThreadedIterator
-from utils.dense_ggnn_method_name import DenseGGNNModel2
+from utils.dense_ggnn_method_name import DenseGGNNModel
 import os
 import sys
 
@@ -80,40 +80,50 @@ def main(opt):
 
 	# print(label_lookup)
 	opt.label_lookup = label_lookup
+	opt.num_labels = len(label_lookup.keys())
 	opt.node_type_lookup = node_type_lookup
 	opt.node_token_lookup = node_token_lookup
 	opt.path = "sample_data/java-small-graph/training"
 	train_dataset = MethodNamePredictionData(opt, True, False)
 
 	opt.n_edge_types = train_dataset.n_edge_types
-	ggnn = DenseGGNNModel2(opt)
+	ggnn = DenseGGNNModel(opt)
 
+	# For debugging purpose
+	nodes_representation = ggnn.nodes_representation
+	graph_representation = ggnn.graph_representation
+	logits = ggnn.logits
 	softmax_values = ggnn.softmax_values
 	attention_scores = ggnn.attention_scores
+	loss_node = ggnn.loss
 
+	optimizer = tf.train.AdamOptimizer(opt.lr)
+	training_point = optimizer.minimize(loss_node)
+
+	saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
 	init = tf.global_variables_initializer()
 
 	with tf.Session() as sess:
 		sess.run(init)
-		train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=5)
-		for train_step, train_batch_data in enumerate(train_batch_iterator):
-			# print("------------")
-			# print(train_batch_data["labels"])
-			# print(train_batch_data["labels"].shape)
-			# for label in train_batch_data["labels"]:
-			# 	print(type(label))
-			label_batch = [[0,1,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0]]
+
+		for epoch in range(1,  opt.epochs + 1):
+			train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=1)
 			for train_step, train_batch_data in enumerate(train_batch_iterator):
-				softmax_values_data = sess.run(
-					[softmax_values],
+				
+				_ , err, softmax_values_data, attention_scores_data = sess.run(
+					[training_point, loss_node, softmax_values, attention_scores],
 					feed_dict={
-						ggnn.placeholders["node_type_indices"]: train_batch_data["node_type_indices"],
-						ggnn.placeholders["node_token_indices"]: train_batch_data["node_token_indices"],
 						ggnn.placeholders["num_vertices"]: train_batch_data["num_vertices"],
 						ggnn.placeholders["adjacency_matrix"]:  train_batch_data['adjacency_matrix'],
-						ggnn.placeholders["labels"]:  label_batch
+						ggnn.placeholders["labels"]:  train_batch_data['labels'],
+						ggnn.placeholders["node_type_indices"]: train_batch_data["node_type_indices"],
+						ggnn.placeholders["node_token_indices"]: train_batch_data["node_token_indices"]
 					}
 				)
+
+				print("Epoch:", epoch, "Step:",train_step,"Loss:", err)
+
+
     # For debugging purpose
     # nodes_representation = ggnn.nodes_representation
     # graph_representation = ggnn.graph_representation

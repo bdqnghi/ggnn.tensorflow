@@ -111,3 +111,7 @@ fast-node-encoding/logs/algorithm
 # model/
 
 embedding/
+
+.DS_Store
+data/.DS_Store
+sample_data/

@@ -172,7 +172,7 @@ def load_single_program(path):
 
                     node_id_edge_list_class_i.append(node_id_digits)
                     node_type_edge_list_class_i.append(node_type_digits)
-    print(node_id_data_list_class_i)
+    # print(node_id_data_list_class_i)
     return node_id_data_list_class_i, node_type_data_list_class_i
 
 def find_max_edge_id(data_list):
@@ -394,7 +394,6 @@ class MethodNamePredictionData():
 
 
             # adj_mat': graph_to_adj_mat(graph, chosen_bucket_size, self.n_edge_types, True),
-            print(node_type_indices)
             buckets[chosen_bucket_idx].append({
                 "graph": graph,
                 "node_type_indices": node_type_indices,
@@ -454,6 +453,12 @@ class MethodNamePredictionData():
                        pad_width=[[0, 0], [0, 0], [0, self.node_dim - self.state_dim]],
                        mode='constant')
 
+    def pad_num_nodes(self, node_type_indices, max_node):
+        for i in range(0,len(node_type_indices)):
+            remaining = max_node - len(node_type_indices[i])
+            node_type_indices[i] = np.concatenate((node_type_indices[i],np.zeros(remaining)), axis=0)
+
+        return node_type_indices
 
     def make_batch(self, elements):
         batch_data = {'adjacency_matrix': [], 'node_type_indices': [], "node_token_indices": [],  'labels': []}
@@ -474,6 +479,8 @@ class MethodNamePredictionData():
             batch_data['labels'].append(d['labels'])
 
         # batch_data["init"] = self.pad_batch(batch_data['init'], max_node + 1)
+        batch_data['node_type_indices'] = self.pad_num_nodes(batch_data['node_type_indices'], max_node + 1)
+        batch_data['node_token_indices'] = self.pad_num_nodes(batch_data['node_token_indices'], max_node + 1)
      
         batch_data['adjacency_matrix'] = np.array(batch_data['adjacency_matrix'])[0:len(batch_data['adjacency_matrix'])]
         # batch_data['init'] = np.array(batch_data['init'])[0:len(batch_data['init'])]
@@ -506,11 +513,13 @@ class MethodNamePredictionData():
                 if (samples >= self.batch_size) or ((i == len(bucket_data)-1)):
                     batch_data, batch_max_node = self.make_batch(elements)
                     num_graphs = len(batch_data['node_type_indices'])
+                    node_type_indices = np.array(batch_data['node_type_indices'])
+                    node_token_indices = np.array(batch_data['node_token_indices'])
                     # print(initial_representations.shape)
                     batch = {
                         "num_graphs": num_graphs,
-                        "node_type_indices": batch_data['node_type_indices'],
-                        "node_token_indices": batch_data['node_token_indices'],
+                        "node_type_indices": node_type_indices,
+                        "node_token_indices": node_token_indices,
                         "num_vertices": batch_max_node + 1,
                         "adjacency_matrix": batch_data['adjacency_matrix'],
                         "labels": batch_data['labels']
