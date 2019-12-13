@@ -2,8 +2,6 @@
 
 This is a Tensorflow implementation of the Gated Graph Neural Networks (GGNN) as described in the paper [Gated Graph Sequence Neural Networks, ICLR 2016](https://arxiv.org/abs/1511.05493) by Y. Li, D. Tarlow, M. Brockschmidt, and R. Zemel.
 
-This implementation focuses on the Graph Level classification task. Concretely, we focus the Program Classification, in which each program is represented in the form of a graph.
-
 Tricks to improve training time and faster convergence:
 - Batch graphs with similar size together instead of randomly shuffling and batch.
 - Use dense graph representation for small graphs, and sparse graph representation for large graphs.
