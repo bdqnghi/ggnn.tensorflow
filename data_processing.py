@@ -27,8 +27,9 @@ def execute(raw_path, fbs_path, graph_path):
 		generate_fbs(raw_path, fbs_path)
 	else:
 		print("The fbs path : " + str(fbs_path) + " exists, ignoring....")
-	if not os.path.exists(graph_path):
+	if not os.path.exists(graph_path) and os.path.exists(fbs_path):
 		generate_graph(fbs_path, graph_path)
+	else:
 		print("The graph path : " + str(graph_path) + " exists, ignoring....")
 
 def main():
