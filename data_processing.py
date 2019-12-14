@@ -12,18 +12,21 @@ args = parser.parse_args()
 
 
 def generate_fbs(src_path, tgt_path):
-	cmd = "docker run --rm -v $(pwd):/e -it yijun/fast -S -G " + src_path + " " + tgt_path
-	print(cmd)
-	os.system(cmd)
+	if os.path.exists(src_path) and os.path.exists(tgt_path):
+		cmd = "docker run --rm -v $(pwd):/e -it yijun/fast -S -G " + src_path + " " + tgt_path
+		print(cmd)
+		os.system(cmd)
 
 def generate_graph(src_path, tgt_path):
-	cmd = "docker run -v $(pwd):/e --entrypoint ggnn -it yijun/fast --label=1 --id_type=1 " + src_path + " " + tgt_path
-	print(cmd)
-	os.system(cmd)
+	if os.path.exists(src_path) and os.path.exists(tgt_path):
+		cmd = "docker run -v $(pwd):/e --entrypoint ggnn -it yijun/fast --label=1 --id_type=1 " + src_path + " " + tgt_path
+		print(cmd)
+		os.system(cmd)
 
 def execute(raw_path, fbs_path, graph_path):
-	generate_fbs(raw_path, fbs_path)
-	generate_graph(fbs_path, graph_path)
+	if not os.path.exists(fbs_path):
+		generate_fbs(raw_path, fbs_path)
+		generate_graph(fbs_path, graph_path)
 
 def main():
 	
@@ -33,29 +36,32 @@ def main():
 	with ProcessPoolExecutor(max_workers=worker) as executor:   
 		for subdir , dirs, files in os.walk(path):
 			for file in files:
-				if file.endswith(".java"):
-					raw_file_path = os.path.join(subdir,file)
-					splits = raw_file_path.split("/")
+				try:
+					if file.endswith(".java"):
+						raw_file_path = os.path.join(subdir,file)
+						splits = raw_file_path.split("/")
 
-					splits_fbs = copy.deepcopy(splits)
-					splits_fbs[len(splits_fbs)-4] = "java-small-fbs"
+						splits_fbs = copy.deepcopy(splits)
+						splits_fbs[len(splits_fbs)-4] = "java-small-fbs"
 
-					splits_graph = copy.deepcopy(splits)
-					splits_graph[len(splits_graph)-4] = "java-small-graph"
+						splits_graph = copy.deepcopy(splits)
+						splits_graph[len(splits_graph)-4] = "java-small-graph"
 
-					splits_fbs_dir = "/".join(splits_fbs[:len(splits_fbs)-1])
-					splits_graph_dir = "/".join(splits_graph[:len(splits_graph)-1])
+						splits_fbs_dir = "/".join(splits_fbs[:len(splits_fbs)-1])
+						splits_graph_dir = "/".join(splits_graph[:len(splits_graph)-1])
 
-					print(splits_fbs_dir)
-					if not os.path.exists(splits_fbs_dir):
-						os.makedirs(splits_fbs_dir)
+						# print(splits_fbs_dir)
+						if not os.path.exists(splits_fbs_dir):
+							os.makedirs(splits_fbs_dir)
 
-					if not os.path.exists(splits_graph_dir):
-						os.makedirs(splits_graph_dir)
+						if not os.path.exists(splits_graph_dir):
+							os.makedirs(splits_graph_dir)
 
-					fbs_path =  "/".join(splits_fbs).replace(".java",".fbs")
-					graph_path =  "/".join(splits_graph).replace(".java",".txt")
-					future = executor.submit(execute, raw_file_path, fbs_path, graph_path)
+						fbs_path =  "/".join(splits_fbs).replace(".java",".fbs")
+						graph_path =  "/".join(splits_graph).replace(".java",".txt")
+						future = executor.submit(execute, raw_file_path, fbs_path, graph_path)
+				except Exception as e:
+					print(e)
 
 if __name__ == "__main__":
     main()				
