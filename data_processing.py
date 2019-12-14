@@ -1,11 +1,12 @@
 import os
-from concurrent.futures import ProcessPoolExecutor
+# from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 import copy
 import sys
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--worker", default=10, type=int, help="Num worker")
+parser.add_argument("--worker", default=64, type=int, help="Num worker")
 parser.add_argument("--path", required=True, type=str, help="Path")
 
 args = parser.parse_args()
@@ -37,7 +38,7 @@ def main():
 	path = args.path
 	worker = args.worker
 	
-	with ProcessPoolExecutor(max_workers=worker) as executor:   
+	with ThreadPoolExecutor(max_workers=worker) as executor:   
 		for subdir , dirs, files in os.walk(path):
 			for file in files:
 				try:
