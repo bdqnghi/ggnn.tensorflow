@@ -7,11 +7,11 @@ import re
 
 regex = '\\"\s+([^"]+)\s+\\"'
 excluded_tokens = [",","{",";","}",")","(",'"',"'","`",""," "]
-# parser = argparse.ArgumentParser()
-# parser.add_argument("--worker", default=10, type=int, help="Num worker")
-# parser.add_argument("--path", required=True, type=str, help="Path")
+parser = argparse.ArgumentParser()
+parser.add_argument("--input", required=True, type=str, help="Input path")
+parser.add_argument("--output", required=True, type=str, help="Output path")
 
-# args = parser.parse_args()
+args = parser.parse_args()
 def exclude_tokens(all_vocabularies):
 	temp_vocabs = []
 	for vocab in all_vocabularies:
@@ -26,14 +26,16 @@ def process_token(token):
 
 def main():
 	
-	# path = args.path
-	path = "../sample_data/java-small-graph/training"
+	# input = "../sample_data/java-small-graph/training"
+	# output = "../preprocessed_data/token_vocabulary.csv"
+	input_path = args.input
+	output_path = args.output
 
 	all_vocabularies = []
 
-	for subdir , dirs, files in os.walk(path):
-		
+	for subdir , dirs, files in os.walk(input_path):
 		for file in files:
+			print(file)
 			# if file.endswith(".java"):
 			raw_file_path = os.path.join(subdir,file)
 			
@@ -41,6 +43,7 @@ def main():
 				lines = f.readlines()
 				for line in lines:
 					try:
+						print(line)
 						line = line.replace("\n","")
 						line = line.replace("'","")
 						line = " ".join(line.split())
@@ -78,9 +81,7 @@ def main():
 	all_vocabularies = list(set(all_vocabularies))
 	all_vocabularies = exclude_tokens(all_vocabularies)
 	
-	output = "../preprocessed_data/token_vocabulary.csv"
-
-	with open(output, "w") as f1:
+	with open(output_path, "w") as f1:
 		for i, v in enumerate(all_vocabularies):
 			f1.write(str(i) + "," + v)
 			f1.write("\n")

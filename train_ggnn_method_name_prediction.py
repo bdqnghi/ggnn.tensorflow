@@ -51,38 +51,39 @@ print(opt)
 
 def main(opt):
 	
-	label_lookup = {}
-	node_type_lookup = {}
-	node_token_lookup = {}
+	train_label_lookup = {}
+	train_node_type_lookup = {}
+	train_node_token_lookup = {}
 
-	label_vocabulary_path = "preprocessed_data/label_vocabulary.csv"
-	node_type_vocabulary_path = "preprocessed_data/node_type_vocabulary.csv"
-	token_vocabulary_path = "preprocessed_data/token_vocabulary.csv"
+	train_label_vocabulary_path = "preprocessed_data/train_label_vocab.txt"
+	node_type_vocabulary_path = "preprocessed_data/node_type_vocab.txt"
+	
+	train_token_vocabulary_path = "preprocessed_data/train_label_vocab.txt"
 
-	with open(label_vocabulary_path, "r") as f1:
+	with open(train_label_vocabulary_path, "r") as f1:
 		data = f1.readlines()
 		for line in data:
 			splits = line.replace("\n","").split(",")
-			label_lookup[splits[1]] = int(splits[0])
+			train_label_lookup[splits[1]] = int(splits[0])
 
 	with open(node_type_vocabulary_path, "r") as f2:
 		data = f2.readlines()
 		for line in data:
 			splits = line.replace("\n","").split(",")
-			node_type_lookup[splits[1]] = int(splits[0])
+			train_node_type_lookup[splits[1]] = int(splits[0])
 
-	with open(token_vocabulary_path, "r") as f3:
+	with open(train_token_vocabulary_path, "r") as f3:
 		data = f3.readlines()
 		for line in data:
 			splits = line.replace("\n","").split(",")
-			node_token_lookup[splits[1]] = int(splits[0])
-	node_token_lookup["captain_america"] = len(node_token_lookup.keys())
+			train_node_token_lookup[splits[1]] = int(splits[0])
+	train_node_token_lookup["captain_america"] = len(train_node_token_lookup.keys())
 
-	# print(label_lookup)
-	opt.label_lookup = label_lookup
-	opt.num_labels = len(label_lookup.keys())
-	opt.node_type_lookup = node_type_lookup
-	opt.node_token_lookup = node_token_lookup
+	# print(train_label_lookup)
+	opt.train_label_lookup = train_label_lookup
+	opt.num_labels = len(train_label_lookup.keys())
+	opt.train_node_type_lookup = train_node_type_lookup
+	opt.train_node_token_lookup = train_node_token_lookup
 	opt.path = "sample_data/java-small-graph/training"
 	train_dataset = MethodNamePredictionData(opt, True, False)
 
