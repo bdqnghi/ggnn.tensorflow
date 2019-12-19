@@ -5,22 +5,23 @@ import sys
 import argparse
 import re
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--input", required=True, type=str, help="Input path")
+parser.add_argument("--output", required=True, type=str, help="Output path")
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument("--worker", default=10, type=int, help="Num worker")
-# parser.add_argument("--path", required=True, type=str, help="Path")
-
-# args = parser.parse_args()
-
+args = parser.parse_args()
 
 def main():
 	
 	# path = args.path
-	path = "../sample_data/java-small-graph/training"
+	# input_path = "../sample_data/java-small-graph/training"
+	# output_path = "../preprocessed_data/label_vocabulary.csv"
+	input_path = args.input
+	output_path = args.output
 
 	all_vocabularies = []
 
-	for subdir , dirs, files in os.walk(path):
+	for subdir , dirs, files in os.walk(input_path):
 		
 		for file in files:
 			name_splits = file.split(".")
@@ -29,10 +30,9 @@ def main():
 
 	all_vocabularies = list(set(all_vocabularies))
 	# all_vocabularies = exclude_tokens(all_vocabularies)
-	
-	output = "../preprocessed_data/label_vocabulary.csv"
 
-	with open(output, "w") as f1:
+
+	with open(output_path, "w") as f1:
 		for i, v in enumerate(all_vocabularies):
 			f1.write(str(i) + "," + v)
 			f1.write("\n")
