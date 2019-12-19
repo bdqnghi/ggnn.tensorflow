@@ -29,6 +29,7 @@ def main():
 				method_name = name_splits[0].split("_")[1]
 				all_vocabularies.append(method_name)
 			except Exception as e:
+				print(file)
 				print(e)
 
 	all_vocabularies = list(set(all_vocabularies))
