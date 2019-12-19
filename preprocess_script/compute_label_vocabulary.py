@@ -24,10 +24,12 @@ def main():
 	for subdir , dirs, files in os.walk(input_path):
 		
 		for file in files:
-			print(file)
-			name_splits = file.split(".")
-			method_name = name_splits[0].split("_")[1]
-			all_vocabularies.append(method_name)
+			try:
+				name_splits = file.split(".")
+				method_name = name_splits[0].split("_")[1]
+				all_vocabularies.append(method_name)
+			except Exception as e:
+				print(e)
 
 	all_vocabularies = list(set(all_vocabularies))
 	# all_vocabularies = exclude_tokens(all_vocabularies)
