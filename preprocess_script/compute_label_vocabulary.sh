@@ -6,6 +6,6 @@ TEST_LABEL_VOCAB_PATH=../preprocessed_data/test_label_vocab.txt
 VALIDATION_LABEL_VOCAB_PATH=../preprocessed_data/val_label_vocab.txt
 PYTHON=python3
 
-${PYTHON} compute_token_vocabulary.py --input ${TRAIN_DIR} --output ${TRAIN_LABEL_VOCAB_PATH} 
-${PYTHON} compute_token_vocabulary.py --input ${TRAIN_DIR} --output ${TEST_LABEL_VOCAB_PATH}
-${PYTHON} compute_token_vocabulary.py --input ${VAL_DIR} --output ${VALIDATION_LABEL_VOCAB_PATH}
+${PYTHON} compute_label_vocabulary.py --input ${TRAIN_DIR} --output ${TRAIN_LABEL_VOCAB_PATH} 
+${PYTHON} compute_label_vocabulary.py --input ${TRAIN_DIR} --output ${TEST_LABEL_VOCAB_PATH}
+${PYTHON} compute_label_vocabulary.py --input ${VAL_DIR} --output ${VALIDATION_LABEL_VOCAB_PATH}
