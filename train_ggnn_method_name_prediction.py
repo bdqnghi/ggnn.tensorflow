@@ -9,7 +9,10 @@ from utils.utils import ThreadedIterator
 from utils.dense_ggnn_method_name import DenseGGNNModel
 import os
 import sys
+import re
 
+from bidict import bidict
+import copy
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
@@ -38,7 +41,7 @@ parser.add_argument('--training_percentage', type=float, default=1.0 ,help='perc
 parser.add_argument('--log_path', default="logs/" ,help='log path for tensorboard')
 parser.add_argument('--checkpoint_every', type=int, default=100 ,help='check point to save model')
 parser.add_argument('--best_accuracy', type=float, default=0.0 ,help='best accuracy to save model')
-parser.add_argument('--aggregation', type=int, default=1, choices=range(0,4), help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
+parser.add_argument('--aggregation', type=int, default=3, choices=range(0,4), help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
 parser.add_argument('--distributed_function', type=int, default=0, choices=range(0,2), help='0 for softmax, 1 for sigmoid')
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
@@ -49,22 +52,54 @@ print(opt)
 
 # opt.model_path = os.path.join(opt.model_path,"sum_softmax" + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer)) + "_node_dim_" + str(opt.node_dim)
 
+def camel_case_split(identifier):
+    matches = re.finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', identifier)
+    return [m.group(0) for m in matches]
+
+def transform_data(method_names):
+	method_name_splits = []
+	for method in method_names:
+		if "_" in method:
+			snake_splits = method.split("_")
+			snake_splits_temp = []
+			for snake_split in snake_splits:
+				snake_splits_temp.append(snake_split.lower())
+			method_name_splits.append(snake_splits_temp)
+		else:
+			camel_splits = camel_case_split(method)
+			camel_splits_temp = []
+			for camel_split in camel_splits:
+				camel_splits_temp.append(camel_split.lower())
+			method_name_splits.append(camel_splits_temp)
+	return "".join(method_name_splits)
+
+
 def main(opt):
 	
 	train_label_lookup = {}
+	train_label_lookup_by_index = {}
 	train_node_type_lookup = {}
 	train_node_token_lookup = {}
 
-	train_label_vocabulary_path = "preprocessed_data/train_label_vocab.txt"
+	val_label_lookup = {}
+	val_label_lookup_by_index = {}
+	val_node_type_lookup = {}
+	val_node_token_lookup = {}
+
 	node_type_vocabulary_path = "preprocessed_data/node_type_vocab.txt"
 	
-	train_token_vocabulary_path = "preprocessed_data/train_label_vocab.txt"
+	train_label_vocabulary_path = "preprocessed_data/train_label_vocab.txt"
+	train_token_vocabulary_path = "preprocessed_data/train_token_vocab.txt"
+
+	val_label_vocabulary_path = "preprocessed_data/val_label_vocab.txt"
+	val_token_vocabulary_path = "preprocessed_data/val_token_vocab.txt"
 
 	with open(train_label_vocabulary_path, "r") as f1:
 		data = f1.readlines()
 		for line in data:
 			splits = line.replace("\n","").split(",")
 			train_label_lookup[splits[1]] = int(splits[0])
+			train_label_lookup_by_index[int(splits[0])] = splits[1]
 
 	with open(node_type_vocabulary_path, "r") as f2:
 		data = f2.readlines()
@@ -77,17 +112,44 @@ def main(opt):
 		for line in data:
 			splits = line.replace("\n","").split(",")
 			train_node_token_lookup[splits[1]] = int(splits[0])
+
+	with open(val_label_vocabulary_path, "r") as f4:
+		data = f4.readlines()
+		for line in data:
+			splits = line.replace("\n","").split(",")
+			val_label_lookup[splits[1]] = int(splits[0])
+			val_label_lookup_by_index[int(splits[0])] = splits[1]
+
+	with open(val_token_vocabulary_path, "r") as f5:
+		data = f5.readlines()
+		for line in data:
+			splits = line.replace("\n","").split(",")
+			val_node_token_lookup[splits[1]] = int(splits[0])
+
 	train_node_token_lookup["captain_america"] = len(train_node_token_lookup.keys())
+	val_node_token_lookup["captain_america"] = len(val_node_token_lookup.keys())
+
+	checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
+	ckpt = tf.train.get_checkpoint_state(opt.model_path)
 
 	# print(train_label_lookup)
-	opt.train_label_lookup = train_label_lookup
+	opt.label_lookup = train_label_lookup
 	opt.num_labels = len(train_label_lookup.keys())
-	opt.train_node_type_lookup = train_node_type_lookup
-	opt.train_node_token_lookup = train_node_token_lookup
+	opt.node_type_lookup = train_node_type_lookup
+	opt.node_token_lookup = train_node_token_lookup
 	opt.path = "sample_data/java-small-graph/training"
-	train_dataset = MethodNamePredictionData(opt, True, False)
 
+	train_dataset = MethodNamePredictionData(opt, True, False, False)
 	opt.n_edge_types = train_dataset.n_edge_types
+
+
+	val_opt = copy.deepcopy(opt)
+	val_opt.path = "sample_data/java-small-graph/validation"
+	val_opt.label_lookup = val_label_lookup
+	val_opt.num_labels = len(val_label_lookup.keys())
+	val_opt.node_token_lookup = val_node_token_lookup
+	validation_dataset = MethodNamePredictionData(val_opt, False, False, True)
+
 	ggnn = DenseGGNNModel(opt)
 
 	# For debugging purpose
@@ -107,10 +169,16 @@ def main(opt):
 	with tf.Session() as sess:
 		sess.run(init)
 
+		if ckpt and ckpt.model_checkpoint_path:
+			print("Continue training with old model")
+			print("Checkpoint path : " + str(ckpt.model_checkpoint_path))
+			saver.restore(sess, ckpt.model_checkpoint_path)
+			for i, var in enumerate(saver._var_list):
+				print('Var {}: {}'.format(i, var))
+
 		for epoch in range(1,  opt.epochs + 1):
 			train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=1)
-			for train_step, train_batch_data in enumerate(train_batch_iterator):
-				
+			for train_step, train_batch_data in enumerate(train_batch_iterator):	
 				_ , err, softmax_values_data, attention_scores_data = sess.run(
 					[training_point, loss_node, softmax_values, attention_scores],
 					feed_dict={
@@ -118,31 +186,56 @@ def main(opt):
 						ggnn.placeholders["adjacency_matrix"]:  train_batch_data['adjacency_matrix'],
 						ggnn.placeholders["labels"]:  train_batch_data['labels'],
 						ggnn.placeholders["node_type_indices"]: train_batch_data["node_type_indices"],
-						ggnn.placeholders["node_token_indices"]: train_batch_data["node_token_indices"]
+						ggnn.placeholders["node_token_indices"]: train_batch_data["node_token_indices"],
+						ggnn.placeholders["graph_state_keep_prob"]: 0.5,
+						ggnn.placeholders["edge_weight_dropout_keep_prob"]: 0.5
 					}
 				)
 
 				print("Epoch:", epoch, "Step:",train_step,"Loss:", err)
 
+				if train_step % opt.checkpoint_every == 0:
+					#--------------------------------------
+					print("Validating.......")
+					# predictions = []
+					validation_batch_iterator = ThreadedIterator(validation_dataset.make_minibatch_iterator(), max_queue_size=5)
 
-    # For debugging purpose
-    # nodes_representation = ggnn.nodes_representation
-    # graph_representation = ggnn.graph_representation
-    # logits = ggnn.logits
-    # softmax_values = ggnn.softmax_values
-    # attention_scores = ggnn.attention_scores
-    # loss_node = ggnn.loss
-    # optimizer = tf.train.AdamOptimizer(opt.lr)
-    # training_point = optimizer.minimize(loss_node)
-    # saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
-    # init = tf.global_variables_initializer()
-# with open("model_selection.txt","r") as f:
+					for _, val_batch_data in enumerate(validation_batch_iterator):
+					    
+						# Note: putting ggnn.placeholders["labels"]:  train_batch_data['labels'] seems stupid but it is a work-around, num labels in train data vs validation data is different
+					    softmax_values_data = sess.run(
+					        [softmax_values],
+					        feed_dict={
+					            ggnn.placeholders["num_vertices"]: val_batch_data["num_vertices"],
+								ggnn.placeholders["adjacency_matrix"]:  val_batch_data['adjacency_matrix'],
+								ggnn.placeholders["labels"]:  train_batch_data['labels'],
+								ggnn.placeholders["node_type_indices"]: val_batch_data["node_type_indices"],
+								ggnn.placeholders["node_token_indices"]: val_batch_data["node_token_indices"],
+								ggnn.placeholders["graph_state_keep_prob"]: 1.0,
+								ggnn.placeholders["edge_weight_dropout_keep_prob"]: 1.0
+					        }
+					    )
+					    predictions = np.argmax(softmax_values_data[0],axis=1)
+					    ground_truths = np.argmax(val_batch_data['labels'],axis=1)
+					    # print(ground_truths)
 
- #    with tf.Session() as sess:
- #        sess.run(init)
+					    predicted_labels = []
+					    for prediction in predictions:
+					    	predicted_labels.append(train_label_lookup_by_index[prediction])
+					    
+					    ground_truth_labels = []
+					    for ground_truth in ground_truths:
+					    	ground_truth_labels.append(val_label_lookup_by_index[ground_truth])
 
- #        print("List of available devices..........")
- #        print(tf.test.gpu_device_name())
+					    predicted_labels = transform_data(predicted_labels)
+					    ground_truth_labels = transform_data(ground_truth_labels)
+					    print("----------")
+					    print("Predicted: " + str(predicted_labels))
+					    print("Ground truth: " + str(ground_truth_labels))
+					    # predictions.extend(np.argmax(softmax_values_data[0],axis=1))
+
+			
+
 
       
 

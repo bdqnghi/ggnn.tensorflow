@@ -51,15 +51,14 @@ def process_token(token):
         token = token.replace(t,"")
     return token
 
-def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup, node_token_lookup, is_training=True, is_testing=True):
+def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup, node_token_lookup, is_training=True, is_testing=False, is_validating=False):
 
     node_id_data_list = []
     node_type_data_list = []
     node_token_data_list = []
-    print(directory)
+ 
     for subdir , dirs, files in os.walk(directory):
         for file in files:
-            print(file)
             raw_file_path = os.path.join(subdir,file)
             name_splits = file.split(".")
             method_name = name_splits[0].split("_")[1]
@@ -74,48 +73,45 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
                         line = line.replace("\n","")
                         line = line.replace("'","")
                         line = " ".join(line.split())
-
+                       
                         splits = line.split(" ")
-                        source = splits[0]
-                        edge = splits[1]
-                        sink = splits[2]
+                        if len(splits) == 3:
+                            source = splits[0]
+                            edge = splits[1]
+                            sink = splits[2]
 
-                        source_splits = source.split(",")
-                        source_node_id = source_splits[0].split(":")[0]
-                        source_node_type = source_splits[0].split(":")[1]
-                        source_node_type_id = node_type_lookup[source_node_type]
+                            source_splits = source.split(",")
+                            source_node_id = source_splits[0].split(":")[0]
+                            source_node_type = source_splits[0].split(":")[1]
+                            source_node_type_id = node_type_lookup[source_node_type]
 
-                        source_token = "captain_america"
-                        sink_token = "captain_america"
+                            source_token = "captain_america"
+                            sink_token = "captain_america"
 
-                        if len(source_splits) == 2:
-                            source_token = source_splits[1]
-                            source_token = process_token(source_token)
+                            if len(source_splits) == 2:
+                                source_token = source_splits[1]
+                                source_token = process_token(source_token)
 
-                        sink_splits = sink.split(",")
-                        sink_node_id = sink_splits[0].split(":")[0]
-                        sink_node_type = sink_splits[0].split(":")[1]
-                        sink_node_type_id = node_type_lookup[sink_node_type]
-                        if len(sink_splits) == 2:
-                            sink_token = sink_splits[1]
-                            sink_token = process_token(sink_token)
+                            sink_splits = sink.split(",")
+                            sink_node_id = sink_splits[0].split(":")[0]
+                            sink_node_type = sink_splits[0].split(":")[1]
+                            sink_node_type_id = node_type_lookup[sink_node_type]
+                            if len(sink_splits) == 2:
+                                sink_token = sink_splits[1]
+                                sink_token = process_token(sink_token)
 
-                        source_token_id = node_token_lookup[source_token]
-                        sink_token_id = node_token_lookup[sink_token]
+                            source_token_id = node_token_lookup[source_token]
+                            sink_token_id = node_token_lookup[sink_token]
 
-                        node_id_edge = [int(source_node_id), int(edge), int(sink_node_id)]
-                        node_type_edge = [int(source_node_type_id), int(edge), int(sink_node_type_id)]
-                        node_token_edge = [int(source_token_id), int(edge), int(sink_token_id)]
+                            node_id_edge = [int(source_node_id), int(edge), int(sink_node_id)]
+                            node_type_edge = [int(source_node_type_id), int(edge), int(sink_node_type_id)]
+                            node_token_edge = [int(source_token_id), int(edge), int(sink_token_id)]
 
-                        # node_id_edge_with_label = [node_id_edge, [label_id]]
-                        # node_type_edge_with_label = [node_type_edge, [label_id]]
-                        # node_token_edge_with_label = [node_token_edge, [label_id]]
-
-                        node_id_edge_per_class.append(node_id_edge)
-                        node_type_edge_per_class.append(node_type_edge)
-                        node_token_edge_per_class.append(node_token_edge)
+                            node_id_edge_per_class.append(node_id_edge)
+                            node_type_edge_per_class.append(node_type_edge)
+                            node_token_edge_per_class.append(node_token_edge)
                     except Exception as e:
-                        print(e)
+                        print("Error: " + str(e))
 
 
             node_id_data_list.append([node_id_edge_per_class, label_id])
@@ -150,7 +146,6 @@ def load_single_program(path):
                 if line_tokens[0] == "?":
                     # print(label)
                     splits = line_tokens[2].split("/")
-                    print(splits)
                     try: 
                         label = int(splits[len(splits)-2])
                     except:
@@ -291,25 +286,24 @@ def _onehot(i, total):
    
 class MethodNamePredictionData():
    
-    def __init__(self, opt, is_training=True, is_testing=False, live_test=False):
+    def __init__(self, opt, is_training=True, is_testing=False, is_validating=False, live_test=False):
 
+        if is_training:
+            print("Processing training data....")
+        if is_testing:
+            print("Processing testing data....")
+        if is_validating:
+            print("Processing validation data....")
         # self.node_dim = opt.node_dim
         self.state_dim = opt.state_dim
 
         self.is_training = is_training
         self.is_testing = is_testing
-
-       
-            
-           
+        self.n_edge_types = 7
         all_data_node_id, all_data_node_type, all_data_node_token = load_program_graphs_from_directory(opt.path, opt.label_lookup, opt.node_type_lookup, opt.node_token_lookup, is_training, is_testing)
         all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
         all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
         all_data_node_token = np.array(all_data_node_token)[0:len(all_data_node_token)]
-
-        # print(all_data_node_id)
-        print(all_data_node_type.shape)
-        print(all_data_node_token)
 
         num_labels = len(opt.label_lookup.keys())
         self.num_labels = num_labels
@@ -322,8 +316,6 @@ class MethodNamePredictionData():
         print("Max node id in data : " + str(max_node_id))
         print("Min node id in data : " + str(min_node_id))
 
-
-        self.n_edge_types = 7
         # all_data_node_id = convert_program_data(all_data_node_id)
         # all_data_node_type = convert_program_data(all_data_node_type)
 
@@ -353,7 +345,6 @@ class MethodNamePredictionData():
             graph = self.all_data_node_id[i][0]
             label = self.all_data_node_id[i][1]
             # print(label)
-            print(label)
             label_one_hot = self.label_lookup_onehot[label]
 
             graph_node_type = self.all_data_node_type[i][0]
@@ -372,7 +363,7 @@ class MethodNamePredictionData():
             # node_inits = np.zeros([num_nodes+1, 30])
 
             # print(node_inits.shape)
-            print(num_nodes)
+           
             node_type_indices = np.zeros(num_nodes + 1, dtype = int)
             node_token_indices = np.zeros(num_nodes + 1, dtype = int)
             for k in range(len(graph)):
@@ -421,9 +412,6 @@ class MethodNamePredictionData():
 
         total = 0
         for k,v in buckets.items():
-            print("--------")
-            print(k)
-            print(len(v))
             total = total + len(v)
         
 

@@ -84,8 +84,8 @@ class DenseGGNNModel():
         
         # initializer = tf.contrib.layers.xavier_initializer()
         # inputs
-        # self.placeholders['graph_state_keep_prob'] = tf.placeholder(tf.float32, None, name='graph_state_keep_prob')
-        # self.placeholders['edge_weight_dropout_keep_prob'] = tf.placeholder(tf.float32, None, name='edge_weight_dropout_keep_prob')
+        self.placeholders['graph_state_keep_prob'] = tf.placeholder(tf.float32, None, name='graph_state_keep_prob')
+        self.placeholders['edge_weight_dropout_keep_prob'] = tf.placeholder(tf.float32, None, name='edge_weight_dropout_keep_prob')
         self.node_type_embeddings = tf.Variable(tf.random_uniform([len(self.node_type_lookup.keys()), self.node_type_dim]), name='node_type_embeddings')
         self.node_token_embeddings = tf.Variable(tf.random_uniform([len(self.node_token_lookup.keys()), self.node_token_dim]), name='node_token_embeddings')
 
@@ -115,7 +115,7 @@ class DenseGGNNModel():
 
         with tf.variable_scope("gru_scope"):
             cell = tf.contrib.rnn.GRUCell(node_dim)
-            # cell = tf.nn.rnn_cell.DropoutWrapper(cell, state_keep_prob=self.placeholders['graph_state_keep_prob'])
+            cell = tf.nn.rnn_cell.DropoutWrapper(cell, state_keep_prob=self.placeholders['graph_state_keep_prob'])
             self.weights['node_gru'] = cell
 
     def compute_nodes_representation(self):
@@ -132,7 +132,9 @@ class DenseGGNNModel():
                     tf.get_variable_scope().reuse_variables()
                 for edge_type in range(self.num_edge_types):
                     # print("edge type : " + str(edge_type))
-                    m = tf.matmul(h, self.weights['edge_weights'][edge_type])                               # [b*v, h]
+                    m = tf.matmul(h, tf.nn.dropout(self.weights['edge_weights'][edge_type],
+                                                   keep_prob=self.placeholders['edge_weight_dropout_keep_prob'])) # [b*v, h]
+                    # m = tf.matmul(h, self.weights['edge_weights'][edge_type])                               # [b*v, h]
 
                     m = tf.reshape(m, [-1, v, node_dim])                                                       # [b, v, h]
                     m += self.weights['edge_biases'][edge_type]                                             # [b, v, h]
