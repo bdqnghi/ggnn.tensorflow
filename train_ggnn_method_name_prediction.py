@@ -17,32 +17,54 @@ import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--workers', type=int, help='number of data loading workers', default=2)
-parser.add_argument('--batch_size', type=int, default=12, help='input batch size')
-parser.add_argument('--train_batch_size', type=int, default=12, help='input batch size')
-parser.add_argument('--test_batch_size', type=int, default=5, help='input batch size')
-parser.add_argument('--state_dim', type=int, default=30, help='GGNN hidden state dimension size')
-parser.add_argument('--node_type_dim', type=int, default=50, help='node type dimension size')
-parser.add_argument('--node_token_dim', type=int, default=100, help='node token dimension size')
-parser.add_argument('--hidden_layer_size', type=int, default=100, help='size of hidden layer')
-parser.add_argument('--num_hidden_layer', type=int, default=1, help='number of hidden layer')
-parser.add_argument('--n_steps', type=int, default=10, help='propagation steps number of GGNN')
-parser.add_argument('--epochs', type=int, default=500, help='number of epochs to train for')
+parser.add_argument('--workers', type=int,
+                    help='number of data loading workers', default=2)
+parser.add_argument('--batch_size', type=int,
+                    default=12, help='input batch size')
+parser.add_argument('--train_batch_size', type=int,
+                    default=12, help='input batch size')
+parser.add_argument('--test_batch_size', type=int,
+                    default=5, help='input batch size')
+parser.add_argument('--state_dim', type=int, default=30,
+                    help='GGNN hidden state dimension size')
+parser.add_argument('--node_type_dim', type=int, default=50,
+                    help='node type dimension size')
+parser.add_argument('--node_token_dim', type=int,
+                    default=100, help='node token dimension size')
+parser.add_argument('--hidden_layer_size', type=int,
+                    default=100, help='size of hidden layer')
+parser.add_argument('--num_hidden_layer', type=int,
+                    default=1, help='number of hidden layer')
+parser.add_argument('--n_steps', type=int, default=10,
+                    help='propagation steps number of GGNN')
+parser.add_argument('--epochs', type=int, default=500,
+                    help='number of epochs to train for')
 parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
-parser.add_argument('--cuda', default="0",type=str, help='enables cuda')
-parser.add_argument('--verbal', type=bool, default=True, help='print training info or not')
+parser.add_argument('--cuda', default="0", type=str, help='enables cuda')
+parser.add_argument('--verbal', type=bool, default=True,
+                    help='print training info or not')
 parser.add_argument('--manualSeed', type=int, help='manual seed')
 parser.add_argument('--n_classes', type=int, default=10, help='manual seed')
-parser.add_argument('--path', default="program_data/github_java_sort_function_babi", help='program data')
-parser.add_argument('--model_path', default="model", help='path to save the model')
-parser.add_argument('--n_hidden', type=int, default=50, help='number of hidden layers')
-parser.add_argument('--size_vocabulary', type=int, default=59, help='maximum number of node types')
-parser.add_argument('--training_percentage', type=float, default=1.0 ,help='percentage of data use for training')
-parser.add_argument('--log_path', default="logs/" ,help='log path for tensorboard')
-parser.add_argument('--checkpoint_every', type=int, default=100 ,help='check point to save model')
-parser.add_argument('--best_accuracy', type=float, default=0.0 ,help='best accuracy to save model')
-parser.add_argument('--aggregation', type=int, default=3, choices=range(0,4), help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
-parser.add_argument('--distributed_function', type=int, default=0, choices=range(0,2), help='0 for softmax, 1 for sigmoid')
+parser.add_argument(
+    '--path', default="program_data/github_java_sort_function_babi", help='program data')
+parser.add_argument('--model_path', default="model",
+                    help='path to save the model')
+parser.add_argument('--n_hidden', type=int, default=50,
+                    help='number of hidden layers')
+parser.add_argument('--size_vocabulary', type=int,
+                    default=59, help='maximum number of node types')
+parser.add_argument('--training_percentage', type=float,
+                    default=1.0, help='percentage of data use for training')
+parser.add_argument('--log_path', default="logs/",
+                    help='log path for tensorboard')
+parser.add_argument('--checkpoint_every', type=int,
+                    default=100, help='check point to save model')
+parser.add_argument('--best_accuracy', type=float,
+                    default=0.0, help='best accuracy to save model')
+parser.add_argument('--aggregation', type=int, default=3, choices=range(0, 4),
+                    help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
+parser.add_argument('--distributed_function', type=int, default=0,
+                    choices=range(0, 2), help='0 for softmax, 1 for sigmoid')
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
 opt = parser.parse_args()
@@ -52,194 +74,200 @@ print(opt)
 
 # opt.model_path = os.path.join(opt.model_path,"sum_softmax" + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer)) + "_node_dim_" + str(opt.node_dim)
 
+
 def camel_case_split(identifier):
-    matches = re.finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', identifier)
+    matches = re.finditer(
+        '.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', identifier)
     return [m.group(0) for m in matches]
 
+
 def transform_data(method_names):
-	method_name_splits = []
-	for method in method_names:
-		if "_" in method:
-			snake_splits = method.split("_")
-			snake_splits_temp = []
-			for snake_split in snake_splits:
-				snake_splits_temp.append(snake_split.lower())
-			method_name_splits.append(snake_splits_temp)
-		else:
-			camel_splits = camel_case_split(method)
-			camel_splits_temp = []
-			for camel_split in camel_splits:
-				camel_splits_temp.append(camel_split.lower())
-			method_name_splits.append(camel_splits_temp)
-	return "".join(method_name_splits)
+    method_name_splits = []
+    for method in method_names:
+        if "_" in method:
+            snake_splits = method.split("_")
+            snake_splits_temp = []
+            for snake_split in snake_splits:
+                snake_splits_temp.append(snake_split.lower())
+            method_name_splits.append(snake_splits_temp)
+        else:
+            camel_splits = camel_case_split(method)
+            camel_splits_temp = []
+            for camel_split in camel_splits:
+                camel_splits_temp.append(camel_split.lower())
+            method_name_splits.append(camel_splits_temp)
+    return "".join(method_name_splits)
 
 
 def main(opt):
-	
-	train_label_lookup = {}
-	train_label_lookup_by_index = {}
-	train_node_type_lookup = {}
-	train_node_token_lookup = {}
 
-	val_label_lookup = {}
-	val_label_lookup_by_index = {}
-	val_node_type_lookup = {}
-	val_node_token_lookup = {}
+    train_label_lookup = {}
+    train_label_lookup_by_index = {}
+    train_node_type_lookup = {}
+    train_node_token_lookup = {}
 
-	node_type_vocabulary_path = "preprocessed_data/node_type_vocab.txt"
-	
-	train_label_vocabulary_path = "preprocessed_data/train_label_vocab.txt"
-	train_token_vocabulary_path = "preprocessed_data/train_token_vocab.txt"
+    val_label_lookup = {}
+    val_label_lookup_by_index = {}
+    val_node_type_lookup = {}
+    val_node_token_lookup = {}
 
-	val_label_vocabulary_path = "preprocessed_data/val_label_vocab.txt"
-	val_token_vocabulary_path = "preprocessed_data/val_token_vocab.txt"
+    node_type_vocabulary_path = "preprocessed_data/node_type_vocab.txt"
 
-	with open(train_label_vocabulary_path, "r") as f1:
-		data = f1.readlines()
-		for line in data:
-			splits = line.replace("\n","").split(",")
-			train_label_lookup[splits[1]] = int(splits[0])
-			train_label_lookup_by_index[int(splits[0])] = splits[1]
+    train_label_vocabulary_path = "preprocessed_data/train_label_vocab.txt"
+    train_token_vocabulary_path = "preprocessed_data/train_token_vocab.txt"
 
-	with open(node_type_vocabulary_path, "r") as f2:
-		data = f2.readlines()
-		for line in data:
-			splits = line.replace("\n","").split(",")
-			train_node_type_lookup[splits[1]] = int(splits[0])
+    val_label_vocabulary_path = "preprocessed_data/val_label_vocab.txt"
+    val_token_vocabulary_path = "preprocessed_data/val_token_vocab.txt"
 
-	with open(train_token_vocabulary_path, "r") as f3:
-		data = f3.readlines()
-		for line in data:
-			splits = line.replace("\n","").split(",")
-			train_node_token_lookup[splits[1]] = int(splits[0])
+    with open(train_label_vocabulary_path, "r") as f1:
+        data = f1.readlines()
+        for line in data:
+            splits = line.replace("\n", "").split(",")
+            train_label_lookup[splits[1]] = int(splits[0])
+            train_label_lookup_by_index[int(splits[0])] = splits[1]
 
-	with open(val_label_vocabulary_path, "r") as f4:
-		data = f4.readlines()
-		for line in data:
-			splits = line.replace("\n","").split(",")
-			val_label_lookup[splits[1]] = int(splits[0])
-			val_label_lookup_by_index[int(splits[0])] = splits[1]
+    with open(node_type_vocabulary_path, "r") as f2:
+        data = f2.readlines()
+        for line in data:
+            splits = line.replace("\n", "").split(",")
+            train_node_type_lookup[splits[1]] = int(splits[0])
 
-	with open(val_token_vocabulary_path, "r") as f5:
-		data = f5.readlines()
-		for line in data:
-			splits = line.replace("\n","").split(",")
-			val_node_token_lookup[splits[1]] = int(splits[0])
+    with open(train_token_vocabulary_path, "r") as f3:
+        data = f3.readlines()
+        for line in data:
+            splits = line.replace("\n", "").split(",")
+            train_node_token_lookup[splits[1]] = int(splits[0])
 
-	train_node_token_lookup["captain_america"] = len(train_node_token_lookup.keys())
-	val_node_token_lookup["captain_america"] = len(val_node_token_lookup.keys())
+    with open(val_label_vocabulary_path, "r") as f4:
+        data = f4.readlines()
+        for line in data:
+            splits = line.replace("\n", "").split(",")
+            val_label_lookup[splits[1]] = int(splits[0])
+            val_label_lookup_by_index[int(splits[0])] = splits[1]
 
-	checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
-	ckpt = tf.train.get_checkpoint_state(opt.model_path)
+    with open(val_token_vocabulary_path, "r") as f5:
+        data = f5.readlines()
+        for line in data:
+            splits = line.replace("\n", "").split(",")
+            val_node_token_lookup[splits[1]] = int(splits[0])
 
-	# print(train_label_lookup)
-	opt.label_lookup = train_label_lookup
-	opt.num_labels = len(train_label_lookup.keys())
-	opt.node_type_lookup = train_node_type_lookup
-	opt.node_token_lookup = train_node_token_lookup
-	opt.path = "sample_data/java-small-graph/training"
+    train_node_token_lookup["captain_america"] = len(
+        train_node_token_lookup.keys())
+    val_node_token_lookup["captain_america"] = len(
+        val_node_token_lookup.keys())
 
-	train_dataset = MethodNamePredictionData(opt, True, False, False)
-	opt.n_edge_types = train_dataset.n_edge_types
+    checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
+    ckpt = tf.train.get_checkpoint_state(opt.model_path)
+
+    # print(train_label_lookup)
+    opt.label_lookup = train_label_lookup
+    opt.num_labels = len(train_label_lookup.keys())
+    opt.node_type_lookup = train_node_type_lookup
+    opt.node_token_lookup = train_node_token_lookup
+    opt.path = "sample_data/java-small-graph/training"
+
+    train_dataset = MethodNamePredictionData(opt, True, False, False)
+    opt.n_edge_types = train_dataset.n_edge_types
+
+    val_opt = copy.deepcopy(opt)
+    val_opt.path = "sample_data/java-small-graph/validation"
+    val_opt.label_lookup = val_label_lookup
+    val_opt.num_labels = len(val_label_lookup.keys())
+    val_opt.node_token_lookup = val_node_token_lookup
+    validation_dataset = MethodNamePredictionData(val_opt, False, False, True)
+
+    ggnn = DenseGGNNModel(opt)
+
+    # For debugging purpose
+    nodes_representation = ggnn.nodes_representation
+    graph_representation = ggnn.graph_representation
+    logits = ggnn.logits
+    softmax_values = ggnn.softmax_values
+    attention_scores = ggnn.attention_scores
+    loss_node = ggnn.loss
+
+    optimizer = tf.train.AdamOptimizer(opt.lr)
+    training_point = optimizer.minimize(loss_node)
+
+    saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
+    init = tf.global_variables_initializer()
+
+    with tf.Session() as sess:
+        sess.run(init)
+
+        if ckpt and ckpt.model_checkpoint_path:
+            print("Continue training with old model")
+            print("Checkpoint path : " + str(ckpt.model_checkpoint_path))
+            saver.restore(sess, ckpt.model_checkpoint_path)
+            for i, var in enumerate(saver._var_list):
+                print('Var {}: {}'.format(i, var))
+
+        for epoch in range(1,  opt.epochs + 1):
+            train_batch_iterator = ThreadedIterator(
+                train_dataset.make_minibatch_iterator(), max_queue_size=1)
+            for train_step, train_batch_data in enumerate(train_batch_iterator):
+                _, err, softmax_values_data, attention_scores_data = sess.run(
+                    [training_point, loss_node, softmax_values, attention_scores],
+                    feed_dict={
+                        ggnn.placeholders["num_vertices"]: train_batch_data["num_vertices"],
+                        ggnn.placeholders["adjacency_matrix"]:  train_batch_data['adjacency_matrix'],
+                        ggnn.placeholders["labels"]:  train_batch_data['labels'],
+                        ggnn.placeholders["node_type_indices"]: train_batch_data["node_type_indices"],
+                        ggnn.placeholders["node_token_indices"]: train_batch_data["node_token_indices"],
+                        ggnn.placeholders["graph_state_keep_prob"]: 0.5,
+                        ggnn.placeholders["edge_weight_dropout_keep_prob"]: 0.5
+                    }
+                )
+
+                print("Epoch:", epoch, "Step:", train_step, "Loss:", err)
+
+                if train_step % opt.checkpoint_every == 0:
+                    # --------------------------------------
+                    print("Validating.......")
+                    # predictions = []
+                    validation_batch_iterator = ThreadedIterator(
+                        validation_dataset.make_minibatch_iterator(), max_queue_size=5)
+
+                    for _, val_batch_data in enumerate(validation_batch_iterator):
+
+                            # Note: putting ggnn.placeholders["labels"]:  train_batch_data['labels'] seems stupid but it is a work-around, num labels in train data vs validation data is different
+                        softmax_values_data = sess.run(
+                            [softmax_values],
+                            feed_dict={
+                                ggnn.placeholders["num_vertices"]: val_batch_data["num_vertices"],
+                                ggnn.placeholders["adjacency_matrix"]:  val_batch_data['adjacency_matrix'],
+                                ggnn.placeholders["labels"]:  train_batch_data['labels'],
+                                ggnn.placeholders["node_type_indices"]: val_batch_data["node_type_indices"],
+                                ggnn.placeholders["node_token_indices"]: val_batch_data["node_token_indices"],
+                                ggnn.placeholders["graph_state_keep_prob"]: 1.0,
+                                ggnn.placeholders["edge_weight_dropout_keep_prob"]: 1.0
+                            }
+                        )
+                        predictions = np.argmax(softmax_values_data[0], axis=1)
+                        ground_truths = np.argmax(
+                            val_batch_data['labels'], axis=1)
+                        # print(ground_truths)
+
+                        predicted_labels = []
+                        for prediction in predictions:
+                            predicted_labels.append(
+                                train_label_lookup_by_index[prediction])
+
+                        ground_truth_labels = []
+                        for ground_truth in ground_truths:
+                            ground_truth_labels.append(
+                                val_label_lookup_by_index[ground_truth])
+                        
+                        print(predicted_labels)
+                        print(ground_truth_labels)
+                        predicted_labels = transform_data(predicted_labels)
+                        ground_truth_labels = transform_data(
+                            ground_truth_labels)
+                        print("----------")
+                        print("Predicted: " + str(predicted_labels))
+                        print("Ground truth: " + str(ground_truth_labels))
+                        # predictions.extend(np.argmax(softmax_values_data[0],axis=1))
 
 
-	val_opt = copy.deepcopy(opt)
-	val_opt.path = "sample_data/java-small-graph/validation"
-	val_opt.label_lookup = val_label_lookup
-	val_opt.num_labels = len(val_label_lookup.keys())
-	val_opt.node_token_lookup = val_node_token_lookup
-	validation_dataset = MethodNamePredictionData(val_opt, False, False, True)
-
-	ggnn = DenseGGNNModel(opt)
-
-	# For debugging purpose
-	nodes_representation = ggnn.nodes_representation
-	graph_representation = ggnn.graph_representation
-	logits = ggnn.logits
-	softmax_values = ggnn.softmax_values
-	attention_scores = ggnn.attention_scores
-	loss_node = ggnn.loss
-
-	optimizer = tf.train.AdamOptimizer(opt.lr)
-	training_point = optimizer.minimize(loss_node)
-
-	saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
-	init = tf.global_variables_initializer()
-
-	with tf.Session() as sess:
-		sess.run(init)
-
-		if ckpt and ckpt.model_checkpoint_path:
-			print("Continue training with old model")
-			print("Checkpoint path : " + str(ckpt.model_checkpoint_path))
-			saver.restore(sess, ckpt.model_checkpoint_path)
-			for i, var in enumerate(saver._var_list):
-				print('Var {}: {}'.format(i, var))
-
-		for epoch in range(1,  opt.epochs + 1):
-			train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=1)
-			for train_step, train_batch_data in enumerate(train_batch_iterator):	
-				_ , err, softmax_values_data, attention_scores_data = sess.run(
-					[training_point, loss_node, softmax_values, attention_scores],
-					feed_dict={
-						ggnn.placeholders["num_vertices"]: train_batch_data["num_vertices"],
-						ggnn.placeholders["adjacency_matrix"]:  train_batch_data['adjacency_matrix'],
-						ggnn.placeholders["labels"]:  train_batch_data['labels'],
-						ggnn.placeholders["node_type_indices"]: train_batch_data["node_type_indices"],
-						ggnn.placeholders["node_token_indices"]: train_batch_data["node_token_indices"],
-						ggnn.placeholders["graph_state_keep_prob"]: 0.5,
-						ggnn.placeholders["edge_weight_dropout_keep_prob"]: 0.5
-					}
-				)
-
-				print("Epoch:", epoch, "Step:",train_step,"Loss:", err)
-
-				if train_step % opt.checkpoint_every == 0:
-					#--------------------------------------
-					print("Validating.......")
-					# predictions = []
-					validation_batch_iterator = ThreadedIterator(validation_dataset.make_minibatch_iterator(), max_queue_size=5)
-
-					for _, val_batch_data in enumerate(validation_batch_iterator):
-					    
-						# Note: putting ggnn.placeholders["labels"]:  train_batch_data['labels'] seems stupid but it is a work-around, num labels in train data vs validation data is different
-					    softmax_values_data = sess.run(
-					        [softmax_values],
-					        feed_dict={
-					            ggnn.placeholders["num_vertices"]: val_batch_data["num_vertices"],
-								ggnn.placeholders["adjacency_matrix"]:  val_batch_data['adjacency_matrix'],
-								ggnn.placeholders["labels"]:  train_batch_data['labels'],
-								ggnn.placeholders["node_type_indices"]: val_batch_data["node_type_indices"],
-								ggnn.placeholders["node_token_indices"]: val_batch_data["node_token_indices"],
-								ggnn.placeholders["graph_state_keep_prob"]: 1.0,
-								ggnn.placeholders["edge_weight_dropout_keep_prob"]: 1.0
-					        }
-					    )
-					    predictions = np.argmax(softmax_values_data[0],axis=1)
-					    ground_truths = np.argmax(val_batch_data['labels'],axis=1)
-					    # print(ground_truths)
-
-					    predicted_labels = []
-					    for prediction in predictions:
-					    	predicted_labels.append(train_label_lookup_by_index[prediction])
-					    
-					    ground_truth_labels = []
-					    for ground_truth in ground_truths:
-					    	ground_truth_labels.append(val_label_lookup_by_index[ground_truth])
-
-					    predicted_labels = transform_data(predicted_labels)
-					    ground_truth_labels = transform_data(ground_truth_labels)
-					    print("----------")
-					    print("Predicted: " + str(predicted_labels))
-					    print("Ground truth: " + str(ground_truth_labels))
-					    # predictions.extend(np.argmax(softmax_values_data[0],axis=1))
-
-			
-
-
-      
-
-    
 if __name__ == "__main__":
     main(opt)
-

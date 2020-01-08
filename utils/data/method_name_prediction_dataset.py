@@ -56,7 +56,7 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
     node_id_data_list = []
     node_type_data_list = []
     node_token_data_list = []
- 
+    
     for subdir , dirs, files in os.walk(directory):
         for file in files:
             raw_file_path = os.path.join(subdir,file)
@@ -69,55 +69,56 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
                 node_type_edge_per_class = []
                 node_token_edge_per_class = []
                 for line in lines:
-                    try:
-                        line = line.replace("\n","")
-                        line = line.replace("'","")
-                        line = " ".join(line.split())
-                       
+                  
+                    line = line.replace("\n","")
+                    line = line.replace("'","")
+                    line = " ".join(line.split())
+                    if "?" not in line:
                         splits = line.split(" ")
                         if len(splits) == 3:
                             source = splits[0]
                             edge = splits[1]
                             sink = splits[2]
+                            
+                            source_token = "captain_america"
+                            sink_token = "captain_america"
 
                             source_splits = source.split(",")
                             source_node_id = source_splits[0].split(":")[0]
                             source_node_type = source_splits[0].split(":")[1]
-                            source_node_type_id = node_type_lookup[source_node_type]
-
-                            source_token = "captain_america"
-                            sink_token = "captain_america"
-
-                            if len(source_splits) == 2:
-                                source_token = source_splits[1]
-                                source_token = process_token(source_token)
 
                             sink_splits = sink.split(",")
                             sink_node_id = sink_splits[0].split(":")[0]
                             sink_node_type = sink_splits[0].split(":")[1]
-                            sink_node_type_id = node_type_lookup[sink_node_type]
-                            if len(sink_splits) == 2:
-                                sink_token = sink_splits[1]
-                                sink_token = process_token(sink_token)
 
-                            source_token_id = node_token_lookup[source_token]
-                            sink_token_id = node_token_lookup[sink_token]
+                            if source_node_type != "dummy" and sink_node_type != "dummy":
+                                source_node_type_id = node_type_lookup[source_node_type]
 
-                            node_id_edge = [int(source_node_id), int(edge), int(sink_node_id)]
-                            node_type_edge = [int(source_node_type_id), int(edge), int(sink_node_type_id)]
-                            node_token_edge = [int(source_token_id), int(edge), int(sink_token_id)]
+                                if len(source_splits) == 2:
+                                    source_token = source_splits[1]
+                                    source_token = process_token(source_token)
 
-                            node_id_edge_per_class.append(node_id_edge)
-                            node_type_edge_per_class.append(node_type_edge)
-                            node_token_edge_per_class.append(node_token_edge)
-                    except Exception as e:
-                        print("Error: " + str(e))
+                                sink_node_type_id = node_type_lookup[sink_node_type]
+                                if len(sink_splits) == 2:
+                                    sink_token = sink_splits[1]
+                                    sink_token = process_token(sink_token)
+                                if source_token != "" and sink_token != "":
+                                    source_token_id = node_token_lookup[source_token]
+                                    sink_token_id = node_token_lookup[sink_token]
 
-
-            node_id_data_list.append([node_id_edge_per_class, label_id])
-            node_type_data_list.append([node_type_edge_per_class, label_id])
-            node_token_data_list.append([node_token_edge_per_class, label_id])
-       
+                                    node_id_edge = [int(source_node_id), int(edge), int(sink_node_id)]
+                                    node_type_edge = [int(source_node_type_id), int(edge), int(sink_node_type_id)]
+                                    node_token_edge = [int(source_token_id), int(edge), int(sink_token_id)]
+                                    
+                                    node_id_edge_per_class.append(node_id_edge)
+                                    node_type_edge_per_class.append(node_type_edge)
+                                    node_token_edge_per_class.append(node_token_edge)
+            # print(node_id_edge_per_class)
+            if len(node_id_edge_per_class) > 0:
+                node_id_data_list.append([node_id_edge_per_class, label_id])
+                node_type_data_list.append([node_type_edge_per_class, label_id])
+                node_token_data_list.append([node_token_edge_per_class, label_id])
+    
     return node_id_data_list, node_type_data_list, node_token_data_list
 
 def load_single_program(path):
@@ -318,7 +319,7 @@ class MethodNamePredictionData():
 
         # all_data_node_id = convert_program_data(all_data_node_id)
         # all_data_node_type = convert_program_data(all_data_node_type)
-
+    
         self.all_data_node_id = all_data_node_id
         self.all_data_node_type = all_data_node_type
         self.all_data_node_token = all_data_node_token
