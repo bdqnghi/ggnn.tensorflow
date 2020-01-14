@@ -38,13 +38,6 @@ def load_graphs_from_file(file_name):
     # print(data_list)
     return data_list
 
-
-def lookup_vector(node_type, embeddings):
-    # look_up_vector = embed_loopkup[node_type]
-
-    nodes.append(embeddings[int(n)])
-
-
 def process_token(token):
     excluded_tokens = [",","{",";","}",")","(",'"',"'","`",""," "]
     for t in excluded_tokens:
@@ -60,10 +53,9 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
     for subdir , dirs, files in os.walk(directory):
         for file in files:
             raw_file_path = os.path.join(subdir,file)
-            name_splits = file.split(".")
-            method_name = name_splits[0].split("_")[1]
-            label_id = int(label_lookup[method_name])
+            label_id = None
             with open(raw_file_path,"r") as f:
+                print(raw_file_path)
                 lines = f.readlines()
                 node_id_edge_per_class = []
                 node_type_edge_per_class = []
@@ -73,46 +65,31 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
                     line = line.replace("\n","")
                     line = line.replace("'","")
                     line = " ".join(line.split())
+                    
                     if "?" not in line:
+                        
+                        splits = line.split(",")
+                        source_node_id = splits[0]
+                        source_node_type_id = splits[1]
+                        source_tokens_ids = splits[2]
+
+                        sink_node_id = splits[4]
+                        sink_node_type_id = splits[5]
+                        sink_tokens_ids = splits[6]
+
+                        edge_id = splits[3]
+
+                        node_id_edge = [int(source_node_id), int(edge_id), int(sink_node_id)]
+                        node_type_edge = [int(source_node_type_id), int(edge_id), int(sink_node_type_id)]
+                        node_token_edge = [source_tokens_ids, int(edge_id), sink_tokens_ids]
+                        
+                        node_id_edge_per_class.append(node_id_edge)
+                        node_type_edge_per_class.append(node_type_edge)
+                        node_token_edge_per_class.append(node_token_edge)
+                    else:
                         splits = line.split(" ")
-                        if len(splits) == 3:
-                            source = splits[0]
-                            edge = splits[1]
-                            sink = splits[2]
-                            
-                            source_token = "captain_america"
-                            sink_token = "captain_america"
-
-                            source_splits = source.split(",")
-                            source_node_id = source_splits[0].split(":")[0]
-                            source_node_type = source_splits[0].split(":")[1]
-
-                            sink_splits = sink.split(",")
-                            sink_node_id = sink_splits[0].split(":")[0]
-                            sink_node_type = sink_splits[0].split(":")[1]
-
-                            if source_node_type != "dummy" and sink_node_type != "dummy":
-                                source_node_type_id = node_type_lookup[source_node_type]
-
-                                if len(source_splits) == 2:
-                                    source_token = source_splits[1]
-                                    source_token = process_token(source_token)
-
-                                sink_node_type_id = node_type_lookup[sink_node_type]
-                                if len(sink_splits) == 2:
-                                    sink_token = sink_splits[1]
-                                    sink_token = process_token(sink_token)
-                                if source_token != "" and sink_token != "":
-                                    source_token_id = node_token_lookup[source_token]
-                                    sink_token_id = node_token_lookup[sink_token]
-
-                                    node_id_edge = [int(source_node_id), int(edge), int(sink_node_id)]
-                                    node_type_edge = [int(source_node_type_id), int(edge), int(sink_node_type_id)]
-                                    node_token_edge = [int(source_token_id), int(edge), int(sink_token_id)]
-                                    
-                                    node_id_edge_per_class.append(node_id_edge)
-                                    node_type_edge_per_class.append(node_type_edge)
-                                    node_token_edge_per_class.append(node_token_edge)
+                        label_id = splits[1]
+                   
             # print(node_id_edge_per_class)
             if len(node_id_edge_per_class) > 0:
                 node_id_data_list.append([node_id_edge_per_class, label_id])
@@ -212,7 +189,24 @@ def find_num_nodes_of_graph(graph):
             max_node_id = item[0]
         if item[2] > max_node_id:
             max_node_id = item[2]
-    return max_node_id
+    return max_node_id + 1
+
+def split_node_token(node_token_str):
+    splits = node_token_str.split("-")
+    return [int(x) for x in splits if x]
+
+def find_max_num_tokens_of_graph(graph):
+    max_num_tokens = 0
+    for item in graph:
+        source = item[0]
+        sink = item[2]
+        source_splits = split_node_token(source)
+        sink_splits = split_node_token(sink)
+        if len(source_splits) > max_num_tokens:
+            max_num_tokens = len(source_splits)
+        if len(sink_splits) > max_num_tokens:
+            max_num_tokens = len(sink_splits)
+    return max_num_tokens
 
 def split_set(data_list,num):
     n_examples = len(data_list)
@@ -241,50 +235,25 @@ def convert_program_data(data_list):
         class_data_list.append([edge_list, target])
     return class_data_list
 
-
-def create_adjacency_matrix(edges, n_nodes, n_edge_types):
-    a = np.zeros([n_nodes, n_nodes * n_edge_types * 2])
-    for edge in edges:
-
-        src_idx = edge[0]
-        e_type = edge[1]
-        tgt_idx = edge[2]
-       
-        if tgt_idx < len(a):
-           a[tgt_idx-1][(e_type - 1) * n_nodes + src_idx - 1] =  1
-        if src_idx <len(a):
-           a[src_idx-1][(e_type - 1 + n_edge_types) * n_nodes + tgt_idx - 1] =  1
-    return a
-
-def create_embedding_matrix(node_id_edges, node_type_edges, n_nodes, pretrained_embeddings):
-    a = np.zeros([n_nodes, 30])
-    # print(a.shape)
-    for i in range(len(node_id_edges)):
-        node_type = node_type_edges[i][0]
-        # print(node_type)
-        src_idx = node_id_edges[i][0]
-        a[src_idx-1] = pretrained_embeddings[int(node_type)]
-    return a
-
-
-def graph_to_adj_mat(graph, max_n_vertices, num_edge_types, tie_fwd_bkwd=True):
+def graph_to_adj_mat(graph, num_nodes, num_edge_types, tie_fwd_bkwd=True):
     bwd_edge_offset = 0 if tie_fwd_bkwd else (num_edge_types // 2)
     # print("Num edge types : " + str(num_edge_types))
-    amat = np.zeros((num_edge_types, max_n_vertices, max_n_vertices))
+    amat = np.zeros((num_edge_types, num_nodes, num_nodes))
     # print(amat.shape)
     for src, e, dest in graph:
         # print("---------------")
         # print(src)
         # print(dest)
 
-        amat[e-1, dest, src] = 1
+        amat[e-1, dest , src] = 1
         amat[e-1 + bwd_edge_offset, src, dest] = 1
     return amat
 
 def _onehot(i, total):
     return [1.0 if j == i else 0.0 for j in range(total)]
 
-   
+
+
 class MethodNamePredictionData():
    
     def __init__(self, opt, is_training=True, is_testing=False, is_validating=False, live_test=False):
@@ -345,13 +314,14 @@ class MethodNamePredictionData():
             # print("--------------")
             graph = self.all_data_node_id[i][0]
             label = self.all_data_node_id[i][1]
-            # print(label)
-            label_one_hot = self.label_lookup_onehot[label]
+          
+            label_one_hot = self.label_lookup_onehot[int(label)]
 
             graph_node_type = self.all_data_node_type[i][0]
             graph_node_token = self.all_data_node_token[i][0]
             
-
+            max_num_tokens = find_max_num_tokens_of_graph(graph_node_token)
+            
             # print(max([v for e in d['graph'] for v in [e[0], e[2]]]))
             chosen_bucket_idx = np.argmax(bucket_sizes > max([v for e in graph for v in [e[0], e[2]]]))
             chosen_bucket_size = bucket_sizes[chosen_bucket_idx]
@@ -365,24 +335,40 @@ class MethodNamePredictionData():
 
             # print(node_inits.shape)
            
-            node_type_indices = np.zeros(num_nodes + 1, dtype = int)
-            node_token_indices = np.zeros(num_nodes + 1, dtype = int)
+            node_type_indices = np.zeros(num_nodes, dtype = int)
+            node_token_indices = np.zeros((num_nodes, max_num_tokens), dtype = int)
             for k in range(len(graph)):
                 src_node_type = graph_node_type[k][0]
                 tgt_node_type = graph_node_type[k][2]
 
-                src_node_token = graph_node_token[k][0]
-                tgt_node_token = graph_node_token[k][2]
-              
+                src_node_tokens = graph_node_token[k][0]
+                tgt_node_tokens = graph_node_token[k][2]
+                
+                src_node_tokens = split_node_token(src_node_tokens)
+                tgt_node_tokens = split_node_token(tgt_node_tokens)
+                
+                if len(src_node_tokens) < max_num_tokens:
+                    remaining = max_num_tokens - len(src_node_tokens)
+                    for i in range(remaining):
+                        src_node_tokens.append(0)
+                
+                if len(tgt_node_tokens) < max_num_tokens:
+                    remaining = max_num_tokens - len(tgt_node_tokens)
+                    for i in range(remaining):
+                        tgt_node_tokens.append(0)
+
                 src_node_id = graph[k][0]
                 tgt_node_id = graph[k][2]
 
-                node_type_indices[int(src_node_id-1)] = int(src_node_type)
-                node_type_indices[int(src_node_id-1)] = int(tgt_node_type)
+                node_type_indices[int(src_node_id)] = int(src_node_type)
+                node_type_indices[int(tgt_node_id)] = int(tgt_node_type)
 
-                node_token_indices[int(src_node_id-1)] = int(src_node_token)
-                node_token_indices[int(src_node_id-1)] = int(tgt_node_token)
+                if len(src_node_tokens) > 0:
+                    node_token_indices[int(src_node_id)] = src_node_tokens
+                if len(tgt_node_tokens) > 0:
+                    node_token_indices[int(tgt_node_id)] = tgt_node_tokens
                 # print("SRC node id : " + str(src_node_id))
+        
 
 
             # adj_mat': graph_to_adj_mat(graph, chosen_bucket_size, self.n_edge_types, True),
@@ -390,7 +376,7 @@ class MethodNamePredictionData():
                 "graph": graph,
                 "node_type_indices": node_type_indices,
                 "node_token_indices": node_token_indices,
-                "labels": label_one_hot
+                "labels": label_one_hot      
             })
 
         #------------------------
@@ -437,49 +423,80 @@ class MethodNamePredictionData():
 
         return initial_node_representations
 
-    def pad_annotations(self, initial_node_representations):
-        return  np.pad(initial_node_representations,
-                       pad_width=[[0, 0], [0, 0], [0, self.node_dim - self.state_dim]],
-                       mode='constant')
-
-    def pad_num_nodes(self, node_type_indices, max_node):
-        for i in range(0,len(node_type_indices)):
-            remaining = max_node - len(node_type_indices[i])
+    def pad_node_types(self, node_type_indices, num_nodes_of_batch):
+        for i in range(0, len(node_type_indices)):
+            remaining = num_nodes_of_batch - len(node_type_indices[i])
             node_type_indices[i] = np.concatenate((node_type_indices[i],np.zeros(remaining)), axis=0)
 
         return node_type_indices
+
+    def pad_node_tokens(self, node_token_indices, num_nodes_of_batch, num_sub_tokens_of_batch):
+        # print("**********************")
+        # print("Num nodes of batch : " + str(num_nodes_of_batch))
+        # print("Num sub tokens of batch : " + str(num_sub_tokens_of_batch))
+        for i in range(0, len(node_token_indices)):
+            
+            remaining_nodes = num_nodes_of_batch - node_token_indices[i].shape[0]
+            remaining_sub_tokens = num_sub_tokens_of_batch - node_token_indices[i].shape[1]
+            # print("--------------")
+            # print("Remaining nodes : " + str(remaining_nodes))
+            # print("Remaining sub tokens : " + str(remaining_sub_tokens))
+            # print("Original shape : " + str(node_token_indices[i].shape))
+           
+            if remaining_nodes > 0:
+                if remaining_sub_tokens == 0:
+                    # print("case 1....")
+                    node_token_indices[i] = np.concatenate((node_token_indices[i],np.zeros((remaining_nodes, num_sub_tokens_of_batch))), axis=0)        
+                else:
+                    # print("case 2....")
+                    node_token_indices[i] = np.concatenate((node_token_indices[i],np.zeros((node_token_indices[i].shape[0], remaining_sub_tokens))), axis=1)
+                    node_token_indices[i] = np.concatenate((node_token_indices[i],np.zeros((remaining_nodes, num_sub_tokens_of_batch))), axis=0)        
+            else:
+                if remaining_sub_tokens > 0:
+                    node_token_indices[i] = np.concatenate((node_token_indices[i],np.zeros((node_token_indices[i].shape[0], remaining_sub_tokens))), axis=1)
+
+            # print("After shape :" + str(node_token_indices[i].shape))
+        return node_token_indices
 
     def make_batch(self, elements):
         batch_data = {'adjacency_matrix': [], 'node_type_indices': [], "node_token_indices": [],  'labels': []}
 
         # find graph which has the largest number of nodes in batch
-        max_node = find_num_nodes_of_graph(elements[0]["graph"])
+        num_nodes_of_batch = find_num_nodes_of_graph(elements[0]["graph"])
+        num_sub_tokens_of_batch = 0
         for d in elements:
-            num_node = find_num_nodes_of_graph(d["graph"])
-            if max_node < num_node:
-                max_node = num_node
-        # print("max node : " + str(max_node))
-
+            num_nodes_of_current_graph = find_num_nodes_of_graph(d["graph"])
+            if num_nodes_of_batch < num_nodes_of_current_graph:
+                num_nodes_of_batch = num_nodes_of_current_graph
+            
+            num_sub_tokens_of_graph = d['node_token_indices'].shape[1]
+            if num_sub_tokens_of_batch < num_sub_tokens_of_graph:
+                num_sub_tokens_of_batch = num_sub_tokens_of_graph
+            
         for d in elements:
-            adjacency_matrix = graph_to_adj_mat(d["graph"], max_node + 1, self.n_edge_types, True)
+            adjacency_matrix = graph_to_adj_mat(d["graph"], num_nodes_of_batch, self.n_edge_types, True)
             batch_data['adjacency_matrix'].append(adjacency_matrix)
             batch_data['node_type_indices'].append(d['node_type_indices'])
             batch_data['node_token_indices'].append(d['node_token_indices'])
             batch_data['labels'].append(d['labels'])
 
         # batch_data["init"] = self.pad_batch(batch_data['init'], max_node + 1)
-        batch_data['node_type_indices'] = self.pad_num_nodes(batch_data['node_type_indices'], max_node + 1)
-        batch_data['node_token_indices'] = self.pad_num_nodes(batch_data['node_token_indices'], max_node + 1)
-     
-        batch_data['adjacency_matrix'] = np.array(batch_data['adjacency_matrix'])[0:len(batch_data['adjacency_matrix'])]
+        batch_data['node_type_indices'] = self.pad_node_types(batch_data['node_type_indices'], num_nodes_of_batch)
+        batch_data['node_token_indices'] = self.pad_node_tokens(batch_data['node_token_indices'], num_nodes_of_batch, num_sub_tokens_of_batch)
+        
+        batch_data['node_type_indices'] = np.stack( batch_data['node_type_indices'], axis=0 )
+
+        batch_data['node_token_indices'] = np.stack( batch_data['node_token_indices'], axis=0 )
+        
+        batch_data['adjacency_matrix'] = np.stack( batch_data['adjacency_matrix'], axis=0 )
         # batch_data['init'] = np.array(batch_data['init'])[0:len(batch_data['init'])]
         
-        batch_data['labels'] = np.array(batch_data['labels'])[0:len(batch_data['labels'])]
+        batch_data['labels'] = np.stack(batch_data['labels'],  axis=0 )
 
         # print("adj shape : " + str(batch_data['adjacency_matrix'].shape))
         # print("init shape : " + str(batch_data['init'].shape))
 
-        return batch_data, max_node
+        return batch_data, num_nodes_of_batch
 
     def make_minibatch_iterator(self):
         (buckets, bucket_sizes, bucket_at_step) = self.data
@@ -509,7 +526,7 @@ class MethodNamePredictionData():
                         "num_graphs": num_graphs,
                         "node_type_indices": node_type_indices,
                         "node_token_indices": node_token_indices,
-                        "num_vertices": batch_max_node + 1,
+                        "num_vertices": batch_max_node,
                         "adjacency_matrix": batch_data['adjacency_matrix'],
                         "labels": batch_data['labels']
                     }

@@ -90,9 +90,12 @@ class DenseGGNNModel():
         self.node_token_embeddings = tf.Variable(tf.random_uniform([len(self.node_token_lookup.keys()), self.node_token_dim]), name='node_token_embeddings')
 
         self.placeholders["node_type_indices"] = tf.placeholder(tf.int32, shape=[None,None], name='node_type_indices')
-        self.placeholders["node_token_indices"] = tf.placeholder(tf.int32, shape=[None,None], name='node_token_indices')
+        self.placeholders["node_token_indices"] = tf.placeholder(tf.int32, shape=[None,None,None], name='node_token_indices')
+    
+
         self.node_type_representations = tf.nn.embedding_lookup(self.node_type_embeddings, self.placeholders["node_type_indices"])
         self.node_token_representations = tf.nn.embedding_lookup(self.node_token_embeddings, self.placeholders["node_token_indices"])
+        self.node_token_representations = tf.reduce_mean(self.node_token_representations, axis=2)
         
         # self.placeholders['initial_node_representation'] = tf.placeholder(tf.float32, [None, None, self.node_dim], name='node_features')
         self.placeholders['num_vertices'] = tf.placeholder(tf.int32, (),  name='num_vertices')
@@ -101,7 +104,7 @@ class DenseGGNNModel():
 
         self.placeholders['adjacency_matrix'] = tf.placeholder(tf.float32,[None, self.num_edge_types, None, None], name='adjacency_matrix')     # [b, e, v, v]
         self.__adjacency_matrix = tf.transpose(self.placeholders['adjacency_matrix'], [1, 0, 2, 3])                    # [e, b, v, v]
-
+        
         # weights
         self.weights['edge_weights'] = tf.Variable(glorot_init([self.num_edge_types, node_dim, node_dim]),name='edge_weights')
         self.weights['edge_biases'] = tf.Variable(glorot_init([self.num_edge_types, 1, node_dim]).astype(np.float32),name='edge_biases')
@@ -123,6 +126,8 @@ class DenseGGNNModel():
         v = self.placeholders['num_vertices']
         # h = self.placeholders['initial_node_representation']                                                # [b, v, h]
         
+        
+
         h = tf.concat([self.node_type_representations, self.node_token_representations], -1)
         h = tf.reshape(h, [-1, self.node_token_dim + self.node_type_dim])
 

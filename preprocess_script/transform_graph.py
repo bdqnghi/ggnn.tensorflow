@@ -13,9 +13,11 @@ regex = '\\"\s+([^"]+)\s+\\"'
 excluded_tokens = [",","{",";","}",")","(",'"',"'","`",""," ","[]","[","]","/",":","."," "]
 parser = argparse.ArgumentParser()
 parser.add_argument("--node_type_path",
-                    default="../preprocessed_data/node_type_vocab.txt", type=str, help="Input path")
+                    default="../preprocessed_data/node_type_vocab.txt", type=str, help="Type vocab")
 parser.add_argument("--node_token_path",
-                    default="../preprocessed_data/token_vocab.txt", type=str, help="Output path")
+                    default="../preprocessed_data/token_vocab.txt", type=str, help="Token vocab")
+parser.add_argument("--label_path",
+                    default="../preprocessed_data/train_label_vocab.txt", type=str, help="Label vocab")
 parser.add_argument(
     "--input", default="../sample_data/java-small-graph/training", type=str, help="Input path")
 parser.add_argument(
@@ -47,9 +49,11 @@ def main():
 
     node_type_lookup = {}
     node_token_lookup = {}
+    label_lookup = {}
 
     token_vocabulary_path = args.node_token_path
     node_type_vocabulary_path = args.node_type_path
+    label_vocabulary_path = args.label_path
 
     with open(token_vocabulary_path, "r") as f1:
         data = f1.readlines()
@@ -63,9 +67,17 @@ def main():
             splits = line.replace("\n", "").split(",")
             node_type_lookup[splits[1]] = int(splits[0])
     
+    with open(label_vocabulary_path, "r") as f3:
+        data = f3.readlines()
+        for line in data:
+            splits = line.replace("\n", "").split(",")
+            label_lookup[splits[1]] = int(splits[0])
+    
     node_type_lookup = bidict(node_type_lookup)
     node_token_lookup = bidict(node_token_lookup)
-    
+    label_lookup = bidict(label_lookup)
+    print(label_lookup)
+
     for subdir, dirs, files in os.walk(input_path):
         for file in files:
             # print(file)
@@ -148,10 +160,17 @@ def main():
             project_name = raw_file_path_splits[len(raw_file_path_splits) - 2]
             new_file_path = os.path.join(args.output,project_name, file)
             os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
-            with open(new_file_path, "w") as f:
+            
+            method_name = file.replace(".txt","").split("_")[1]
+            method_name_index = "-1"
+            if method_name in label_lookup:
+                method_name_index = label_lookup[method_name]
+            with open(new_file_path, "w") as f4:
                 for new_line in new_lines:
-                    f.write(new_line)
-                    f.write("\n")
+                    f4.write(new_line)
+                    f4.write("\n")
+                f4.write("? " + str(method_name_index))
+                f4.write("\n")
                             
                                 
 
