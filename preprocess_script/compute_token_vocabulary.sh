@@ -1,4 +1,5 @@
-TRAIN_DIR=../sample_data/java-small-graph/training
+DATA=sample_data
+TRAIN_DIR=../${DATA}/java-small-graph/training
 TOKEN_VOCAB_PATH=../preprocessed_data/token_vocab.txt
 
 PYTHON=python3
