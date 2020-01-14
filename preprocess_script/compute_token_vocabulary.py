@@ -4,7 +4,7 @@ import copy
 import sys
 import argparse
 import re
-sys.path.append("../utils/data_processing_utils")
+sys.path.append("../utils")
 import identifier_splitting
 
 regex = '\\"\s+([^"]+)\s+\\"'
