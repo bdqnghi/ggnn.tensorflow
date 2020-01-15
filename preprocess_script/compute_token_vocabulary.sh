@@ -1,5 +1,6 @@
 DATA=sample_data
-TRAIN_DIR=../${DATA}/java-small-graph/training
+DATASET=java-small-graph
+TRAIN_DIR=../${DATA}/${DATASET}/training
 TOKEN_VOCAB_PATH=../preprocessed_data/token_vocab.txt
 
 PYTHON=python3

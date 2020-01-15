@@ -19,7 +19,7 @@ parser.add_argument("--node_token_path",
 parser.add_argument("--label_path",
                     default="../preprocessed_data/train_label_vocab.txt", type=str, help="Label vocab")
 parser.add_argument(
-    "--input", default="../sample_data/java-small-graph/training", type=str, help="Input path")
+    "--input", default="../sample_data/java-small/training", type=str, help="Input path")
 parser.add_argument(
     "--output", default="../sample_data/java-small-graph-transformed/training", type=str, help="Output path")
 
@@ -78,14 +78,13 @@ def main():
     label_lookup = bidict(label_lookup)
     print(label_lookup)
 
-    for subdir, dirs, files in os.walk(input_path):
-        for file in files:
-            # print(file)
-            # if file.endswith(".java"):
-            raw_file_path = os.path.join(subdir, file)
-            print(raw_file_path)
-            new_lines = []
-            with open(raw_file_path, "r") as f:
+    for subdir, dirs, files in os.walk(input_path):  
+        for project in dirs:
+         
+            graphs_path = os.path.join(subdir,project + ".txt")
+
+            single_graph_file = []
+            with open(graphs_path, "r") as f:
                 lines = f.readlines()
                 for line in lines:
                    
@@ -98,80 +97,84 @@ def main():
                     # print(line)
                     
                     new_line_arr = []
-                    if "?" not in line and "dummy" not in line:
-                        splits = line.split(" ")
-                        if len(splits) == 3:
-                            source = splits[0]
-                            source_splits = source.split(",")
-                            source_node_id = source_splits[0].split(":")[0]
-                            source_node_type = source_splits[0].split(":")[1]
-                            source_node_type_id = node_type_lookup[source_node_type]
-                            
-                            sink = splits[2]
-                            sink_splits = sink.split(",")
-                            sink_node_id = sink_splits[0].split(":")[0]
-                            sink_node_type = sink_splits[0].split(":")[1]
-                            sink_node_type_id = node_type_lookup[sink_node_type]
-                            
-                            source_subtokens_str = "-"
-                            sink_subtokens_str = "-"
-                            if len(source_splits) == 2:
-                                source_token = source_splits[1]
-                                source_token = process_token(source_token)
-                                # print("Source token : "  + source_token)
-                                source_subtokens = identifier_splitting.split_identifier_into_parts(source_token)
-                                source_subtokens_ids = []
-                                for source_subtoken in source_subtokens:
-                                    if source_subtoken and source_subtoken not in excluded_tokens:
-                                        if source_subtoken in node_token_lookup:
-                                            source_subtoken_id = node_token_lookup[source_subtoken]
-                                            source_subtokens_ids.append(str(source_subtoken_id))
-                                if len(source_subtokens_ids) > 0:
-                                    source_subtokens_str = "-".join(source_subtokens_ids)
-
-                            if len(sink_splits) == 2:
-                                sink_token = sink_splits[1]
-                                sink_token = process_token(sink_token)
-                                # print("Sink token : " + sink_token)
-                                sink_subtokens = identifier_splitting.split_identifier_into_parts(sink_token)
-                                sink_subtokens_ids = []
-                                for sink_subtoken in sink_subtokens:
-                                    if sink_subtoken and sink_subtoken not in excluded_tokens:
-                                        if sink_subtoken in node_token_lookup:
-                                            sink_subtoken_id = node_token_lookup[sink_subtoken]
-                                            sink_subtokens_ids.append(str(sink_subtoken_id))
+                    if "?" not in line:
+                        if "dummy" not in line:
+                            splits = line.split(" ")
+                            if len(splits) == 3:
+                                source = splits[0]
+                                source_splits = source.split(",")
+                                source_node_id = source_splits[0].split(":")[0]
+                                source_node_type = source_splits[0].split(":")[1]
+                                source_node_type_id = node_type_lookup[source_node_type]
                                 
-                                if len(sink_subtokens_ids) > 0:
-                                    sink_subtokens_str = "-".join(sink_subtokens_ids)
+                                sink = splits[2]
+                                sink_splits = sink.split(",")
+                                sink_node_id = sink_splits[0].split(":")[0]
+                                sink_node_type = sink_splits[0].split(":")[1]
+                                sink_node_type_id = node_type_lookup[sink_node_type]
+                                
+                                source_subtokens_str = "-"
+                                sink_subtokens_str = "-"
+                                if len(source_splits) == 2:
+                                    source_token = source_splits[1]
+                                    source_token = process_token(source_token)
+                                    # print("Source token : "  + source_token)
+                                    source_subtokens = identifier_splitting.split_identifier_into_parts(source_token)
+                                    source_subtokens_ids = []
+                                    for source_subtoken in source_subtokens:
+                                        if source_subtoken and source_subtoken not in excluded_tokens:
+                                            if source_subtoken in node_token_lookup:
+                                                source_subtoken_id = node_token_lookup[source_subtoken]
+                                                source_subtokens_ids.append(str(source_subtoken_id))
+                                    if len(source_subtokens_ids) > 0:
+                                        source_subtokens_str = "-".join(source_subtokens_ids)
 
-                            edge_id = splits[1]
-                            new_line_arr.append(str(source_node_id))
-                            new_line_arr.append(str(source_node_type_id))
-                            new_line_arr.append(str(source_subtokens_str))
+                                if len(sink_splits) == 2:
+                                    sink_token = sink_splits[1]
+                                    sink_token = process_token(sink_token)
+                                    # print("Sink token : " + sink_token)
+                                    sink_subtokens = identifier_splitting.split_identifier_into_parts(sink_token)
+                                    sink_subtokens_ids = []
+                                    for sink_subtoken in sink_subtokens:
+                                        if sink_subtoken and sink_subtoken not in excluded_tokens:
+                                            if sink_subtoken in node_token_lookup:
+                                                sink_subtoken_id = node_token_lookup[sink_subtoken]
+                                                sink_subtokens_ids.append(str(sink_subtoken_id))
+                                    
+                                    if len(sink_subtokens_ids) > 0:
+                                        sink_subtokens_str = "-".join(sink_subtokens_ids)
 
-                            new_line_arr.append(edge_id)
-                            
-                            new_line_arr.append(str(sink_node_id))
-                            new_line_arr.append(str(sink_node_type_id))
-                            new_line_arr.append(str(sink_subtokens_str))
+                                edge_id = splits[1]
+                                new_line_arr.append(str(source_node_id))
+                                new_line_arr.append(str(source_node_type_id))
+                                new_line_arr.append(str(source_subtokens_str))
 
-                            new_lines.append(",".join(new_line_arr))
-            raw_file_path_splits = raw_file_path.split("/")
-            project_name = raw_file_path_splits[len(raw_file_path_splits) - 2]
-            new_file_path = os.path.join(args.output,project_name, file)
-            os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
-            
-            method_name = file.replace(".txt","").split("_")[1]
-            method_name_index = "-1"
-            if method_name in label_lookup:
-                method_name_index = label_lookup[method_name]
-            with open(new_file_path, "w") as f4:
-                for new_line in new_lines:
-                    f4.write(new_line)
-                    f4.write("\n")
-                f4.write("? " + str(method_name_index))
-                f4.write("\n")
-                            
+                                new_line_arr.append(edge_id)
+                                
+                                new_line_arr.append(str(sink_node_id))
+                                new_line_arr.append(str(sink_node_type_id))
+                                new_line_arr.append(str(sink_subtokens_str))
+
+                                single_graph_file.append(",".join(new_line_arr))
+                    else:
+                        # ? e/sample_data/java-small/training/project_2/Actor_getParent.java
+                        splits = line.split(" ")
+                        file_path_splits = splits[1].split("/")
+                        file_name = file_path_splits[len(file_path_splits)-1]
+                        method_name = file_name.split("_")[1].replace(".java","")
+                        method_name_index = "-1"
+                        if method_name in label_lookup:
+                            method_name_index = label_lookup[method_name]
+                        single_graph_file.append("? " + str(method_name_index))
+
+                        new_file_path = os.path.join(output_path,file_name.replace(".java",".txt"))
+                        print(single_graph_file)
+                        with open(new_file_path, "w") as f4:
+                            for new_line in single_graph_file:
+                                f4.write(new_line)
+                                f4.write("\n")
+                        # Reset the graph file object
+                        single_graph_file = []                
                                 
 
 

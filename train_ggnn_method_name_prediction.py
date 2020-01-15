@@ -6,7 +6,7 @@ import pickle
 import tensorflow as tf
 from utils.data.method_name_prediction_dataset import MethodNamePredictionData
 from utils.utils import ThreadedIterator
-from utils.dense_ggnn_method_name import DenseGGNNModel
+from utils.dense_ggnn_method_name_prediction import DenseGGNNModel
 import os
 import sys
 import re
@@ -230,13 +230,7 @@ def main(opt):
                         print("Ground truth : " + str(ground_truth_labels))
                         f1_score = evaluation.calculate_f1_scores(predicted_labels, ground_truth_labels)
                         print("F1 score : " + str(f1_score))
-                        # predicted_labels = transform_data(predicted_labels)
-                        # ground_truth_labels = transform_data(
-                        #     ground_truth_labels)
-                        # print("----------")
-                        # print("Predicted: " + str(predicted_labels))
-                        # print("Ground truth: " + str(ground_truth_labels))
-                        # predictions.extend(np.argmax(softmax_values_data[0],axis=1))
+
 
 
 if __name__ == "__main__":
