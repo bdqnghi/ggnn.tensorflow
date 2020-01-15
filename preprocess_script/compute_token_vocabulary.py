@@ -83,7 +83,7 @@ def main():
 						
 	all_vocabularies = list(set(all_vocabularies))
 	all_vocabularies = exclude_tokens(all_vocabularies)
-	all_vocabularies.append("<SLOT>")
+	all_vocabularies.append("<SPECIAL>")
 	
 	with open(output_path, "w") as f1:
 		for i, v in enumerate(all_vocabularies):
