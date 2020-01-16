@@ -1,5 +1,5 @@
 DATA=sample_data
-DATASET=java-small-graph
+DATASET=java-small
 TRAIN_DIR=../${DATA}/${DATASET}/training
 TOKEN_VOCAB_PATH=../preprocessed_data/token_vocab.txt
 

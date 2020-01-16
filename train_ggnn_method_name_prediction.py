@@ -50,20 +50,20 @@ parser.add_argument('--model_path', default="model",
                     help='path to save the model')
 parser.add_argument('--n_hidden', type=int, default=50,
                     help='number of hidden layers')
-parser.add_argument('--size_vocabulary', type=int,
-                    default=59, help='maximum number of node types')
-parser.add_argument('--training_percentage', type=float,
-                    default=1.0, help='percentage of data use for training')
 parser.add_argument('--log_path', default="logs/",
                     help='log path for tensorboard')
 parser.add_argument('--checkpoint_every', type=int,
                     default=100, help='check point to save model')
-parser.add_argument('--best_accuracy', type=float,
-                    default=0.0, help='best accuracy to save model')
+parser.add_argument('--best_f1', type=float,
+                    default=0.0, help='best f1 to save model')
 parser.add_argument('--aggregation', type=int, default=3, choices=range(0, 4),
                     help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
 parser.add_argument('--distributed_function', type=int, default=0,
                     choices=range(0, 2), help='0 for softmax, 1 for sigmoid')
+parser.add_argument('--training_path', default="sample_data/java-small-graph-transformed/training",
+                    help='path of training data')
+parser.add_argument('--val_path', default="sample_data/java-small-graph-transformed/validation",
+                    help='path of validation data')
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
 opt = parser.parse_args()
@@ -71,7 +71,7 @@ opt = parser.parse_args()
 
 print(opt)
 
-# opt.model_path = os.path.join(opt.model_path,"sum_softmax" + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer)) + "_node_dim_" + str(opt.node_dim)
+opt.model_path = os.path.join(opt.model_path,"method_name_prediction")
 
 
 def main(opt):
@@ -127,17 +127,17 @@ def main(opt):
     opt.num_labels = len(train_label_lookup.keys())
     opt.node_type_lookup = node_type_lookup
     opt.node_token_lookup = node_token_lookup
-    opt.path = "sample_data/java-small-graph-transformed/training"
+    # opt.training_path = "sample_data/java-small-graph-transformed/training"
 
-    train_dataset = MethodNamePredictionData(opt, True, False, False)
+    train_dataset = MethodNamePredictionData(opt, opt.training_path, True, False, False)
     opt.n_edge_types = train_dataset.n_edge_types
 
     val_opt = copy.deepcopy(opt)
-    val_opt.path = "sample_data/java-small-graph-transformed/validation"
+    # val_opt.path = "sample_data/java-small-graph-transformed/validation"
     val_opt.label_lookup = val_label_lookup
     val_opt.num_labels = len(val_label_lookup.keys())
     val_opt.node_token_lookup = node_token_lookup
-    validation_dataset = MethodNamePredictionData(val_opt, False, False, True)
+    validation_dataset = MethodNamePredictionData(val_opt, opt.val_path, False, False, True)
 
     ggnn = DenseGGNNModel(opt)
 
@@ -170,6 +170,7 @@ def main(opt):
             for i, var in enumerate(saver._var_list):
                 print('Var {}: {}'.format(i, var))
 
+        # best_f1_score = opt.best_f1_score
         for epoch in range(1,  opt.epochs + 1):
             train_batch_iterator = ThreadedIterator(
                 train_dataset.make_minibatch_iterator(), max_queue_size=1)
@@ -196,7 +197,8 @@ def main(opt):
                     # predictions = []
                     validation_batch_iterator = ThreadedIterator(
                         validation_dataset.make_minibatch_iterator(), max_queue_size=5)
-
+                    
+                    f1_scores_of_val_data = []
                     for _, val_batch_data in enumerate(validation_batch_iterator):
 
                             # Note: putting ggnn.placeholders["labels"]:  train_batch_data['labels'] seems stupid but it is a work-around, num labels in train data vs validation data is different
@@ -226,10 +228,17 @@ def main(opt):
                             ground_truth_labels.append(
                                 val_label_lookup.inverse[ground_truth])
                         
-                        print("Predicted : " + str(predicted_labels))
-                        print("Ground truth : " + str(ground_truth_labels))
+                        # print("Predicted : " + str(predicted_labels))
+                        # print("Ground truth : " + str(ground_truth_labels))
                         f1_score = evaluation.calculate_f1_scores(predicted_labels, ground_truth_labels)
-                        print("F1 score : " + str(f1_score))
+                        f1_scores_of_val_data.append(f1_score)
+                    average_f1 = np.mean(f1_scores_of_val_data)
+                    # print("F1 score : " + str(f1_score))
+                    print("Validation with F1 score ", average_f1)
+                    # if f1_score > best_f1_score:
+                    #     best_f1_score = f1_score
+                    saver.save(sess, checkfile)                  
+                    print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
 
 
 

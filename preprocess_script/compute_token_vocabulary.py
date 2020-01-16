@@ -10,8 +10,8 @@ import identifier_splitting
 regex = '\\"\s+([^"]+)\s+\\"'
 excluded_tokens = [",","{",";","}",")","(",'"',"'","`",""," ","[]","[","]","/",":","."," "]
 parser = argparse.ArgumentParser()
-parser.add_argument("--input", default="../sample_data/java-small-graph/training", type=str, help="Input path")
-parser.add_argument("--output", default="../preprocessed_data/train_token_vocab.txt", type=str, help="Output path")
+parser.add_argument("--input", default="../sample_data/java-small/training", type=str, help="Input path")
+parser.add_argument("--output", default="../preprocessed_data/token_vocab.txt", type=str, help="Output path")
 
 args = parser.parse_args()
 def exclude_tokens(all_vocabularies):
@@ -36,16 +36,14 @@ def main():
 	all_vocabularies = []
 
 	for subdir , dirs, files in os.walk(input_path):
-		for file in files:
-			print(file)
-			# if file.endswith(".java"):
-			raw_file_path = os.path.join(subdir,file)
-			
-			with open(raw_file_path,"r") as f:
+		for project in dirs:
+			graphs_path = os.path.join(subdir,project + ".txt")
+			print(graphs_path)
+			with open(graphs_path,"r") as f:
 				lines = f.readlines()
 				for line in lines:
-					
-					# print(line)
+					print(line)
+				
 					line = line.replace("\n","")
 					line = line.replace("'","")
 					line = " ".join(line.split())
@@ -80,13 +78,17 @@ def main():
 								sink_subtokens = identifier_splitting.split_identifier_into_parts(sink_token)
 								for sink_subtoken in sink_subtokens:
 									all_vocabularies.append(sink_subtoken)
-						
-	all_vocabularies = list(set(all_vocabularies))
+			
 	all_vocabularies = exclude_tokens(all_vocabularies)
-	all_vocabularies.append("<SPECIAL>")
+
+	unique_vocabularies = []
+	for vocab in all_vocabularies:
+		if vocab not in unique_vocabularies:
+			unique_vocabularies.append(vocab)
+	unique_vocabularies.append("<SPECIAL>")
 	
 	with open(output_path, "w") as f1:
-		for i, v in enumerate(all_vocabularies):
+		for i, v in enumerate(unique_vocabularies):
 			f1.write(str(i) + "," + v)
 			f1.write("\n")
 

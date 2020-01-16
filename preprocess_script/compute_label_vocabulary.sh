@@ -1,5 +1,5 @@
 DATA=sample_data
-DATASET=java-small-graph
+DATASET=java-small
 TRAIN_DIR=../${DATA}/${DATASET}/training
 TEST_DIR=../${DATA}/${DATASET}/test
 VAL_DIR=../${DATA}/${DATASET}/validation
