@@ -256,7 +256,7 @@ def _onehot(i, total):
 
 class MethodNamePredictionData():
    
-    def __init__(self, opt, is_training=True, is_testing=False, is_validating=False, live_test=False):
+    def __init__(self, opt, data_path, is_training=True, is_testing=False, is_validating=False, live_test=False):
 
         if is_training:
             print("Processing training data....")
@@ -270,7 +270,7 @@ class MethodNamePredictionData():
         self.is_training = is_training
         self.is_testing = is_testing
         self.n_edge_types = 7
-        all_data_node_id, all_data_node_type, all_data_node_token = load_program_graphs_from_directory(opt.path, opt.label_lookup, opt.node_type_lookup, opt.node_token_lookup, is_training, is_testing)
+        all_data_node_id, all_data_node_type, all_data_node_token = load_program_graphs_from_directory(data_path, opt.label_lookup, opt.node_type_lookup, opt.node_token_lookup, is_training, is_testing)
         all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
         all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
         all_data_node_token = np.array(all_data_node_token)[0:len(all_data_node_token)]
