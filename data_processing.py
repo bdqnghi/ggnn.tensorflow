@@ -47,8 +47,8 @@ def main():
                 raw_dir_path = os.path.join(subdir, project)
                 fbss_path = os.path.join(subdir,project + ".fbs")
                 graphs_path = os.path.join(subdir,project + ".txt")
-                
-                future = executor.submit(execute, raw_dir_path, fbss_path, graphs_path)
+                if not os.path.exists(fbss_path) and not os.path.exists(graphs_path):
+                    future = executor.submit(execute, raw_dir_path, fbss_path, graphs_path)
             # print(fbs_path)
 
 if __name__ == "__main__":
