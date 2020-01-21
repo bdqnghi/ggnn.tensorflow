@@ -403,7 +403,7 @@ class MonoLanguageProgramData():
                 tgt_node_type = graph_node_type[k][2]
                 # print(node_type)
                 src_node_id = graph[k][0]
-                tgt_node_id = graph[k][2]
+                tgt_node_id = graph[k][0]
                 # print("SRC node id : " + str(src_node_id))
 
 

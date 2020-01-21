@@ -6,7 +6,7 @@ import pickle
 import tensorflow as tf
 from utils.data.dataset import MonoLanguageProgramData
 from utils.utils import ThreadedIterator
-from utils.dense_ggnn import DenseGGNNModel
+from utils.dense_ggnn_code_classification import DenseGGNNModel
 import os
 import sys
 
@@ -83,11 +83,8 @@ def main(opt):
       
         batch_iterator = ThreadedIterator(test_dataset.make_minibatch_iterator(), max_queue_size=5)
         for step, batch_data in enumerate(batch_iterator):
-            print("------------")
-            print(batch_data["labels"])
-            print(batch_data["labels"].shape)
-            for label in batch_data["labels"]:
-                print(type(label))
+            # print(batch_data["labels"])
+
             softmax_values_data = sess.run(
                 [softmax_values],
                 feed_dict={
@@ -122,4 +119,3 @@ def main(opt):
     
 if __name__ == "__main__":
     main(opt)
-
