@@ -27,16 +27,14 @@ def move_files(abs_dirname, num_files):
             subproject_name = project_name + "_" + str(int(i / num_files + 1))
             subdir_name = abs_dirname.replace(project_name, subproject_name)
             # subdir_name = os.path.join(abs_dirname, project_name + "_" + str(int(i / N + 1)))
+            if os.path.exists(subdir_name):
+                shutil.rmtree(subdir_name)
             os.mkdir(subdir_name)
             curr_subdir = subdir_name
 
         # move file to current dir
         f_base = os.path.basename(f)
 
-        target_sub_dir = os.path.join(subdir_name, f_base)
-        if os.path.exists(target_sub_dir):
-            shutil.rmtree(target_sub_dir)
-            
         shutil.copy(f, target_sub_dir)
         i += 1
 
