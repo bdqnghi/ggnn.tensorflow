@@ -34,8 +34,8 @@ def move_files(abs_dirname, num_files):
 
         # move file to current dir
         f_base = os.path.basename(f)
-
-        shutil.copy(f, target_sub_dir)
+        target_sub_file = os.path.join(subdir_name, f_base)
+        shutil.copy(f, target_sub_file)
         i += 1
 
 
