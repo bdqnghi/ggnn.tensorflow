@@ -24,9 +24,11 @@ def generate_folder_graph(src_path, tgt_path):
 	os.system(cmd)
 
 
-def execute(raw_path, fbs_path, graph_path):
-    generate_folder_fbs(raw_path, fbs_path)
-    generate_folder_graph(fbs_path, graph_path)
+
+
+# def execute(raw_path, fbs_path, graph_path):
+#     generate_folder_fbs(raw_path, fbs_path)
+#     generate_folder_graph(fbs_path, graph_path)
 # def execute(raw_path, fbs_path, graph_path):
 # 	if not os.path.exists(fbs_path):
 # 		generate_folder_fbs(raw_path, fbs_path)
@@ -47,8 +49,16 @@ def main():
                 raw_dir_path = os.path.join(subdir, project)
                 fbss_path = os.path.join(subdir,project + ".fbs")
                 graphs_path = os.path.join(subdir,project + ".txt")
-                if not os.path.exists(fbss_path) and not os.path.exists(graphs_path):
-                    future = executor.submit(execute, raw_dir_path, fbss_path, graphs_path)
+                if os.path.exists(fbss_path):
+                    if not os.path.getsize(fbss_path):
+                        os.remove(fbss_path)
+                if os.path.exists(graphs_path):
+                    if not os.path.getsize(graphs_path):
+                        os.remove(graphs_path)
+                if not os.path.exists(fbss_path) 
+                    future = executor.submit(generate_folder_fbs, raw_dir_path, fbss_path)  
+                if not os.path.exists(graphs_path) 
+                    future = executor.submit(generate_folder_graph, fbss_path, graphs_path)
             # print(fbs_path)
 
 if __name__ == "__main__":
