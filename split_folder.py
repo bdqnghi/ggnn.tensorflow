@@ -5,9 +5,9 @@ import argparse
 import os
 import shutil
 
-N = 60  # the number of files in seach subfolder folder
+# N = 60  # the number of files in seach subfolder folder
 parser = argparse.ArgumentParser(description='Split files into multiple subfolders.')
-parser.add_argument("--worker", default=10, type=int, help="Num worker")
+parser.add_argument("--num_file", default=1000, type=int, help="Num files")
 parser.add_argument("--path", default="code2vec_data/java-small/validation/libgdx", type=str, help="Path")
 args = parser.parse_args()
 
