@@ -8,7 +8,7 @@ import shutil
 # N = 60  # the number of files in seach subfolder folder
 parser = argparse.ArgumentParser(description='Split files into multiple subfolders.')
 parser.add_argument("--num_files", default=1000, type=int, help="Num files")
-parser.add_argument("--path", default="code2vec_data/java-small/validation/libgdx", type=str, help="Path")
+parser.add_argument("--path", default="code2vec_data/java-small/validation/abc", type=str, help="Path")
 args = parser.parse_args()
 
 def move_files(abs_dirname, num_files):
@@ -33,7 +33,11 @@ def move_files(abs_dirname, num_files):
         # move file to current dir
         f_base = os.path.basename(f)
 
-        shutil.copy(f, os.path.join(subdir_name, f_base))
+        target_sub_dir = os.path.join(subdir_name, f_base)
+        if os.path.exists(target_sub_dir):
+            shutil.rmtree(target_sub_dir)
+            
+        shutil.copy(f, target_sub_dir)
         i += 1
 
 
@@ -49,6 +53,9 @@ def main():
 
     
     move_files(os.path.abspath(src_dir), num_files)
+
+    # # remove the folder
+    # shutil.rmtree(os.path.abspath(src_dir))
 
 
 if __name__ == '__main__':
