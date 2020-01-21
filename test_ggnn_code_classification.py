@@ -48,7 +48,7 @@ def main(opt):
 
         opt.pretrained_embeddings = embeddings
         opt.pretrained_embed_lookup = embed_lookup
-
+    print("Finished loading pretrained embeddings......")
     
     checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')   
     ckpt = tf.train.get_checkpoint_state(opt.model_path)
