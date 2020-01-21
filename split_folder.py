@@ -7,11 +7,11 @@ import shutil
 
 # N = 60  # the number of files in seach subfolder folder
 parser = argparse.ArgumentParser(description='Split files into multiple subfolders.')
-parser.add_argument("--num_file", default=1000, type=int, help="Num files")
+parser.add_argument("--num_files", default=1000, type=int, help="Num files")
 parser.add_argument("--path", default="code2vec_data/java-small/validation/libgdx", type=str, help="Path")
 args = parser.parse_args()
 
-def move_files(abs_dirname):
+def move_files(abs_dirname, num_files):
     """Move files into subdirectories."""
     src_dir_splits = abs_dirname.split("/")
     project_name = src_dir_splits[len(src_dir_splits)-1]
@@ -22,9 +22,9 @@ def move_files(abs_dirname):
 
     for f in files:
         # create new subdir if necessary
-        if i % N == 0:
+        if i % num_files == 0:
             # print(abs_dirname)
-            subproject_name = project_name + "_" + str(int(i / N + 1))
+            subproject_name = project_name + "_" + str(int(i / num_files + 1))
             subdir_name = abs_dirname.replace(project_name, subproject_name)
             # subdir_name = os.path.join(abs_dirname, project_name + "_" + str(int(i / N + 1)))
             os.mkdir(subdir_name)
@@ -43,12 +43,12 @@ def main():
     """Module's main entry point (zopectl.command)."""
     
     src_dir = args.path
-
+    num_files = args.num_files
     if not os.path.exists(src_dir):
         raise Exception('Directory does not exist ({0}).'.format(src_dir))
 
     
-    move_files(os.path.abspath(src_dir))
+    move_files(os.path.abspath(src_dir), num_files)
 
 
 if __name__ == '__main__':
