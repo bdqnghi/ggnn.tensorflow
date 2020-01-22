@@ -21,9 +21,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--workers', type=int,
                     help='number of data loading workers', default=2)
 parser.add_argument('--batch_size', type=int,
-                    default=12, help='input batch size')
+                    default=5, help='input batch size')
 parser.add_argument('--train_batch_size', type=int,
-                    default=12, help='input batch size')
+                    default=5, help='input batch size')
 parser.add_argument('--test_batch_size', type=int,
                     default=5, help='input batch size')
 parser.add_argument('--state_dim', type=int, default=30,
