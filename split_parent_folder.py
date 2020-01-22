@@ -55,6 +55,7 @@ def main():
     for subdir, dirs, files in os.walk(path):
         for project in dirs:
             raw_dir_path = os.path.join(subdir, project)
+            print(raw_dir_path)
             _, _, files_in_subdir = next(os.walk(raw_dir_path))
             file_count = len(files_in_subdir)
             if file_count > threshold:
