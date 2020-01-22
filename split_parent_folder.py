@@ -60,9 +60,9 @@ def main():
             if file_count > threshold:
                 
                 move_files(os.path.abspath(raw_dir_path), num_files)
-
-    # # remove the folder
-    # shutil.rmtree(os.path.abspath(src_dir))
+                shutil.rmtree(os.path.abspath(raw_dir_path))
+    # remove the folder
+    
 
 
 if __name__ == '__main__':
