@@ -125,7 +125,9 @@ def main():
                                         if source_subtoken and source_subtoken not in excluded_tokens:
                                             if source_subtoken in node_token_lookup:
                                                 source_subtoken_id = node_token_lookup[source_subtoken]
-                                                source_subtokens_ids.append(str(source_subtoken_id))
+                                            else:
+                                                source_subtoken_id = node_token_lookup["<SPECIAL>"]
+                                            source_subtokens_ids.append(str(source_subtoken_id))
                                     if len(source_subtokens_ids) > 0:
                                         source_subtokens_str = "-".join(source_subtokens_ids)
 
@@ -138,8 +140,11 @@ def main():
                                     for sink_subtoken in sink_subtokens:
                                         if sink_subtoken and sink_subtoken not in excluded_tokens:
                                             if sink_subtoken in node_token_lookup:
-                                                sink_subtoken_id = node_token_lookup[sink_subtoken]
-                                                sink_subtokens_ids.append(str(sink_subtoken_id))
+                                                sink_subtoken_id = node_token_lookup[sink_subtoken]   
+                                            else:
+                                                sink_subtoken_id = node_token_lookup["<SPECIAL>"]
+                                            sink_subtokens_ids.append(str(sink_subtoken_id))
+
                                     
                                     if len(sink_subtokens_ids) > 0:
                                         sink_subtokens_str = "-".join(sink_subtokens_ids)
