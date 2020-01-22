@@ -59,8 +59,8 @@ def main():
             file_count = len(files_in_subdir)
             if file_count > threshold:
                 
-                move_files(os.path.abspath(raw_dir_path), num_files)
-                shutil.rmtree(os.path.abspath(raw_dir_path))
+                move_files(raw_dir_path, num_files)
+                shutil.rmtree(raw_dir_path)
     # remove the folder
     
 
