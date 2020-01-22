@@ -50,6 +50,7 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
     node_type_data_list = []
     node_token_data_list = []
     
+    count = 0
     for subdir , dirs, files in os.walk(directory):
         for file in files:
             raw_file_path = os.path.join(subdir,file)
@@ -95,6 +96,10 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
                 node_id_data_list.append([node_id_edge_per_class, label_id])
                 node_type_data_list.append([node_type_edge_per_class, label_id])
                 node_token_data_list.append([node_token_edge_per_class, label_id])
+            
+            count += 1
+    
+    print("Total number of files read : " + str(count))
     
     return node_id_data_list, node_type_data_list, node_token_data_list
 
@@ -270,10 +275,27 @@ class MethodNamePredictionData():
         self.is_training = is_training
         self.is_testing = is_testing
         self.n_edge_types = 7
-        all_data_node_id, all_data_node_type, all_data_node_token = load_program_graphs_from_directory(data_path, opt.label_lookup, opt.node_type_lookup, opt.node_token_lookup, is_training, is_testing)
-        all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
-        all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
-        all_data_node_token = np.array(all_data_node_token)[0:len(all_data_node_token)]
+
+        base_name =os.path.basename(data_path)
+        parent_base_name = os.path.basename(os.path.dirname(data_path))
+
+        base_path = str(os.path.dirname(data_path))
+
+        saved_input_filename = "%s/%s-%s.pkl" % (base_path, parent_base_name, base_name)
+        if os.path.exists(saved_input_filename):
+            input_file = open(saved_input_filename, 'rb')
+            buf = input_file.read()
+            all_data_node_id, all_data_node_type, all_data_node_token = pyarrow.deserialize(buf)
+            input_file.close()
+        else:
+            all_data_node_id, all_data_node_type, all_data_node_token = load_program_graphs_from_directory(data_path, opt.label_lookup, opt.node_type_lookup, opt.node_token_lookup, is_training, is_testing)
+            all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
+            all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
+            all_data_node_token = np.array(all_data_node_token)[0:len(all_data_node_token)]
+            buf = pyarrow.serialize((all_data_node_id, all_data_node_type, all_data_node_token)).to_buffer()
+            out = pyarrow.OSFile(saved_input_filename, 'wb')
+            out.write(buf)
+            out.close()
 
         num_labels = len(opt.label_lookup.keys())
         self.num_labels = num_labels
@@ -310,6 +332,7 @@ class MethodNamePredictionData():
 
         buckets = defaultdict(list)
         x_dim = self.state_dim
+        print("Adding graphs to bucket.....")
         for i in range(len(self.all_data_node_id)):
             # print("--------------")
             graph = self.all_data_node_id[i][0]
@@ -379,6 +402,7 @@ class MethodNamePredictionData():
                 "labels": label_one_hot      
             })
 
+        print("Merging buckets.....")
         #------------------------
         # To merge the bucket with too few elements together
         anchor_bucket_idx = None
@@ -401,16 +425,12 @@ class MethodNamePredictionData():
         for k,v in buckets.items():
             total = total + len(v)
         
-
         bucket_at_step = [[bucket_idx for _ in range(len(bucket_data))]
                           for bucket_idx, bucket_data in buckets.items()]
 
         # print("Bucket at step : " + str(bucket_at_step))
         # print(len(bucket_at_step))
         bucket_at_step = [x for y in bucket_at_step for x in y]
-
-        #--------------------------------
-            
 
         return (buckets, bucket_sizes, bucket_at_step)
 
