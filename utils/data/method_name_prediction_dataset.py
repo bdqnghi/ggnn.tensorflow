@@ -307,9 +307,9 @@ class MethodNamePredictionData():
         num_labels = len(opt.label_lookup.keys())
         self.num_labels = num_labels
         print("Computing lookup vectors of label", str(num_labels))
-        label_lookup_onehot = {label: _onehot(label, num_labels) for label in range(0, num_labels)}
+        # label_lookup_onehot = {label: _onehot(label, num_labels) for label in range(0, num_labels)}
 
-        self.label_lookup_onehot = label_lookup_onehot
+        # self.label_lookup_onehot = label_lookup_onehot
 
         # max_node_id = find_max_node_id(all_data_node_id)
         # min_node_id = find_min_node_id(all_data_node_id)
