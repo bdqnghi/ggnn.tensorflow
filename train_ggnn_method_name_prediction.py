@@ -48,6 +48,8 @@ parser.add_argument('--manualSeed', type=int, help='manual seed')
 parser.add_argument('--n_classes', type=int, default=10, help='manual seed')
 parser.add_argument('--model_path', default="model",
                     help='path to save the model')
+parser.add_argument('--model_accuracy_path', default="model_accuracy/method_name.txt",
+                    help='path to save the the best accuracy of the model')
 parser.add_argument('--n_hidden', type=int, default=50,
                     help='number of hidden layers')
 parser.add_argument('--log_path', default="logs/",
@@ -60,7 +62,7 @@ parser.add_argument('--aggregation', type=int, default=3, choices=range(0, 4),
                     help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
 parser.add_argument('--distributed_function', type=int, default=0,
                     choices=range(0, 2), help='0 for softmax, 1 for sigmoid')
-parser.add_argument('--training_path', default="sample_data/java-small-graph-transformed/training",
+parser.add_argument('--train_path', default="sample_data/java-small-graph-transformed/training",
                     help='path of training data')
 parser.add_argument('--val_path', default="sample_data/java-small-graph-transformed/validation",
                     help='path of validation data')
@@ -129,7 +131,7 @@ def main(opt):
     opt.node_token_lookup = node_token_lookup
     # opt.training_path = "sample_data/java-small-graph-transformed/training"
 
-    train_dataset = MethodNamePredictionData(opt, opt.training_path, True, False, False)
+    train_dataset = MethodNamePredictionData(opt, opt.train_path, True, False, False)
     opt.n_edge_types = train_dataset.n_edge_types
 
     val_opt = copy.deepcopy(opt)
@@ -159,7 +161,20 @@ def main(opt):
     # train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=1)
     # for train_step, train_batch_data in enumerate(train_batch_iterator):
     #     print(train_batch_data['adjacency_matrix'].shape)
-
+    
+    best_f1_score = 0.0
+    if not os.path.exists(opt.model_accuracy_path):
+        try:
+            os.mkdir("model_accuracy")
+        except Exception as e:
+            print(e)
+    else:
+        with open(opt.model_accuracy_path,"r") as f:
+            data = f.readlines()
+            for line in data:
+                best_f1_score = float(line.replace("\n",""))
+    
+    print("Best f1 score : " + str(best_f1_score))
     with tf.Session() as sess:
         sess.run(init)
 
@@ -170,7 +185,7 @@ def main(opt):
             for i, var in enumerate(saver._var_list):
                 print('Var {}: {}'.format(i, var))
 
-        # best_f1_score = opt.best_f1_score
+        
         for epoch in range(1,  opt.epochs + 1):
             train_batch_iterator = ThreadedIterator(
                 train_dataset.make_minibatch_iterator(), max_queue_size=1)
@@ -235,11 +250,12 @@ def main(opt):
                     average_f1 = np.mean(f1_scores_of_val_data)
                     # print("F1 score : " + str(f1_score))
                     print("Validation with F1 score ", average_f1)
-                    # if f1_score > best_f1_score:
-                    #     best_f1_score = f1_score
-                    saver.save(sess, checkfile)                  
-                    print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
-
+                    if f1_score > best_f1_score:
+                        best_f1_score = f1_score
+                        saver.save(sess, checkfile)                  
+                        print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
+                        with open(opt.model_accuracy_path,"w") as f1:
+                            f1.write(str(best_f1_score))
 
 
 if __name__ == "__main__":
