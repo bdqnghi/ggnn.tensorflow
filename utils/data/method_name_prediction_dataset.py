@@ -55,44 +55,44 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
     count = 0
     for subdir , dirs, files in os.walk(directory):
         for file in files:
-            if count < 5000:
-                raw_file_path = os.path.join(subdir,file)
-                label_id = None
-                with open(raw_file_path,"r") as f:
-                    print(raw_file_path)
-                    lines = f.readlines()
-                    node_id_edge_per_class = []
-                    node_type_edge_per_class = []
-                    node_token_edge_per_class = []
-                    for line in lines:
+            # if count < 5000:
+            raw_file_path = os.path.join(subdir,file)
+            label_id = None
+            with open(raw_file_path,"r") as f:
+                print(raw_file_path)
+                lines = f.readlines()
+                node_id_edge_per_class = []
+                node_type_edge_per_class = []
+                node_token_edge_per_class = []
+                for line in lines:
+                
+                    line = line.replace("\n","")
+                    line = line.replace("'","")
+                    line = " ".join(line.split())
                     
-                        line = line.replace("\n","")
-                        line = line.replace("'","")
-                        line = " ".join(line.split())
+                    if "?" not in line:
                         
-                        if "?" not in line:
-                            
-                            splits = line.split(",")
-                            source_node_id = splits[0]
-                            source_node_type_id = splits[1]
-                            source_tokens_ids = splits[2]
+                        splits = line.split(",")
+                        source_node_id = splits[0]
+                        source_node_type_id = splits[1]
+                        source_tokens_ids = splits[2]
 
-                            sink_node_id = splits[4]
-                            sink_node_type_id = splits[5]
-                            sink_tokens_ids = splits[6]
+                        sink_node_id = splits[4]
+                        sink_node_type_id = splits[5]
+                        sink_tokens_ids = splits[6]
 
-                            edge_id = splits[3]
+                        edge_id = splits[3]
 
-                            node_id_edge = [int(source_node_id), int(edge_id), int(sink_node_id)]
-                            node_type_edge = [int(source_node_type_id), int(edge_id), int(sink_node_type_id)]
-                            node_token_edge = [source_tokens_ids, int(edge_id), sink_tokens_ids]
-                            
-                            node_id_edge_per_class.append(node_id_edge)
-                            node_type_edge_per_class.append(node_type_edge)
-                            node_token_edge_per_class.append(node_token_edge)
-                        else:
-                            splits = line.split(" ")
-                            label_id = splits[1]
+                        node_id_edge = [int(source_node_id), int(edge_id), int(sink_node_id)]
+                        node_type_edge = [int(source_node_type_id), int(edge_id), int(sink_node_type_id)]
+                        node_token_edge = [source_tokens_ids, int(edge_id), sink_tokens_ids]
+                        
+                        node_id_edge_per_class.append(node_id_edge)
+                        node_type_edge_per_class.append(node_type_edge)
+                        node_token_edge_per_class.append(node_token_edge)
+                    else:
+                        splits = line.split(" ")
+                        label_id = splits[1]
                    
             # print(node_id_edge_per_class)
             if len(node_id_edge_per_class) > 0:
