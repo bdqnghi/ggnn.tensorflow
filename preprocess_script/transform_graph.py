@@ -97,9 +97,9 @@ def main():
                     # print(line)
                     
                     new_line_arr = []
-                    if "?" not in line:
+                    splits = line.split(" ")
+                    if splits[0] != "?":
                         if "dummy" not in line:
-                            splits = line.split(" ")
                             if len(splits) == 3:
                                 source = splits[0]
                                 source_splits = source.split(",")
