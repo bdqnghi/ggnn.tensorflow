@@ -290,9 +290,12 @@ class MethodNamePredictionData():
             input_file.close()
         else:
             all_data_node_id, all_data_node_type, all_data_node_token = load_program_graphs_from_directory(data_path, opt.label_lookup, opt.node_type_lookup, opt.node_token_lookup, is_training, is_testing)
-            all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
-            all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
-            all_data_node_token = np.array(all_data_node_token)[0:len(all_data_node_token)]
+            # all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
+            # all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
+            # all_data_node_token = np.array(all_data_node_token)[0:len(all_data_node_token)]
+            all_data_node_id = np.asarray(all_data_node_id) 
+            all_data_node_type = np.asarray(all_data_node_type) 
+            all_data_node_token = np.asarray(all_data_node_token) 
             print("Serializing......")
             buf = pyarrow.serialize((all_data_node_id, all_data_node_type, all_data_node_token)).to_buffer()
             out = pyarrow.OSFile(saved_input_filename, 'wb')
