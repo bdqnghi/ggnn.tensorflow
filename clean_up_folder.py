@@ -19,13 +19,13 @@ def clean_up(path):
                 except Exception as e:
                     print(e)
 
-        
-        for content in os.listdir(project_path):
-            content_path = os.path.join(project_path, content)
-            # print(content_path)
-            if os.path.isdir(content_path):
+        if os.path.isdir(project_path):
+            for content in os.listdir(project_path):
+                content_path = os.path.join(project_path, content)
                 # print(content_path)
-                shutil.rmtree(content_path)
+                if os.path.isdir(content_path):
+                    # print(content_path)
+                    shutil.rmtree(content_path)
 
 
 def main():
