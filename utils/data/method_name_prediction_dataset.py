@@ -293,8 +293,10 @@ class MethodNamePredictionData():
             all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
             all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
             all_data_node_token = np.array(all_data_node_token)[0:len(all_data_node_token)]
+            print("Serializing......")
             buf = pyarrow.serialize((all_data_node_id, all_data_node_type, all_data_node_token)).to_buffer()
             out = pyarrow.OSFile(saved_input_filename, 'wb')
+            print("Writing to pkl......")
             out.write(buf)
             out.close()
 
