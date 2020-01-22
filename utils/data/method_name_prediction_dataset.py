@@ -53,43 +53,44 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
     count = 0
     for subdir , dirs, files in os.walk(directory):
         for file in files:
-            raw_file_path = os.path.join(subdir,file)
-            label_id = None
-            with open(raw_file_path,"r") as f:
-                print(raw_file_path)
-                lines = f.readlines()
-                node_id_edge_per_class = []
-                node_type_edge_per_class = []
-                node_token_edge_per_class = []
-                for line in lines:
-                  
-                    line = line.replace("\n","")
-                    line = line.replace("'","")
-                    line = " ".join(line.split())
+            if count < 5000:
+                raw_file_path = os.path.join(subdir,file)
+                label_id = None
+                with open(raw_file_path,"r") as f:
+                    print(raw_file_path)
+                    lines = f.readlines()
+                    node_id_edge_per_class = []
+                    node_type_edge_per_class = []
+                    node_token_edge_per_class = []
+                    for line in lines:
                     
-                    if "?" not in line:
+                        line = line.replace("\n","")
+                        line = line.replace("'","")
+                        line = " ".join(line.split())
                         
-                        splits = line.split(",")
-                        source_node_id = splits[0]
-                        source_node_type_id = splits[1]
-                        source_tokens_ids = splits[2]
+                        if "?" not in line:
+                            
+                            splits = line.split(",")
+                            source_node_id = splits[0]
+                            source_node_type_id = splits[1]
+                            source_tokens_ids = splits[2]
 
-                        sink_node_id = splits[4]
-                        sink_node_type_id = splits[5]
-                        sink_tokens_ids = splits[6]
+                            sink_node_id = splits[4]
+                            sink_node_type_id = splits[5]
+                            sink_tokens_ids = splits[6]
 
-                        edge_id = splits[3]
+                            edge_id = splits[3]
 
-                        node_id_edge = [int(source_node_id), int(edge_id), int(sink_node_id)]
-                        node_type_edge = [int(source_node_type_id), int(edge_id), int(sink_node_type_id)]
-                        node_token_edge = [source_tokens_ids, int(edge_id), sink_tokens_ids]
-                        
-                        node_id_edge_per_class.append(node_id_edge)
-                        node_type_edge_per_class.append(node_type_edge)
-                        node_token_edge_per_class.append(node_token_edge)
-                    else:
-                        splits = line.split(" ")
-                        label_id = splits[1]
+                            node_id_edge = [int(source_node_id), int(edge_id), int(sink_node_id)]
+                            node_type_edge = [int(source_node_type_id), int(edge_id), int(sink_node_type_id)]
+                            node_token_edge = [source_tokens_ids, int(edge_id), sink_tokens_ids]
+                            
+                            node_id_edge_per_class.append(node_id_edge)
+                            node_type_edge_per_class.append(node_type_edge)
+                            node_token_edge_per_class.append(node_token_edge)
+                        else:
+                            splits = line.split(" ")
+                            label_id = splits[1]
                    
             # print(node_id_edge_per_class)
             if len(node_id_edge_per_class) > 0:
@@ -303,10 +304,10 @@ class MethodNamePredictionData():
 
         self.label_lookup_onehot = label_lookup_onehot
 
-        max_node_id = find_max_node_id(all_data_node_id)
-        min_node_id = find_min_node_id(all_data_node_id)
-        print("Max node id in data : " + str(max_node_id))
-        print("Min node id in data : " + str(min_node_id))
+        # max_node_id = find_max_node_id(all_data_node_id)
+        # min_node_id = find_min_node_id(all_data_node_id)
+        # print("Max node id in data : " + str(max_node_id))
+        # print("Min node id in data : " + str(min_node_id))
 
         # all_data_node_id = convert_program_data(all_data_node_id)
         # all_data_node_type = convert_program_data(all_data_node_type)
