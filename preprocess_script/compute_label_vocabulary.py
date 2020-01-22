@@ -42,9 +42,16 @@ def main():
 			with open(graphs_path,"r") as f:
 				lines = f.readlines()
 				for line in lines:
-					if "?" in line:
-						print(line)
-						splits = line.split(" ")
+					# print(line)
+				
+					line = line.replace("\n","")
+					line = line.replace("'","")
+					line = " ".join(line.split())
+					# line = strip(line)
+					# line
+					splits = line.split(" ")
+					
+					if splits[0] == "?":
 						file_path_splits = splits[1].split("/")
 						file_name = file_path_splits[len(file_path_splits)-1]
 						method_name = file_name.split("_")[1].replace(".java","")
