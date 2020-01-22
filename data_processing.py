@@ -52,12 +52,15 @@ def main():
                 if os.path.exists(fbss_path):
                     if not os.path.getsize(fbss_path):
                         os.remove(fbss_path)
+                     
                 if os.path.exists(graphs_path):
                     if not os.path.getsize(graphs_path):
                         os.remove(graphs_path)
                 if not os.path.exists(fbss_path):
+                    print("Producing fbs....")
                     future_1 = executor.submit(generate_folder_fbs, raw_dir_path, fbss_path)  
-                if not os.path.exists(graphs_path) and os.path.exists(fbss_path): 
+                if not os.path.exists(graphs_path): 
+                    print("Producing graph....")
                     future_2 = executor.submit(generate_folder_graph, fbss_path, graphs_path)
             # print(fbs_path)
 
