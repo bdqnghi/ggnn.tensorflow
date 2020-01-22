@@ -10,6 +10,8 @@ import random
 #import pickle
 import pyarrow
 from collections import defaultdict
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
 
 def load_graphs_from_file(file_name):
     data_list = []
@@ -255,8 +257,13 @@ def graph_to_adj_mat(graph, num_nodes, num_edge_types, tie_fwd_bkwd=True):
         amat[e-1 + bwd_edge_offset, src, dest] = 1
     return amat
 
+# def _onehot(i, total):
+#     return [1.0 if j == i else 0.0 for j in range(total)]
+
 def _onehot(i, total):
-    return [1.0 if j == i else 0.0 for j in range(total)]
+    zeros = np.zeros(total)
+    zeros[i] = 1.0
+    return zeros
 
 
 
@@ -304,9 +311,9 @@ class MethodNamePredictionData():
             out.write(buf)
             out.close()
 
-        num_labels = len(opt.label_lookup.keys())
-        self.num_labels = num_labels
-        print("Computing lookup vectors of label", str(num_labels))
+        self.num_labels = len(opt.label_lookup.keys())
+        # self.num_labels = num_labels
+        # print("Computing lookup vectors of label", str(num_labels))
         # label_lookup_onehot = {label: _onehot(label, num_labels) for label in range(0, num_labels)}
 
         # self.label_lookup_onehot = label_lookup_onehot
@@ -346,7 +353,7 @@ class MethodNamePredictionData():
             graph = self.all_data_node_id[i][0]
             label = self.all_data_node_id[i][1]
           
-            label_one_hot = self.label_lookup_onehot[int(label)]
+            # label_one_hot = self.label_lookup_onehot[int(label)]
 
             graph_node_type = self.all_data_node_type[i][0]
             graph_node_token = self.all_data_node_token[i][0]
@@ -407,7 +414,7 @@ class MethodNamePredictionData():
                 "graph": graph,
                 "node_type_indices": node_type_indices,
                 "node_token_indices": node_token_indices,
-                "labels": label_one_hot      
+                "labels": int(label)      
             })
 
         print("Merging buckets.....")
@@ -550,13 +557,20 @@ class MethodNamePredictionData():
                     node_type_indices = np.array(batch_data['node_type_indices'])
                     node_token_indices = np.array(batch_data['node_token_indices'])
                     # print(initial_representations.shape)
+
+                    batch_labels_one_hot = []
+                    for label in batch_data['labels']:
+                        one_hot = _onehot(label, self.num_labels)
+                        batch_labels_one_hot.append(one_hot)
+
+                    batch_labels_one_hot = np.asarray(batch_labels_one_hot)
                     batch = {
                         "num_graphs": num_graphs,
                         "node_type_indices": node_type_indices,
                         "node_token_indices": node_token_indices,
                         "num_vertices": batch_max_node,
                         "adjacency_matrix": batch_data['adjacency_matrix'],
-                        "labels": batch_data['labels']
+                        "labels": batch_labels_one_hot
                     }
 
                     yield batch
