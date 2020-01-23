@@ -54,7 +54,8 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
     
     count = 0
     for subdir , dirs, files in os.walk(directory):
-        for file in files:
+        print("Loading graph from files....")
+        for file in tqdm(files):
             # if count < 5000:
             raw_file_path = os.path.join(subdir,file)
             label_id = None
@@ -285,7 +286,7 @@ class MethodNamePredictionData():
         self.n_edge_types = 7
         self.num_labels = len(opt.label_lookup.keys())
         self.batch_size = opt.batch_size
-        
+
         base_name =os.path.basename(data_path)
         parent_base_name = os.path.basename(os.path.dirname(data_path))
 
