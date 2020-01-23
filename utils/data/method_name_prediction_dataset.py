@@ -442,25 +442,23 @@ class MethodNamePredictionData():
         print("Merging buckets.....")
         #------------------------
         # To merge the bucket with too few elements together
-        anchor_bucket_idx = None
-        buckets_to_delete = []
-        for bucket_idx, bucket_data in buckets.items():
-            if len(bucket_data) > 0 and len(bucket_data) <=10:
-                # print("anchor : " + str(anchor_bucket_idx))
-                if anchor_bucket_idx is None:
-                    # print("None , choose bukcket id : " + str(bucket_idx))
-                    anchor_bucket_idx = bucket_idx               
-                if anchor_bucket_idx != bucket_idx:
-                    buckets[anchor_bucket_idx].extend(bucket_data)
-                    buckets_to_delete.append(bucket_idx)
+        # anchor_bucket_idx = None
+        # buckets_to_delete = []
+        # for bucket_idx, bucket_data in buckets.items():
+        #     if len(bucket_data) > 0 and len(bucket_data) <=10:
+        #         if anchor_bucket_idx is None:      
+        #             anchor_bucket_idx = bucket_idx               
+        #         if anchor_bucket_idx != bucket_idx:
+        #             buckets[anchor_bucket_idx].extend(bucket_data)
+        #             buckets_to_delete.append(bucket_idx)
 
-        for b in buckets_to_delete:
-            buckets.pop(b,None)
+        # for b in buckets_to_delete:
+        #     buckets.pop(b,None)
         #------------------------
 
-        total = 0
-        for k,v in buckets.items():
-            total = total + len(v)
+        # total = 0
+        # for k,v in buckets.items():
+        #     total = total + len(v)
         
         bucket_at_step = [[bucket_idx for _ in range(len(bucket_data))]
                           for bucket_idx, bucket_data in buckets.items()]
