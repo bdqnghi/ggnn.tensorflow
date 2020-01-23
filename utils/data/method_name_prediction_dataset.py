@@ -341,8 +341,8 @@ class MethodNamePredictionData():
         print("Processing raw graphs........")
         
         # Interesting idea to batch graphs with approximately similar size into the same bucket
-        # The difference is that he original code from Microsoft batch exact similar size graphs into the same bucket
-        bucket_sizes = np.array(list(range(65 , 2100 , 83)))
+        # The difference is that the original code from Microsoft batch exact similar size graphs into the same bucket
+        bucket_sizes = np.array(list(range(100 , 7500 , 100)))
         
 
         buckets = defaultdict(list)
@@ -362,60 +362,62 @@ class MethodNamePredictionData():
             
             # print(max([v for e in d['graph'] for v in [e[0], e[2]]]))
             chosen_bucket_idx = np.argmax(bucket_sizes > max([v for e in graph for v in [e[0], e[2]]]))
-            chosen_bucket_size = bucket_sizes[chosen_bucket_idx]
-            # print(chosen_bucket_size)
-            n_active_nodes = self.state_dim
 
-            num_nodes = find_num_nodes_of_graph(graph)
+            if chosen_bucket_idx > 3000:
+                chosen_bucket_size = bucket_sizes[chosen_bucket_idx]
+                # print(chosen_bucket_size)
+                n_active_nodes = self.state_dim
 
-            # print("max node : " + str(num_nodes))
-            # node_inits = np.zeros([num_nodes+1, 30])
+                num_nodes = find_num_nodes_of_graph(graph)
 
-            # print(node_inits.shape)
-           
-            node_type_indices = np.zeros(num_nodes, dtype = int)
-            node_token_indices = np.zeros((num_nodes, max_num_tokens), dtype = int)
-            for k in range(len(graph)):
-                src_node_type = graph_node_type[k][0]
-                tgt_node_type = graph_node_type[k][2]
+                # print("max node : " + str(num_nodes))
+                # node_inits = np.zeros([num_nodes+1, 30])
 
-                src_node_tokens = graph_node_token[k][0]
-                tgt_node_tokens = graph_node_token[k][2]
-                
-                src_node_tokens = split_node_token(src_node_tokens)
-                tgt_node_tokens = split_node_token(tgt_node_tokens)
-                
-                if len(src_node_tokens) < max_num_tokens:
-                    remaining = max_num_tokens - len(src_node_tokens)
-                    for i in range(remaining):
-                        src_node_tokens.append(0)
-                
-                if len(tgt_node_tokens) < max_num_tokens:
-                    remaining = max_num_tokens - len(tgt_node_tokens)
-                    for i in range(remaining):
-                        tgt_node_tokens.append(0)
+                # print(node_inits.shape)
+            
+                node_type_indices = np.zeros(num_nodes, dtype = int)
+                node_token_indices = np.zeros((num_nodes, max_num_tokens), dtype = int)
+                for k in range(len(graph)):
+                    src_node_type = graph_node_type[k][0]
+                    tgt_node_type = graph_node_type[k][2]
 
-                src_node_id = graph[k][0]
-                tgt_node_id = graph[k][2]
+                    src_node_tokens = graph_node_token[k][0]
+                    tgt_node_tokens = graph_node_token[k][2]
+                    
+                    src_node_tokens = split_node_token(src_node_tokens)
+                    tgt_node_tokens = split_node_token(tgt_node_tokens)
+                    
+                    if len(src_node_tokens) < max_num_tokens:
+                        remaining = max_num_tokens - len(src_node_tokens)
+                        for i in range(remaining):
+                            src_node_tokens.append(0)
+                    
+                    if len(tgt_node_tokens) < max_num_tokens:
+                        remaining = max_num_tokens - len(tgt_node_tokens)
+                        for i in range(remaining):
+                            tgt_node_tokens.append(0)
 
-                node_type_indices[int(src_node_id)] = int(src_node_type)
-                node_type_indices[int(tgt_node_id)] = int(tgt_node_type)
+                    src_node_id = graph[k][0]
+                    tgt_node_id = graph[k][2]
 
-                if len(src_node_tokens) > 0:
-                    node_token_indices[int(src_node_id)] = src_node_tokens
-                if len(tgt_node_tokens) > 0:
-                    node_token_indices[int(tgt_node_id)] = tgt_node_tokens
-                # print("SRC node id : " + str(src_node_id))
-        
+                    node_type_indices[int(src_node_id)] = int(src_node_type)
+                    node_type_indices[int(tgt_node_id)] = int(tgt_node_type)
+
+                    if len(src_node_tokens) > 0:
+                        node_token_indices[int(src_node_id)] = src_node_tokens
+                    if len(tgt_node_tokens) > 0:
+                        node_token_indices[int(tgt_node_id)] = tgt_node_tokens
+                    # print("SRC node id : " + str(src_node_id))
+            
 
 
-            # adj_mat': graph_to_adj_mat(graph, chosen_bucket_size, self.n_edge_types, True),
-            buckets[chosen_bucket_idx].append({
-                "graph": graph,
-                "node_type_indices": node_type_indices,
-                "node_token_indices": node_token_indices,
-                "labels": int(label)      
-            })
+                # adj_mat': graph_to_adj_mat(graph, chosen_bucket_size, self.n_edge_types, True),
+                buckets[chosen_bucket_idx].append({
+                    "graph": graph,
+                    "node_type_indices": node_type_indices,
+                    "node_token_indices": node_token_indices,
+                    "labels": int(label)      
+                })
 
         print("Merging buckets.....")
         #------------------------
@@ -423,7 +425,7 @@ class MethodNamePredictionData():
         anchor_bucket_idx = None
         buckets_to_delete = []
         for bucket_idx, bucket_data in buckets.items():
-            if len(bucket_data) > 0 and len(bucket_data) <=5:
+            if len(bucket_data) > 0 and len(bucket_data) <=10:
                 # print("anchor : " + str(anchor_bucket_idx))
                 if anchor_bucket_idx is None:
                     # print("None , choose bukcket id : " + str(bucket_idx))
