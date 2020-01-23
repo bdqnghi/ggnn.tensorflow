@@ -357,13 +357,12 @@ class MethodNamePredictionData():
 
             graph_node_type = self.all_data_node_type[i][0]
             graph_node_token = self.all_data_node_token[i][0]
-            
-            max_num_tokens = find_max_num_tokens_of_graph(graph_node_token)
-            
+           
             # print(max([v for e in d['graph'] for v in [e[0], e[2]]]))
             chosen_bucket_idx = np.argmax(bucket_sizes > max([v for e in graph for v in [e[0], e[2]]]))
 
-            if chosen_bucket_idx < 4000:
+            if chosen_bucket_idx < 3000:
+                max_num_tokens = find_max_num_tokens_of_graph(graph_node_token)
                 chosen_bucket_size = bucket_sizes[chosen_bucket_idx]
                 # print(chosen_bucket_size)
                 n_active_nodes = self.state_dim
