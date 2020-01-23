@@ -206,7 +206,7 @@ def main(opt):
                 print("Epoch:", epoch, "Step:", train_step, "Loss:", err)
                 
 
-                if train_step % opt.checkpoint_every == 0:
+                if train_step % opt.checkpoint_every == 0 and train_step > 0:
                     # --------------------------------------
                     print("Validating.......")
                     # predictions = []
