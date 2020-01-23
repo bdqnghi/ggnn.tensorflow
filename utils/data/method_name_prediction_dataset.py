@@ -52,14 +52,17 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
     node_type_data_list = []
     node_token_data_list = []
     
-    count = 0
+    
+    all_files_path = []
     for subdir , dirs, files in os.walk(directory):
         print("Loading graph from files....")
         for file in tqdm(files):
-            # if count < 5000:
             raw_file_path = os.path.join(subdir,file)
-            label_id = None
-            with open(raw_file_path,"r") as f:
+            all_files_path.append(raw_file_path)
+    count = 0
+    for file_path in tqdm(all_files_path):
+        if count < 50000:
+            with open(file_path,"r") as f:
                 print(raw_file_path)
                 lines = f.readlines()
                 node_id_edge_per_class = []
@@ -94,14 +97,14 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
                     else:
                         splits = line.split(" ")
                         label_id = splits[1]
-                   
+                    
             # print(node_id_edge_per_class)
             if len(node_id_edge_per_class) > 0:
                 node_id_data_list.append([node_id_edge_per_class, label_id])
                 node_type_data_list.append([node_type_edge_per_class, label_id])
                 node_token_data_list.append([node_token_edge_per_class, label_id])
             
-            count += 1
+        count += 1
     
     print("Total number of files read : " + str(count))
     
@@ -357,7 +360,7 @@ class MethodNamePredictionData():
         
         # Interesting idea to batch graphs with approximately similar size into the same bucket
         # The difference is that the original code from Microsoft batch exact similar size graphs into the same bucket
-        bucket_sizes = np.array(list(range(100 , 7500 , 100)))
+        bucket_sizes = np.array(list(range(30 , 7500 , 100)))
         
 
         buckets = defaultdict(list)
