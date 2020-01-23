@@ -5,7 +5,7 @@ import sys
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--worker", default=10, type=int, help="Num worker")
+parser.add_argument("--worker", default=16, type=int, help="Num worker")
 parser.add_argument("--path", default="sample_data/java-small/training", type=str, help="Path")
 
 args = parser.parse_args()
