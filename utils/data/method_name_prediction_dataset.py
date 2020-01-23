@@ -363,7 +363,7 @@ class MethodNamePredictionData():
             # print(max([v for e in d['graph'] for v in [e[0], e[2]]]))
             chosen_bucket_idx = np.argmax(bucket_sizes > max([v for e in graph for v in [e[0], e[2]]]))
 
-            if chosen_bucket_idx > 3000:
+            if chosen_bucket_idx < 4000:
                 chosen_bucket_size = bucket_sizes[chosen_bucket_idx]
                 # print(chosen_bucket_size)
                 n_active_nodes = self.state_dim
