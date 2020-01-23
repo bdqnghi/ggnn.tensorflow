@@ -254,12 +254,12 @@ def main(opt):
                     average_f1 = np.mean(f1_scores_of_val_data)
                     # print("F1 score : " + str(f1_score))
                     print("Validation with F1 score ", average_f1)
-                    if f1_score > best_f1_score:
-                        best_f1_score = f1_score
-                        saver.save(sess, checkfile)                  
-                        print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
-                        with open(opt.model_accuracy_path,"w") as f1:
-                            f1.write(str(best_f1_score))
+                    # if f1_score > best_f1_score:
+                    best_f1_score = f1_score
+                    saver.save(sess, checkfile)                  
+                    print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
+                    with open(opt.model_accuracy_path,"w") as f1:
+                        f1.write(str(best_f1_score))
 
 
 if __name__ == "__main__":
