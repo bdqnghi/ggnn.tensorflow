@@ -348,7 +348,7 @@ class MethodNamePredictionData():
         buckets = defaultdict(list)
         x_dim = self.state_dim
         print("Adding graphs to bucket.....")
-        for i in range(len(self.all_data_node_id)):
+        for i in tqdm(range(len(self.all_data_node_id))):
             # print("--------------")
             graph = self.all_data_node_id[i][0]
             label = self.all_data_node_id[i][1]
