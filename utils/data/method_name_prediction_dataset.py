@@ -283,7 +283,9 @@ class MethodNamePredictionData():
         self.is_training = is_training
         self.is_testing = is_testing
         self.n_edge_types = 7
-
+        self.num_labels = len(opt.label_lookup.keys())
+        self.batch_size = opt.batch_size
+        
         base_name =os.path.basename(data_path)
         parent_base_name = os.path.basename(os.path.dirname(data_path))
 
@@ -291,47 +293,45 @@ class MethodNamePredictionData():
 
         saved_input_filename = "%s/%s-%s.pkl" % (base_path, parent_base_name, base_name)
         if os.path.exists(saved_input_filename):
+            print("Loading existing data file.........")
             input_file = open(saved_input_filename, 'rb')
             buf = input_file.read()
-            all_data_node_id, all_data_node_type, all_data_node_token = pyarrow.deserialize(buf)
+            self.data = pyarrow.deserialize(buf)
             input_file.close()
         else:
             all_data_node_id, all_data_node_type, all_data_node_token = load_program_graphs_from_directory(data_path, opt.label_lookup, opt.node_type_lookup, opt.node_token_lookup, is_training, is_testing)
-            # all_data_node_id = np.array(all_data_node_id)[0:len(all_data_node_id)]
-            # all_data_node_type = np.array(all_data_node_type)[0:len(all_data_node_type)]
-            # all_data_node_token = np.array(all_data_node_token)[0:len(all_data_node_token)]
+        
             print("Converting array to numpy array......")
             all_data_node_id = np.asarray(all_data_node_id) 
             all_data_node_type = np.asarray(all_data_node_type) 
             all_data_node_token = np.asarray(all_data_node_token) 
+         
+            # self.num_labels = num_labels
+            # print("Computing lookup vectors of label", str(num_labels))
+            # label_lookup_onehot = {label: _onehot(label, num_labels) for label in range(0, num_labels)}
+
+            # self.label_lookup_onehot = label_lookup_onehot
+
+            # max_node_id = find_max_node_id(all_data_node_id)
+            # min_node_id = find_min_node_id(all_data_node_id)
+            # print("Max node id in data : " + str(max_node_id))
+            # print("Min node id in data : " + str(min_node_id))
+
+            # all_data_node_id = convert_program_data(all_data_node_id)
+            # all_data_node_type = convert_program_data(all_data_node_type)
+            
+            self.all_data_node_id = all_data_node_id
+            self.all_data_node_type = all_data_node_type
+            self.all_data_node_token = all_data_node_token
+
+            self.data = self.process_raw_graphs()
             print("Serializing......")
-            buf = pyarrow.serialize((all_data_node_id, all_data_node_type, all_data_node_token)).to_buffer()
+            buf = pyarrow.serialize(self.data).to_buffer()
             out = pyarrow.OSFile(saved_input_filename, 'wb')
             print("Writing to pkl......")
             out.write(buf)
             out.close()
-
-        self.num_labels = len(opt.label_lookup.keys())
-        # self.num_labels = num_labels
-        # print("Computing lookup vectors of label", str(num_labels))
-        # label_lookup_onehot = {label: _onehot(label, num_labels) for label in range(0, num_labels)}
-
-        # self.label_lookup_onehot = label_lookup_onehot
-
-        # max_node_id = find_max_node_id(all_data_node_id)
-        # min_node_id = find_min_node_id(all_data_node_id)
-        # print("Max node id in data : " + str(max_node_id))
-        # print("Min node id in data : " + str(min_node_id))
-
-        # all_data_node_id = convert_program_data(all_data_node_id)
-        # all_data_node_type = convert_program_data(all_data_node_type)
-        
-        self.all_data_node_id = all_data_node_id
-        self.all_data_node_type = all_data_node_type
-        self.all_data_node_token = all_data_node_token
-
-        self.data = self.process_raw_graphs()
-        self.batch_size = opt.batch_size
+       
       
 
     
