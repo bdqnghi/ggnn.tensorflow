@@ -338,7 +338,8 @@ class MethodNamePredictionData():
         if self.is_training:
             buckets, bucket_sizes, bucket_at_step = self.data
             for bucket_idx, bucket_data in buckets.items():
-                if bucket_idx > 4000:
+                bucket_size = bucket_sizes[bucket_idx]
+                if bucket_size > 1500:
                     del buckets[bucket_idx]
 
             self.data = (buckets, bucket_sizes, bucket_at_step)
