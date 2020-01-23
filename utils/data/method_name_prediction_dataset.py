@@ -337,10 +337,13 @@ class MethodNamePredictionData():
         # Optional : Remove bucket for training step
         if self.is_training:
             buckets, bucket_sizes, bucket_at_step = self.data
+            bucket_ids_to_delete = []
             for bucket_idx, bucket_data in buckets.items():
                 bucket_size = bucket_sizes[bucket_idx]
                 if bucket_size > 1500:
-                    del buckets[bucket_idx]
+                    bucket_ids_to_delete.append(bucket_idx)
+            for b in bucket_ids_to_delete:
+                del buckets[b]
 
             self.data = (buckets, bucket_sizes, bucket_at_step)
     
