@@ -60,7 +60,7 @@ def load_program_graphs_from_directory(directory, label_lookup, node_type_lookup
             raw_file_path = os.path.join(subdir,file)
             all_files_path.append(raw_file_path)
     count = 0
-    thres_hold = 50000
+    threshold = 50000
 
     if is_training:
         all_files_path = all_files_path[:threshold]
