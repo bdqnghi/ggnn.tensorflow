@@ -23,9 +23,11 @@ parser.add_argument('--workers', type=int,
 parser.add_argument('--batch_size', type=int,
                     default=5, help='input batch size')
 parser.add_argument('--train_batch_size', type=int,
-                    default=5, help='input batch size')
+                    default=5, help='train input batch size')
 parser.add_argument('--test_batch_size', type=int,
-                    default=5, help='input batch size')
+                    default=5, help='test input batch size')
+parser.add_argument('--val_batch_size', type=int,
+                    default=4, help='val input batch size')
 parser.add_argument('--state_dim', type=int, default=30,
                     help='GGNN hidden state dimension size')
 parser.add_argument('--node_type_dim', type=int, default=50,
@@ -55,7 +57,7 @@ parser.add_argument('--n_hidden', type=int, default=50,
 parser.add_argument('--log_path', default="logs/",
                     help='log path for tensorboard')
 parser.add_argument('--checkpoint_every', type=int,
-                    default=5000, help='check point to save model')
+                    default=10000, help='check point to save model')
 parser.add_argument('--best_f1', type=float,
                     default=0.0, help='best f1 to save model')
 parser.add_argument('--aggregation', type=int, default=3, choices=range(0, 4),

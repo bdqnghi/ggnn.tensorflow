@@ -274,10 +274,13 @@ class MethodNamePredictionData():
 
         if is_training:
             print("Processing training data....")
+            self.batch_size = opt.batch_size
         if is_testing:
             print("Processing testing data....")
+            self.batch_size = opt.batch_size
         if is_validating:
             print("Processing validation data....")
+            self.batch_size = opt.val_batch_size
         # self.node_dim = opt.node_dim
         self.state_dim = opt.state_dim
 
@@ -285,7 +288,7 @@ class MethodNamePredictionData():
         self.is_testing = is_testing
         self.n_edge_types = 7
         self.num_labels = len(opt.label_lookup.keys())
-        self.batch_size = opt.batch_size
+        
 
         base_name =os.path.basename(data_path)
         parent_base_name = os.path.basename(os.path.dirname(data_path))
