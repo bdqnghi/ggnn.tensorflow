@@ -75,7 +75,7 @@ parser.add_argument('--val_path', default="sample_data/java-small-graph-transfor
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
 opt = parser.parse_args()
-# os.environ['CUDA_VISIBLE_DEVICES'] = opt.cuda
+os.environ['CUDA_VISIBLE_DEVICES'] = opt.cuda
 
 print(opt)
 
