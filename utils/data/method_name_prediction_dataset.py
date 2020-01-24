@@ -229,7 +229,8 @@ class MethodNamePredictionData():
         self.n_edge_types = 7
         self.num_labels = len(opt.label_lookup.keys())
         self.data_threshold = opt.data_threshold
-
+        self.bucket_size_threshold = opt.bucket_size_threshold
+        
         base_name =os.path.basename(data_path)
         parent_base_name = os.path.basename(os.path.dirname(data_path))
 
@@ -283,7 +284,7 @@ class MethodNamePredictionData():
             bucket_ids_to_delete = []
             for bucket_idx, bucket_data in buckets.items():
                 bucket_size = bucket_sizes[bucket_idx]
-                if bucket_size > 1500:
+                if bucket_size > self.bucket_size_threshold:
                     bucket_ids_to_delete.append(bucket_idx)
             for b in bucket_ids_to_delete:
                 del buckets[b]

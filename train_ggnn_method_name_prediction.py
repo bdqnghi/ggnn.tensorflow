@@ -60,6 +60,8 @@ parser.add_argument('--checkpoint_every', type=int,
                     default=500, help='check point to save model')
 parser.add_argument('--data_threshold', type=int,
                     default=100000, help='threshold to select subset of data')
+parser.add_argument('--bucket_size_threshold', type=int,
+                    default=1000, help='bucket size threshold')
 parser.add_argument('--best_f1', type=float,
                     default=0.0, help='best f1 to save model')
 parser.add_argument('--aggregation', type=int, default=3, choices=range(0, 4),
