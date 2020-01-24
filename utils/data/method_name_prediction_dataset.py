@@ -526,19 +526,11 @@ class MethodNamePredictionData():
         batch_data = {'adjacency_matrix': [], 'node_type_indices': [], "node_token_indices": [],  'labels': []}
 
         # find graph which has the largest number of nodes in batch
-        elements_to_process = []
 
-        if self.is_training:
-            for d in elements:
-                num_nodes_of_graph = find_num_nodes_of_graph(d["graph"])
-                if num_nodes_of_graph < self.graph_size_threshold:
-                    elements_to_process.append(d)
-        else:
-            elements_to_process = elements
 
-        num_nodes_of_batch = find_num_nodes_of_graph(elements_to_process[0]["graph"])
+        num_nodes_of_batch = find_num_nodes_of_graph(elements[0]["graph"])
         num_sub_tokens_of_batch = 0
-        for d in elements_to_process:
+        for d in elements:
             num_nodes_of_current_graph = find_num_nodes_of_graph(d["graph"])
             if num_nodes_of_batch < num_nodes_of_current_graph:
                 num_nodes_of_batch = num_nodes_of_current_graph
@@ -547,7 +539,7 @@ class MethodNamePredictionData():
             if num_sub_tokens_of_batch < num_sub_tokens_of_graph:
                 num_sub_tokens_of_batch = num_sub_tokens_of_graph
             
-        for d in elements_to_process:
+        for d in elements:
             adjacency_matrix = graph_to_adj_mat(d["graph"], num_nodes_of_batch, self.n_edge_types, True)
             batch_data['adjacency_matrix'].append(adjacency_matrix)
             batch_data['node_type_indices'].append(d['node_type_indices'])
@@ -594,8 +586,15 @@ class MethodNamePredictionData():
             
             if len(bucket_data) > 5:
                 for i, element in enumerate(bucket_data):
-                    elements.append(element)
-                    samples += 1
+
+                    if self.is_training:
+                        num_nodes_of_graph = find_num_nodes_of_graph(element["graph"])
+                        if num_nodes_of_graph < self.graph_size_threshold:
+                            elements_to_process.append(d)
+                            samples += 1
+                    else:
+                        elements.append(element)
+                        samples += 1
                     if (samples >= self.batch_size) or ((i == len(bucket_data)-1)):
                         batch_data, batch_max_node = self.make_batch(elements)
                         num_graphs = len(batch_data['node_type_indices'])
