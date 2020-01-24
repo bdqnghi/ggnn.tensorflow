@@ -84,7 +84,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = opt.cuda
 print(opt)
 
 # opt.model_path = os.path.join(opt.model_path,)
-opt.model_path = os.path.join(opt.model_path,"method_name_prediction", "aggregation_" + str(opt.aggregation) + "_distributed_function_" + str(opt.distributed_function) + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer) + "_node_type_dim_" + str(opt.node_type_dim) + + "_node_token_dim_" + str(opt.node_token_dim))
+opt.model_path = os.path.join(opt.model_path,"method_name_prediction" + "_aggregation_" + str(opt.aggregation) + "_distributed_function_" + str(opt.distributed_function) + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer) + "_node_type_dim_" + str(opt.node_type_dim) + "_node_token_dim_" + str(opt.node_token_dim))
 
 def main(opt):
 
