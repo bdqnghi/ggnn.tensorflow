@@ -596,30 +596,31 @@ class MethodNamePredictionData():
                         elements.append(element)
                         samples += 1
                     if (samples >= self.batch_size) or ((i == len(bucket_data)-1)):
-                        batch_data, batch_max_node = self.make_batch(elements)
-                        num_graphs = len(batch_data['node_type_indices'])
-                        node_type_indices = np.array(batch_data['node_type_indices'])
-                        node_token_indices = np.array(batch_data['node_token_indices'])
-                        # print(initial_representations.shape)
+                        if len(elements) > 0:
+                            batch_data, batch_max_node = self.make_batch(elements)
+                            num_graphs = len(batch_data['node_type_indices'])
+                            node_type_indices = np.array(batch_data['node_type_indices'])
+                            node_token_indices = np.array(batch_data['node_token_indices'])
+                            # print(initial_representations.shape)
 
-                        batch_labels_one_hot = []
-                        for label in batch_data['labels']:
-                            one_hot = _onehot(label, self.num_labels)
-                            batch_labels_one_hot.append(one_hot)
+                            batch_labels_one_hot = []
+                            for label in batch_data['labels']:
+                                one_hot = _onehot(label, self.num_labels)
+                                batch_labels_one_hot.append(one_hot)
 
-                        batch_labels_one_hot = np.asarray(batch_labels_one_hot)
-                        batch = {
-                            "num_graphs": num_graphs,
-                            "node_type_indices": node_type_indices,
-                            "node_token_indices": node_token_indices,
-                            "num_vertices": batch_max_node,
-                            "adjacency_matrix": batch_data['adjacency_matrix'],
-                            "labels": batch_labels_one_hot
-                        }
+                            batch_labels_one_hot = np.asarray(batch_labels_one_hot)
+                            batch = {
+                                "num_graphs": num_graphs,
+                                "node_type_indices": node_type_indices,
+                                "node_token_indices": node_token_indices,
+                                "num_vertices": batch_max_node,
+                                "adjacency_matrix": batch_data['adjacency_matrix'],
+                                "labels": batch_labels_one_hot
+                            }
 
-                        yield batch
-                        elements = []
-                        samples = 0
+                            yield batch
+                            elements = []
+                            samples = 0
 
         # for step in range(len(bucket_at_step)):
         #     # print("-------------")
