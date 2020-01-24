@@ -283,17 +283,18 @@ class MethodNamePredictionData():
         # Optional : Remove bucket for training step
         if self.is_training:
             print("Deleting bucket for training data with threshold: " + str(self.bucket_size_threshold))
-        if self.is_validating:
-            print("Deleting bucket for validation data with threshold: " + str(self.bucket_size_threshold))
-        buckets, bucket_sizes, bucket_at_step = self.data
-        bucket_ids_to_delete = []
-        for bucket_idx, bucket_data in buckets.items():
-            bucket_size = bucket_sizes[bucket_idx]
-            if bucket_size > self.bucket_size_threshold:
-                bucket_ids_to_delete.append(bucket_idx)
-        for b in bucket_ids_to_delete:
-            del buckets[b]
+            buckets, bucket_sizes, bucket_at_step = self.data
+            bucket_ids_to_delete = []
+            for bucket_idx, bucket_data in buckets.items():
+                bucket_size = bucket_sizes[bucket_idx]
+                if bucket_size > self.bucket_size_threshold:
+                    bucket_ids_to_delete.append(bucket_idx)
+            for b in bucket_ids_to_delete:
+                del buckets[b]
 
+        # if self.is_validating:
+        #     print("Deleting bucket for validation data with threshold: " + str(self.bucket_size_threshold))
+       
         self.data = (buckets, bucket_sizes, bucket_at_step)
     
     def load_program_graphs_from_directory(self, directory, label_lookup, node_type_lookup, node_token_lookup, is_training=True, is_testing=False, is_validating=False):
@@ -526,10 +527,14 @@ class MethodNamePredictionData():
 
         # find graph which has the largest number of nodes in batch
         elements_to_process = []
-        for d in elements:
-            num_nodes_of_graph = find_num_nodes_of_graph(d["graph"])
-            if num_nodes_of_graph < self.graph_size_threshold:
-                elements_to_process.append(d)
+
+        if self.is_training:
+            for d in elements:
+                num_nodes_of_graph = find_num_nodes_of_graph(d["graph"])
+                if num_nodes_of_graph < self.graph_size_threshold:
+                    elements_to_process.append(d)
+        else:
+            elements_to_process = elements
 
         num_nodes_of_batch = find_num_nodes_of_graph(elements_to_process[0]["graph"])
         num_sub_tokens_of_batch = 0

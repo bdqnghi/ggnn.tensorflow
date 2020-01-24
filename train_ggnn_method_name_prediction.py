@@ -30,17 +30,17 @@ parser.add_argument('--val_batch_size', type=int,
                     default=5, help='val input batch size')
 parser.add_argument('--state_dim', type=int, default=30,
                     help='GGNN hidden state dimension size')
-parser.add_argument('--node_type_dim', type=int, default=30,
+parser.add_argument('--node_type_dim', type=int, default=50,
                     help='node type dimension size')
 parser.add_argument('--node_token_dim', type=int,
-                    default=50, help='node token dimension size')
+                    default=100, help='node token dimension size')
 parser.add_argument('--hidden_layer_size', type=int,
-                    default=50, help='size of hidden layer')
+                    default=100, help='size of hidden layer')
 parser.add_argument('--num_hidden_layer', type=int,
                     default=1, help='number of hidden layer')
-parser.add_argument('--n_steps', type=int, default=8,
+parser.add_argument('--n_steps', type=int, default=10,
                     help='propagation steps number of GGNN')
-parser.add_argument('--epochs', type=int, default=500,
+parser.add_argument('--epochs', type=int, default=1000,
                     help='number of epochs to train for')
 parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
 parser.add_argument('--cuda', default="0", type=str, help='enables cuda')
@@ -68,7 +68,7 @@ parser.add_argument('--graph_size_threshold', type=int,
                     default=1000, help='graph size threshold')
 parser.add_argument('--best_f1', type=float,
                     default=0.0, help='best f1 to save model')
-parser.add_argument('--aggregation', type=int, default=3, choices=range(0, 4),
+parser.add_argument('--aggregation', type=int, default=1, choices=range(0, 4),
                     help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
 parser.add_argument('--distributed_function', type=int, default=0,
                     choices=range(0, 2), help='0 for softmax, 1 for sigmoid')
@@ -83,8 +83,8 @@ os.environ['CUDA_VISIBLE_DEVICES'] = opt.cuda
 
 print(opt)
 
-opt.model_path = os.path.join(opt.model_path,"method_name_prediction")
-
+# opt.model_path = os.path.join(opt.model_path,)
+opt.model_path = os.path.join(opt.model_path,"method_name_prediction", "aggregation_" + str(opt.aggregation) + "_distributed_function_" + str(opt.distributed_function) + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer) + "_node_type_dim_" + str(opt.node_type_dim) + + "_node_token_dim_" + str(opt.node_token_dim))
 
 def main(opt):
 
