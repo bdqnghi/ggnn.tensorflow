@@ -228,7 +228,7 @@ class MethodNamePredictionData():
         self.is_testing = is_testing
         self.n_edge_types = 7
         self.num_labels = len(opt.label_lookup.keys())
-        
+        self.data_threshold = opt.data_threshold
 
         base_name =os.path.basename(data_path)
         parent_base_name = os.path.basename(os.path.dirname(data_path))
@@ -243,7 +243,7 @@ class MethodNamePredictionData():
             self.data = pyarrow.deserialize(buf)
             input_file.close()
         else:
-            all_data_node_id, all_data_node_type, all_data_node_token = load_program_graphs_from_directory(data_path, opt.label_lookup, opt.node_type_lookup, opt.node_token_lookup, is_training, is_testing)
+            all_data_node_id, all_data_node_type, all_data_node_token = self.load_program_graphs_from_directory(data_path, opt.label_lookup, opt.node_type_lookup, opt.node_token_lookup, is_training, is_testing)
         
             print("Converting array to numpy array......")
             all_data_node_id = np.asarray(all_data_node_id) 
@@ -307,7 +307,7 @@ class MethodNamePredictionData():
         
         if is_training:
             # all_files_path = all_files_path[:opt.data_threshold]
-            num_to_select = opt.data_threshold           
+            num_to_select = self.data_threshold           
             all_files_path = random.sample(all_files_path, num_to_select)
 
         for file_path in tqdm(all_files_path):
