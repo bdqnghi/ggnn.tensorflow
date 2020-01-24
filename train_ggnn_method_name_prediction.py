@@ -193,7 +193,7 @@ def main(opt):
             for i, var in enumerate(saver._var_list):
                 print('Var {}: {}'.format(i, var))
 
-        
+        average_f1 = 0.0
         for epoch in range(1,  opt.epochs + 1):
             train_batch_iterator = ThreadedIterator(
                 train_dataset.make_minibatch_iterator(), max_queue_size=1)
@@ -211,7 +211,7 @@ def main(opt):
                         ggnn.placeholders["edge_weight_dropout_keep_prob"]: 0.5
                     }
                 )
-                print("Epoch:", epoch, "Step:", train_step, "Loss:", err)
+                print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "F1:", average_f1)
                 
 
                 if train_step % opt.checkpoint_every == 0 and train_step > 0:
@@ -259,7 +259,7 @@ def main(opt):
                     # print("F1 score : " + str(f1_score))
                     print("Validation with F1 score ", average_f1)
                     if average_f1 > best_f1_score:
-                        best_f1_score = f1_score
+                        best_f1_score = average_f1
                         saver.save(sess, checkfile)                  
                         print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
                         with open(opt.model_accuracy_path,"w") as f1:
