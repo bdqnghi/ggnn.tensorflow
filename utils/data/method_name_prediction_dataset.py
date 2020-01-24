@@ -311,10 +311,10 @@ class MethodNamePredictionData():
                 all_files_path.append(raw_file_path)
         count = 0
         
-        if is_training:
+        # if is_training:
             # all_files_path = all_files_path[:opt.data_threshold]
-            num_to_select = self.data_threshold           
-            all_files_path = random.sample(all_files_path, num_to_select)
+            # num_to_select = self.data_threshold           
+            # all_files_path = random.sample(all_files_path, num_to_select)
 
         for file_path in tqdm(all_files_path):
             with open(file_path,"r") as f:
