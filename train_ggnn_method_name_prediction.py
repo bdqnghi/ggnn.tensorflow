@@ -64,6 +64,8 @@ parser.add_argument('--validating', type=int,
                     default=1, help='validating or not')
 parser.add_argument('--bucket_size_threshold', type=int,
                     default=1000, help='bucket size threshold')
+parser.add_argument('--graph_size_threshold', type=int,
+                    default=1000, help='graph size threshold')
 parser.add_argument('--best_f1', type=float,
                     default=0.0, help='best f1 to save model')
 parser.add_argument('--aggregation', type=int, default=3, choices=range(0, 4),
