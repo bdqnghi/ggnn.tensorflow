@@ -357,7 +357,7 @@ class MethodNamePredictionData():
         
         print("Total number of files read : " + str(count))
     
-    return node_id_data_list, node_type_data_list, node_token_data_list
+        return node_id_data_list, node_type_data_list, node_token_data_list
 
     # ----- Data preprocessing and chunking into minibatches:
     def process_raw_graphs(self):
