@@ -211,7 +211,7 @@ def main(opt):
                         ggnn.placeholders["edge_weight_dropout_keep_prob"]: 0.5
                     }
                 )
-                print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "F1:", average_f1)
+                print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "Current F1:", average_f1, "Best F1:", best_f1_score)
                 
 
                 if train_step % opt.checkpoint_every == 0 and train_step > 0:
