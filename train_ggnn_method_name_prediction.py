@@ -33,9 +33,9 @@ parser.add_argument('--state_dim', type=int, default=30,
 parser.add_argument('--node_type_dim', type=int, default=50,
                     help='node type dimension size')
 parser.add_argument('--node_token_dim', type=int,
-                    default=100, help='node token dimension size')
+                    default=50, help='node token dimension size')
 parser.add_argument('--hidden_layer_size', type=int,
-                    default=100, help='size of hidden layer')
+                    default=50, help='size of hidden layer')
 parser.add_argument('--num_hidden_layer', type=int,
                     default=1, help='number of hidden layer')
 parser.add_argument('--n_steps', type=int, default=10,
