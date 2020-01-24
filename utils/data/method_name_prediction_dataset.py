@@ -230,7 +230,7 @@ class MethodNamePredictionData():
         self.num_labels = len(opt.label_lookup.keys())
         self.data_threshold = opt.data_threshold
         self.bucket_size_threshold = opt.bucket_size_threshold
-        
+
         base_name =os.path.basename(data_path)
         parent_base_name = os.path.basename(os.path.dirname(data_path))
 
@@ -280,6 +280,7 @@ class MethodNamePredictionData():
 
         # Optional : Remove bucket for training step
         if self.is_training:
+            print("Deleting bucket with threshold : " + str(self.bucket_size_threshold))
             buckets, bucket_sizes, bucket_at_step = self.data
             bucket_ids_to_delete = []
             for bucket_idx, bucket_data in buckets.items():
