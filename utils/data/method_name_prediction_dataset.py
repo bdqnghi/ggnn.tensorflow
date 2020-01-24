@@ -590,7 +590,7 @@ class MethodNamePredictionData():
                     if self.is_training:
                         num_nodes_of_graph = find_num_nodes_of_graph(element["graph"])
                         if num_nodes_of_graph < self.graph_size_threshold:
-                            elements_to_process.append(d)
+                            elements.append(d)
                             samples += 1
                     else:
                         elements.append(element)
