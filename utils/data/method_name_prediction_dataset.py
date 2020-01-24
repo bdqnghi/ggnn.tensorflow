@@ -226,6 +226,7 @@ class MethodNamePredictionData():
 
         self.is_training = is_training
         self.is_testing = is_testing
+        self.is_validating = is_validating
         self.n_edge_types = 7
         self.num_labels = len(opt.label_lookup.keys())
         self.data_threshold = opt.data_threshold
@@ -280,17 +281,19 @@ class MethodNamePredictionData():
 
         # Optional : Remove bucket for training step
         if self.is_training:
-            print("Deleting bucket with threshold : " + str(self.bucket_size_threshold))
-            buckets, bucket_sizes, bucket_at_step = self.data
-            bucket_ids_to_delete = []
-            for bucket_idx, bucket_data in buckets.items():
-                bucket_size = bucket_sizes[bucket_idx]
-                if bucket_size > self.bucket_size_threshold:
-                    bucket_ids_to_delete.append(bucket_idx)
-            for b in bucket_ids_to_delete:
-                del buckets[b]
+            print("Deleting bucket for training data with threshold: " + str(self.bucket_size_threshold))
+        if self.is_validating:
+            print("Deleting bucket for validation data with threshold: " + str(self.bucket_size_threshold))
+        buckets, bucket_sizes, bucket_at_step = self.data
+        bucket_ids_to_delete = []
+        for bucket_idx, bucket_data in buckets.items():
+            bucket_size = bucket_sizes[bucket_idx]
+            if bucket_size > self.bucket_size_threshold:
+                bucket_ids_to_delete.append(bucket_idx)
+        for b in bucket_ids_to_delete:
+            del buckets[b]
 
-            self.data = (buckets, bucket_sizes, bucket_at_step)
+        self.data = (buckets, bucket_sizes, bucket_at_step)
     
     def load_program_graphs_from_directory(self, directory, label_lookup, node_type_lookup, node_token_lookup, is_training=True, is_testing=False, is_validating=False):
 
