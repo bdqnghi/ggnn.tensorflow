@@ -30,7 +30,7 @@ parser.add_argument('--val_batch_size', type=int,
                     default=5, help='val input batch size')
 parser.add_argument('--state_dim', type=int, default=30,
                     help='GGNN hidden state dimension size')
-parser.add_argument('--node_type_dim', type=int, default=50,
+parser.add_argument('--node_type_dim', type=int, default=30,
                     help='node type dimension size')
 parser.add_argument('--node_token_dim', type=int,
                     default=50, help='node token dimension size')
@@ -38,7 +38,7 @@ parser.add_argument('--hidden_layer_size', type=int,
                     default=50, help='size of hidden layer')
 parser.add_argument('--num_hidden_layer', type=int,
                     default=1, help='number of hidden layer')
-parser.add_argument('--n_steps', type=int, default=10,
+parser.add_argument('--n_steps', type=int, default=8,
                     help='propagation steps number of GGNN')
 parser.add_argument('--epochs', type=int, default=500,
                     help='number of epochs to train for')
