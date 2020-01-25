@@ -45,7 +45,7 @@ class DenseGGNNModel():
         self.node_token_dim = opt.node_token_dim
         self.node_type_dim = opt.node_type_dim
         self.node_dim = self.node_type_dim + self.node_token_dim
-        self.label_dim = opt.label_dim
+        self.label_dim = self.node_type_dim + self.node_token_dim
 
         self.node_type_lookup = opt.node_type_lookup
         self.node_token_lookup = opt.node_token_lookup

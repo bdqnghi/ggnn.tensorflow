@@ -34,8 +34,6 @@ parser.add_argument('--node_type_dim', type=int, default=50,
                     help='node type dimension size')
 parser.add_argument('--node_token_dim', type=int,
                     default=100, help='node token dimension size')
-parser.add_argument('--label_dim', type=int,
-                    default=150, help='node token dimension size')
 parser.add_argument('--hidden_layer_size', type=int,
                     default=100, help='size of hidden layer')
 parser.add_argument('--num_hidden_layer', type=int,
@@ -49,7 +47,6 @@ parser.add_argument('--cuda', default="0", type=str, help='enables cuda')
 parser.add_argument('--verbal', type=bool, default=True,
                     help='print training info or not')
 parser.add_argument('--manualSeed', type=int, help='manual seed')
-parser.add_argument('--n_classes', type=int, default=10, help='manual seed')
 parser.add_argument('--model_path', default="model",
                     help='path to save the model')
 parser.add_argument('--model_accuracy_path', default="model_accuracy/method_name.txt",
@@ -68,6 +65,8 @@ parser.add_argument('--bucket_size_threshold', type=int,
                     default=1000, help='bucket size threshold')
 parser.add_argument('--graph_size_threshold', type=int,
                     default=1000, help='graph size threshold')
+parser.add_argument('--sampling_size', type=int,
+                    default=60, help='sampling size for each epoch')
 parser.add_argument('--best_f1', type=float,
                     default=0.0, help='best f1 to save model')
 parser.add_argument('--aggregation', type=int, default=1, choices=range(0, 4),
@@ -86,7 +85,20 @@ os.environ['CUDA_VISIBLE_DEVICES'] = opt.cuda
 print(opt)
 
 # opt.model_path = os.path.join(opt.model_path,)
-opt.model_path = os.path.join(opt.model_path,"method_name_prediction" + "_aggregation_" + str(opt.aggregation) + "_distributed_function_" + str(opt.distributed_function) + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer) + "_node_type_dim_" + str(opt.node_type_dim) + "_node_token_dim_" + str(opt.node_token_dim))
+# opt.model_path = os.path.join(opt.model_path,"method_name_prediction" + "_aggregation_" + str(opt.aggregation) + "_distributed_function_" + str(opt.distributed_function) + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer) + "_node_type_dim_" + str(opt.node_type_dim) + "_node_token_dim_" + str(opt.node_token_dim))
+
+def form_model_path(opt):
+    model_traits = {}
+    model_traits["aggregation"] = str(opt.aggregation)
+    model_traits["distributed_function"] = str(opt.distributed_function)
+    model_traits["node_type_dim"] = str(opt.node_type_dim)
+    model_traits["node_token_dim"] = str(opt.node_token_dim)
+    
+    model_path = []
+    for k, v in model_traits.items():
+        model_path.append(k + "_" + v)
+    
+    return os.path.join(opt.model_path,"method_name_prediction" + "_" + "-".join(model_path))
 
 def main(opt):
 
@@ -133,6 +145,7 @@ def main(opt):
     node_token_lookup = bidict(node_token_lookup)
     val_label_lookup = bidict(val_label_lookup)
 
+    opt.model_path = form_model_path(opt)
     checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
     ckpt = tf.train.get_checkpoint_state(opt.model_path)
     if ckpt and ckpt.model_checkpoint_path:
@@ -176,6 +189,7 @@ def main(opt):
     # for train_step, train_batch_data in enumerate(train_batch_iterator):
     #     print(train_batch_data['adjacency_matrix'].shape)
     
+
     best_f1_score = 0.0
     if not os.path.exists(opt.model_accuracy_path):
         try:
@@ -219,6 +233,8 @@ def main(opt):
                 )
                 print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "Current F1:", average_f1, "Best F1:", best_f1_score)
                 
+            saver.save(sess, checkfile)                  
+            print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
 
                 # if train_step % opt.checkpoint_every == 0 and train_step > 0:
             # --------------------------------------

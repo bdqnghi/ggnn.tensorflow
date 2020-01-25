@@ -232,6 +232,7 @@ class MethodNamePredictionData():
         self.data_threshold = opt.data_threshold
         self.bucket_size_threshold = opt.bucket_size_threshold
         self.graph_size_threshold = opt.graph_size_threshold
+        self.sampling_size = opt.sampling_size
 
         base_name =os.path.basename(data_path)
         parent_base_name = os.path.basename(os.path.dirname(data_path))
@@ -575,7 +576,7 @@ class MethodNamePredictionData():
             # np.random.shuffle(bucket_at_step)
             for bucket_idx , buckets_data in buckets.items():
                 # np.random.shuffle(buckets_data)
-                buckets_to_process[bucket_idx] = random.sample(buckets_data, int(len(buckets_data)/60))
+                buckets_to_process[bucket_idx] = random.sample(buckets_data, int(len(buckets_data)/self.sampling_size))
         else:
             buckets_to_process = buckets
         
