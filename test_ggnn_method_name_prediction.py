@@ -217,8 +217,8 @@ def main(opt):
         
         f1_scores_of_val_data = []
         
-        for _, val_batch_data in enumerate(validation_batch_iterator):
-           
+        for val_step, val_batch_data in enumerate(validation_batch_iterator):
+            print("----------------------------------------")
             code_vectors, label_embeddings_matrix = sess.run(
                 [graph_representation, label_embeddings],
                 feed_dict={
@@ -249,7 +249,10 @@ def main(opt):
             # print("Predicted : " + str(predicted_labels))
             # print("Ground truth : " + str(ground_truth_labels))
             f1_score = evaluation.calculate_f1_scores(predicted_labels, ground_truth_labels)
-            print("F1 of this step : " + str(f1_score))
+            print(ground_truth_labels)
+            print(predicted_labels)
+            print("F1:", f1_score, "Step:", val_step)
+            
             f1_scores_of_val_data.append(f1_score)
         average_f1 = np.mean(f1_scores_of_val_data)
         # print("F1 score : " + str(f1_score))
