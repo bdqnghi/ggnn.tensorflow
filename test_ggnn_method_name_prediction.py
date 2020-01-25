@@ -72,8 +72,6 @@ parser.add_argument('--aggregation', type=int, default=1, choices=range(0, 4),
                     help='0 for max pooling, 1 for attention with sum pooling, 2 for attention with max pooling, 3 for attention with average pooling')
 parser.add_argument('--distributed_function', type=int, default=0,
                     choices=range(0, 2), help='0 for softmax, 1 for sigmoid')
-parser.add_argument('--train_path', default="sample_data/java-small-graph-transformed/training",
-                    help='path of training data')
 parser.add_argument('--val_path', default="sample_data/java-small-graph-transformed/validation",
                     help='path of validation data')
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
@@ -218,8 +216,9 @@ def main(opt):
             validation_dataset.make_minibatch_iterator(), max_queue_size=5)
         
         f1_scores_of_val_data = []
+        
         for _, val_batch_data in enumerate(validation_batch_iterator):
-
+           
             code_vectors, label_embeddings_matrix = sess.run(
                 [graph_representation, label_embeddings],
                 feed_dict={
@@ -231,6 +230,7 @@ def main(opt):
                     ggnn.placeholders["edge_weight_dropout_keep_prob"]: 1.0
                 }
             )
+           
 
             distance_matrix = distance.cdist(code_vectors, label_embeddings_matrix, metric='cosine')  
             predictions = np.argmax(distance_matrix, axis=1)
