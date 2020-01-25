@@ -240,10 +240,10 @@ def main(opt):
                 #     print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
 
             # --------------------------------------
-            # if opt.validating == 0:
-            #     if train_step % opt.checkpoint_every == 0 and train_step > 0:
-            #         saver.save(sess, checkfile)                  
-            #         print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
+            if opt.validating == 0:
+                if train_step % opt.checkpoint_every == 0 and train_step > 0:
+                    saver.save(sess, checkfile)                  
+                    print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
             if opt.validating == 1:
                 print("Validating after epoch:", epoch)
                 # predictions = []
