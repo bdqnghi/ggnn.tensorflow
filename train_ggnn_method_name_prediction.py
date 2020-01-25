@@ -219,8 +219,8 @@ def main(opt):
             train_batch_iterator = ThreadedIterator(
                 train_dataset.make_minibatch_iterator(), max_queue_size=1)
             for train_step, train_batch_data in enumerate(train_batch_iterator):
-                print("-------------------------------------")
-                print(train_batch_data['labels_index'])
+                # print("-------------------------------------")
+                # print(train_batch_data['labels_index'])
                 _, err = sess.run(
                     [training_point, loss_node],
                     feed_dict={
