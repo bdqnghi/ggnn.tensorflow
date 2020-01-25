@@ -267,14 +267,11 @@ def main(opt):
 
                     # print(code_vectors[0].shape)
                     
-                    predictions = []
-                    for code_vector in code_vectors[0]:
-                        code_vector = np.reshape(code_vector,(-1, code_vectors[0].shape[1]))
-                        distance_matrix = distance.cdist(code_vector, label_embeddings_matrix, 'cosine')
-                        distance_matrix = distance_matrix.flatten()
-                        prediction = np.argmax(distance_matrix)
-                        predictions.append(prediction)
-                       
+                    # for code_vector in code_vectors[0]:
+                    # code_vector = np.reshape(code_vector,(-1, code_vectors[0].shape[1]))
+                    distance_matrix = distance.cdist(code_vectors[0], label_embeddings_matrix, metric='cosine')  
+                    predictions = np.argmax(distance_matrix, axis=1)
+                   
                     ground_truths = np.argmax(val_batch_data['labels'], axis=1)
                    
                     predicted_labels = []
@@ -289,6 +286,7 @@ def main(opt):
                     # print("Predicted : " + str(predicted_labels))
                     # print("Ground truth : " + str(ground_truth_labels))
                     f1_score = evaluation.calculate_f1_scores(predicted_labels, ground_truth_labels)
+                    print("F1 of this step : " + str(f1_score))
                     f1_scores_of_val_data.append(f1_score)
                 average_f1 = np.mean(f1_scores_of_val_data)
                 # print("F1 score : " + str(f1_score))
