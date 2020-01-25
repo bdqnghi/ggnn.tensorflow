@@ -219,10 +219,10 @@ def main(opt):
             train_batch_iterator = ThreadedIterator(
                 train_dataset.make_minibatch_iterator(), max_queue_size=1)
             for train_step, train_batch_data in enumerate(train_batch_iterator):
-                # print("-------------------------------------")
+                print("-------------------------------------")
                 # print(train_batch_data['labels_index'])
-                _, err = sess.run(
-                    [training_point, loss_node],
+                _, err, softmax_values_data = sess.run(
+                    [training_point, loss_node, softmax_values],
                     feed_dict={
                         ggnn.placeholders["num_vertices"]: train_batch_data["num_vertices"],
                         ggnn.placeholders["adjacency_matrix"]:  train_batch_data['adjacency_matrix'],
@@ -233,6 +233,7 @@ def main(opt):
                         ggnn.placeholders["edge_weight_dropout_keep_prob"]: 0.5
                     }
                 )
+                print(softmax_values_data)
                 print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "Current F1:", average_f1, "Best F1:", best_f1_score)
 
                 # print(label_embeddings_matrix.shape)
