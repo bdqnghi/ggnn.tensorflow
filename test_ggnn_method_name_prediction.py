@@ -219,8 +219,8 @@ def main(opt):
         
         for val_step, val_batch_data in enumerate(validation_batch_iterator):
             print("----------------------------------------")
-            code_vectors, label_embeddings_matrix, softmax_values_data = sess.run(
-                [graph_representation, label_embeddings, softmax_values],
+            label_embeddings_matrix, scores = sess.run(
+                [label_embeddings, logits],
                 feed_dict={
                     ggnn.placeholders["num_vertices"]: val_batch_data["num_vertices"],
                     ggnn.placeholders["adjacency_matrix"]:  val_batch_data['adjacency_matrix'],
@@ -231,9 +231,9 @@ def main(opt):
                 }
             )
 
-            predictions = np.argmax(softmax_values_data, axis=1)
+            predictions = np.argmax(scores, axis=1)
 
-            # distance_matrix = distance.cdist(code_vectors, label_embeddings_matrix, metric='cosine')  
+            # distance_matrix = distance.cdist(scores, label_embeddings_matrix, metric='cosine')  
             # predictions = np.argmax(distance_matrix, axis=1)
             
             ground_truths = np.argmax(val_batch_data['labels'], axis=1)
