@@ -61,7 +61,8 @@ def main():
                     future_1 = executor.submit(generate_folder_fbs, raw_dir_path, fbss_path)  
                 if not os.path.exists(graphs_path): 
                     print("Producing graph....")
-                    future_2 = executor.submit(generate_folder_graph, fbss_path, graphs_path)
+                    if os.path.exists(fbss_path):
+                        future_2 = executor.submit(generate_folder_graph, fbss_path, graphs_path)
             # print(fbs_path)
 
 if __name__ == "__main__":
