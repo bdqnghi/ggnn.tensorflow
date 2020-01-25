@@ -231,7 +231,7 @@ def main(opt):
                 }
             )
 
-            predictions = np.argmax(softmax_values_data[0], axis=1)
+            predictions = np.argmax(softmax_values_data, axis=1)
 
             # distance_matrix = distance.cdist(code_vectors, label_embeddings_matrix, metric='cosine')  
             # predictions = np.argmax(distance_matrix, axis=1)
