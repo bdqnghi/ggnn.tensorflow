@@ -57,12 +57,8 @@ parser.add_argument('--log_path', default="logs/",
                     help='log path for tensorboard')
 parser.add_argument('--checkpoint_every', type=int,
                     default=500, help='check point to save model')
-parser.add_argument('--data_threshold', type=int,
-                    default=100000, help='threshold to select subset of data')
 parser.add_argument('--validating', type=int,
                     default=1, help='validating or not')
-parser.add_argument('--bucket_size_threshold', type=int,
-                    default=1000, help='bucket size threshold')
 parser.add_argument('--graph_size_threshold', type=int,
                     default=1000, help='graph size threshold')
 parser.add_argument('--sampling_size', type=int,
@@ -232,9 +228,9 @@ def main(opt):
                     }
                 )
                 print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "Current F1:", average_f1, "Best F1:", best_f1_score)
-                
-            saver.save(sess, checkfile)                  
-            print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
+
+                saver.save(sess, checkfile)                  
+                print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
 
                 # if train_step % opt.checkpoint_every == 0 and train_step > 0:
             # --------------------------------------

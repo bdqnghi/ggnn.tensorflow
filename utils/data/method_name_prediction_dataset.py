@@ -229,8 +229,6 @@ class MethodNamePredictionData():
         self.is_validating = is_validating
         self.n_edge_types = 7
         self.num_labels = len(opt.label_lookup.keys())
-        self.data_threshold = opt.data_threshold
-        self.bucket_size_threshold = opt.bucket_size_threshold
         self.graph_size_threshold = opt.graph_size_threshold
         self.sampling_size = opt.sampling_size
 
