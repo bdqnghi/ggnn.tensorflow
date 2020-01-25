@@ -229,10 +229,11 @@ def main(opt):
                 )
                 print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "Current F1:", average_f1, "Best F1:", best_f1_score)
 
-                saver.save(sess, checkfile)                  
-                print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
+                
 
-                # if train_step % opt.checkpoint_every == 0 and train_step > 0:
+                if train_step % opt.checkpoint_every == 0 and train_step > 0:
+                    saver.save(sess, checkfile)                  
+                    print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
             # --------------------------------------
             # if opt.validating == 0:
             #     if train_step % opt.checkpoint_every == 0 and train_step > 0:
