@@ -227,7 +227,7 @@ class MethodNamePredictionData():
         self.is_training = is_training
         self.is_testing = is_testing
         self.is_validating = is_validating
-        self.n_edge_types = 7
+        self.n_edge_types = opt.n_edge_types
         self.num_labels = len(opt.label_lookup.keys())
         self.graph_size_threshold = opt.graph_size_threshold
         self.sampling_size = opt.sampling_size
@@ -585,43 +585,44 @@ class MethodNamePredictionData():
             elements = []
             samples = 0
             
-            if len(bucket_data) > 5:
-                for i, element in enumerate(bucket_data):
+            # if len(bucket_data) > 5:
+            for i, element in enumerate(bucket_data):
 
-                    if self.is_training:
-                        num_nodes_of_graph = find_num_nodes_of_graph(element["graph"])
-                        if num_nodes_of_graph < self.graph_size_threshold:
-                            elements.append(element)
-                            samples += 1
-                    else:
+                if self.is_training:
+                    num_nodes_of_graph = find_num_nodes_of_graph(element["graph"])
+                    if num_nodes_of_graph < self.graph_size_threshold:
                         elements.append(element)
                         samples += 1
-                    if (samples >= self.batch_size) or ((i == len(bucket_data)-1)):
-                        if len(elements) > 0:
-                            batch_data, batch_max_node = self.make_batch(elements)
-                            num_graphs = len(batch_data['node_type_indices'])
-                            node_type_indices = np.array(batch_data['node_type_indices'])
-                            node_token_indices = np.array(batch_data['node_token_indices'])
-                            # print(initial_representations.shape)
+                else:
+                    elements.append(element)
+                    samples += 1
+                if (samples >= self.batch_size) or ((i == len(bucket_data)-1)):
+                    if len(elements) > 0:
+                        batch_data, batch_max_node = self.make_batch(elements)
+                        num_graphs = len(batch_data['node_type_indices'])
+                        node_type_indices = np.array(batch_data['node_type_indices'])
+                        node_token_indices = np.array(batch_data['node_token_indices'])
+                        # print(initial_representations.shape)
 
-                            batch_labels_one_hot = []
-                            for label in batch_data['labels']:
-                                one_hot = _onehot(label, self.num_labels)
-                                batch_labels_one_hot.append(one_hot)
+                        batch_labels_one_hot = []
+                        for label in batch_data['labels']:
+                            one_hot = _onehot(label, self.num_labels)
+                            batch_labels_one_hot.append(one_hot)
 
-                            batch_labels_one_hot = np.asarray(batch_labels_one_hot)
-                            batch = {
-                                "num_graphs": num_graphs,
-                                "node_type_indices": node_type_indices,
-                                "node_token_indices": node_token_indices,
-                                "num_vertices": batch_max_node,
-                                "adjacency_matrix": batch_data['adjacency_matrix'],
-                                "labels": batch_labels_one_hot
-                            }
+                        batch_labels_one_hot = np.asarray(batch_labels_one_hot)
+                        batch = {
+                            "num_graphs": num_graphs,
+                            "node_type_indices": node_type_indices,
+                            "node_token_indices": node_token_indices,
+                            "num_vertices": batch_max_node,
+                            "adjacency_matrix": batch_data['adjacency_matrix'],
+                            "labels": batch_labels_one_hot,
+                            "labels_index": batch_data['labels']
+                        }
 
-                            yield batch
-                            elements = []
-                            samples = 0
+                        yield batch
+                        elements = []
+                        samples = 0
 
         # for step in range(len(bucket_at_step)):
         #     # print("-------------")
