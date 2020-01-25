@@ -41,6 +41,8 @@ parser.add_argument('--num_hidden_layer', type=int,
                     default=1, help='number of hidden layer')
 parser.add_argument('--n_steps', type=int, default=10,
                     help='propagation steps number of GGNN')
+parser.add_argument('--n_edge_types', type=int, default=7,
+                    help='number of edge types')
 parser.add_argument('--epochs', type=int, default=1000,
                     help='number of epochs to train for')
 parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
@@ -156,7 +158,7 @@ def main(opt):
     # opt.training_path = "sample_data/java-small-graph-transformed/training"
 
     train_dataset = MethodNamePredictionData(opt, opt.train_path, True, False, False)
-    opt.n_edge_types = train_dataset.n_edge_types
+    
 
     val_opt = copy.deepcopy(opt)
     # val_opt.path = "sample_data/java-small-graph-transformed/validation"
@@ -212,14 +214,15 @@ def main(opt):
                 print('Var {}: {}'.format(i, var))
 
         average_f1 = 0.0
-        label_embeddings_matrix = None
+       
         for epoch in range(1,  opt.epochs + 1):
             train_batch_iterator = ThreadedIterator(
                 train_dataset.make_minibatch_iterator(), max_queue_size=1)
             for train_step, train_batch_data in enumerate(train_batch_iterator):
-             
-                _, err, label_embeddings_matrix = sess.run(
-                    [training_point, loss_node, label_embeddings],
+                print("-------------------------------------")
+                print(train_batch_data['labels'])
+                _, err = sess.run(
+                    [training_point, loss_node],
                     feed_dict={
                         ggnn.placeholders["num_vertices"]: train_batch_data["num_vertices"],
                         ggnn.placeholders["adjacency_matrix"]:  train_batch_data['adjacency_matrix'],
@@ -252,9 +255,9 @@ def main(opt):
                 
                 f1_scores_of_val_data = []
                 for _, val_batch_data in enumerate(validation_batch_iterator):
-
-                    code_vectors = sess.run(
-                        [graph_representation],
+            
+                    code_vectors, label_embeddings_matrix, softmax_values_data = sess.run(
+                        [graph_representation, label_embeddings, softmax_values],
                         feed_dict={
                             ggnn.placeholders["num_vertices"]: val_batch_data["num_vertices"],
                             ggnn.placeholders["adjacency_matrix"]:  val_batch_data['adjacency_matrix'],
@@ -265,11 +268,12 @@ def main(opt):
                         }
                     )
 
+                    
                     # print(code_vectors[0].shape)
                     
                     # for code_vector in code_vectors[0]:
                     # code_vector = np.reshape(code_vector,(-1, code_vectors[0].shape[1]))
-                    distance_matrix = distance.cdist(code_vectors[0], label_embeddings_matrix, metric='cosine')  
+                    distance_matrix = distance.cdist(code_vectors, label_embeddings_matrix, metric='cosine')  
                     predictions = np.argmax(distance_matrix, axis=1)
                    
                     ground_truths = np.argmax(val_batch_data['labels'], axis=1)
