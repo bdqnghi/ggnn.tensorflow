@@ -578,6 +578,8 @@ class MethodNamePredictionData():
                 buckets_to_process[bucket_idx] = random.sample(buckets_data, int(len(buckets_data)/60))
         else:
             buckets_to_process = buckets
+        
+        # buckets_to_process = buckets
             
         for bucket_idx, bucket_data in buckets_to_process.items():
 

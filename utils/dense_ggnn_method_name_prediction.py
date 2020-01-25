@@ -45,9 +45,11 @@ class DenseGGNNModel():
         self.node_token_dim = opt.node_token_dim
         self.node_type_dim = opt.node_type_dim
         self.node_dim = self.node_type_dim + self.node_token_dim
+        self.label_dim = opt.label_dim
 
         self.node_type_lookup = opt.node_type_lookup
         self.node_token_lookup = opt.node_token_lookup
+        self.label_lookup = opt.label_lookup
 
         self.hidden_layer_size = opt.hidden_layer_size
         self.num_hidden_layer = opt.num_hidden_layer
@@ -68,13 +70,15 @@ class DenseGGNNModel():
         self.graph_representation = graph_representation
         self.attention_scores = attention_scores
         
-        if self.num_hidden_layer == 1:
-            self.logits = self.hidden_layer(self.graph_representation, self.node_dim, self.num_labels)
-        else:
-            self.logits = self.hidden_layer(self.graph_representation, self.node_dim, self.hidden_layer_size)
-            for i in range(1, self.num_hidden_layer):
-                self.logits = self.hidden_layer(self.logits, self.hidden_layer_size, self.num_labels)
-
+        # if self.num_hidden_layer == 1:
+        #     self.logits = self.hidden_layer(self.graph_representation, self.node_dim, self.num_labels)
+        # else:
+        #     self.logits = self.hidden_layer(self.graph_representation, self.node_dim, self.hidden_layer_size)
+        #     for i in range(1, self.num_hidden_layer):
+        #         self.logits = self.hidden_layer(self.logits, self.hidden_layer_size, self.num_labels)
+        
+        # self.logits = tf.tensordot(tf.transpose(self.logits), self.label_embeddings, axes=1) 
+        self.logits = tf.matmul(graph_representation, self.label_embeddings, transpose_b=True)
         self.loss = self.loss_layer(self.logits)
         self.softmax_values = self.softmax(self.logits)
 
@@ -88,11 +92,11 @@ class DenseGGNNModel():
         self.placeholders['edge_weight_dropout_keep_prob'] = tf.placeholder(tf.float32, None, name='edge_weight_dropout_keep_prob')
         self.node_type_embeddings = tf.Variable(tf.random_uniform([len(self.node_type_lookup.keys()), self.node_type_dim]), name='node_type_embeddings')
         self.node_token_embeddings = tf.Variable(tf.random_uniform([len(self.node_token_lookup.keys()), self.node_token_dim]), name='node_token_embeddings')
+        self.label_embeddings = tf.Variable(tf.random_uniform([len(self.label_lookup.keys()), self.label_dim]), name='label_embeddings')
 
         self.placeholders["node_type_indices"] = tf.placeholder(tf.int32, shape=[None,None], name='node_type_indices')
         self.placeholders["node_token_indices"] = tf.placeholder(tf.int32, shape=[None,None,None], name='node_token_indices')
     
-
         self.node_type_representations = tf.nn.embedding_lookup(self.node_type_embeddings, self.placeholders["node_type_indices"])
         self.node_token_representations = tf.nn.embedding_lookup(self.node_token_embeddings, self.placeholders["node_token_indices"])
         self.node_token_representations = tf.reduce_mean(self.node_token_representations, axis=2)
