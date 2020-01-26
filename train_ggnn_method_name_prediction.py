@@ -10,6 +10,7 @@ from utils.dense_ggnn_method_name_prediction import DenseGGNNModel
 import os
 import sys
 import re
+import time
 
 from bidict import bidict
 import copy
@@ -17,6 +18,7 @@ import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from utils import evaluation
 from scipy.spatial import distance
+from datetime import datetime
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--workers', type=int,
@@ -226,6 +228,8 @@ def main(opt):
         average_f1 = 0.0
        
         for epoch in range(1,  opt.epochs + 1):
+
+            t0_train = time.time()
             train_batch_iterator = ThreadedIterator(
                 train_dataset.make_minibatch_iterator(), max_queue_size=1)
             for train_step, train_batch_data in enumerate(train_batch_iterator):
@@ -318,13 +322,15 @@ def main(opt):
                             checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
                             saver.save(sess, checkfile)
 
-                            checkfile = os.path.join(opt.model_path + "_" + str(epoch), 'cnn_tree.ckpt')
+                            checkfile = os.path.join(opt.model_path + "_" + str(datetime.utcnow().timestamp()), 'cnn_tree.ckpt')
                             saver.save(sess, checkfile)
 
                             print('Checkpoint saved, epoch:' + str(epoch) + ', loss: ' + str(err) + '.')
                             with open(opt.model_accuracy_path,"w") as f1:
                                 f1.write(str(best_f1_score))
-
+            t1_train = time.time()
+            total_train = t1_train-t0_train
+            print("Epoch:", epoch, "Execution time:", str(total_train))
 
 if __name__ == "__main__":
     main(opt)
