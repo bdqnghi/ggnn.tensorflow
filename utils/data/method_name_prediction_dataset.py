@@ -239,7 +239,7 @@ class MethodNamePredictionData():
 
         saved_input_filename = "%s/%s-%s.pkl" % (base_path, parent_base_name, base_name)
         if os.path.exists(saved_input_filename):
-            print("Loading existing data file.........")
+            print("Loading existing data file: ", str(saved_input_filename))
             input_file = open(saved_input_filename, 'rb')
             buf = input_file.read()
             self.data = pyarrow.deserialize(buf)
