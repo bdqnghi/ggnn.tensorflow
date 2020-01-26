@@ -325,6 +325,8 @@ class MethodNamePredictionData():
             for file in tqdm(files):
                 raw_file_path = os.path.join(subdir,file)
                 all_files_path.append(raw_file_path)
+
+        print(all_files_path)
         count = 0
         
         # if is_training:
