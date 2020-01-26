@@ -255,74 +255,76 @@ def main(opt):
                     if train_step % opt.checkpoint_every == 0 and train_step > 0:
                         saver.save(sess, checkfile)                  
                         print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
-            if opt.validating == 1:
-                print("Validating after epoch:", epoch)
-                # predictions = []
-                validation_batch_iterator = ThreadedIterator(
-                    validation_dataset.make_minibatch_iterator(), max_queue_size=5)
-                
-                # f1_scores_of_val_data = []
-                all_predicted_labels = []
-                all_ground_truth_labels = []
+              
+                if opt.validating == 1:
+                    if train_step % opt.checkpoint_every == 0 and train_step > 0:
+                        print("Validating at epoch:", epoch)
+                        # predictions = []
+                        validation_batch_iterator = ThreadedIterator(
+                            validation_dataset.make_minibatch_iterator(), max_queue_size=5)
+                        
+                        # f1_scores_of_val_data = []
+                        all_predicted_labels = []
+                        all_ground_truth_labels = []
 
-                for val_step, val_batch_data in enumerate(validation_batch_iterator):
-            
-                    code_vectors, label_embeddings_matrix, softmax_values_data = sess.run(
-                        [graph_representation, label_embeddings, softmax_values],
-                        feed_dict={
-                            ggnn.placeholders["num_vertices"]: val_batch_data["num_vertices"],
-                            ggnn.placeholders["adjacency_matrix"]:  val_batch_data['adjacency_matrix'],
-                            ggnn.placeholders["node_type_indices"]: val_batch_data["node_type_indices"],
-                            ggnn.placeholders["node_token_indices"]: val_batch_data["node_token_indices"],
-                            ggnn.placeholders["graph_state_keep_prob"]: 1.0,
-                            ggnn.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
-                            ggnn.placeholders["is_training"]: False
-                        }
-                    )
-
+                        for val_step, val_batch_data in enumerate(validation_batch_iterator):
                     
-                    # print(code_vectors[0].shape)
-                    
-                    # for code_vector in code_vectors[0]:
-                    # code_vector = np.reshape(code_vector,(-1, code_vectors[0].shape[1]))
-                    distance_matrix = distance.cdist(code_vectors, label_embeddings_matrix, metric='cosine')  
-                    predictions = np.argmax(distance_matrix, axis=1)
-                   
-                    ground_truths = np.argmax(val_batch_data['labels'], axis=1)
-                   
-                    predicted_labels = []
-                    for prediction in predictions:
-                        predicted_labels.append(train_label_lookup.inverse[prediction])
+                            code_vectors, label_embeddings_matrix, softmax_values_data = sess.run(
+                                [graph_representation, label_embeddings, softmax_values],
+                                feed_dict={
+                                    ggnn.placeholders["num_vertices"]: val_batch_data["num_vertices"],
+                                    ggnn.placeholders["adjacency_matrix"]:  val_batch_data['adjacency_matrix'],
+                                    ggnn.placeholders["node_type_indices"]: val_batch_data["node_type_indices"],
+                                    ggnn.placeholders["node_token_indices"]: val_batch_data["node_token_indices"],
+                                    ggnn.placeholders["graph_state_keep_prob"]: 1.0,
+                                    ggnn.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
+                                    ggnn.placeholders["is_training"]: False
+                                }
+                            )
 
-                    ground_truth_labels = []
-                    for ground_truth in ground_truths:
-                        ground_truth_labels.append(
-                            val_label_lookup.inverse[ground_truth])
-                    
-                    # print("Predicted : " + str(predicted_labels))
-                    # print("Ground truth : " + str(ground_truth_labels))
-                    f1_score = evaluation.calculate_f1_scores(predicted_labels, ground_truth_labels)
-                    print(ground_truth_labels)
-                    print(predicted_labels)
-                    print("F1:", f1_score, "Step:", val_step)
-                    all_predicted_labels.extend(predicted_labels)
-                    all_ground_truth_labels.extend(ground_truth_labels)
+                            
+                            # print(code_vectors[0].shape)
+                            
+                            # for code_vector in code_vectors[0]:
+                            # code_vector = np.reshape(code_vector,(-1, code_vectors[0].shape[1]))
+                            distance_matrix = distance.cdist(code_vectors, label_embeddings_matrix, metric='cosine')  
+                            predictions = np.argmax(distance_matrix, axis=1)
+                        
+                            ground_truths = np.argmax(val_batch_data['labels'], axis=1)
+                        
+                            predicted_labels = []
+                            for prediction in predictions:
+                                predicted_labels.append(train_label_lookup.inverse[prediction])
 
-                average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
-                # print("F1 score : " + str(f1_score))
-                print("Validation with F1 score ", average_f1)
-                if average_f1 > best_f1_score:
-                    best_f1_score = average_f1
+                            ground_truth_labels = []
+                            for ground_truth in ground_truths:
+                                ground_truth_labels.append(
+                                    val_label_lookup.inverse[ground_truth])
+                            
+                            # print("Predicted : " + str(predicted_labels))
+                            # print("Ground truth : " + str(ground_truth_labels))
+                            f1_score = evaluation.calculate_f1_scores(predicted_labels, ground_truth_labels)
+                            print(ground_truth_labels)
+                            print(predicted_labels)
+                            print("F1:", f1_score, "Step:", val_step)
+                            all_predicted_labels.extend(predicted_labels)
+                            all_ground_truth_labels.extend(ground_truth_labels)
 
-                    checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
-                    saver.save(sess, checkfile)
+                        average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
+                        # print("F1 score : " + str(f1_score))
+                        print("Validation with F1 score ", average_f1)
+                        if average_f1 > best_f1_score:
+                            best_f1_score = average_f1
 
-                    checkfile = os.path.join(opt.model_path + "_" + str(epoch), 'cnn_tree.ckpt')
-                    saver.save(sess, checkfile)
+                            checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
+                            saver.save(sess, checkfile)
 
-                    print('Checkpoint saved, epoch:' + str(epoch) + ', loss: ' + str(err) + '.')
-                    with open(opt.model_accuracy_path,"w") as f1:
-                        f1.write(str(best_f1_score))
+                            checkfile = os.path.join(opt.model_path + "_" + str(epoch), 'cnn_tree.ckpt')
+                            saver.save(sess, checkfile)
+
+                            print('Checkpoint saved, epoch:' + str(epoch) + ', loss: ' + str(err) + '.')
+                            with open(opt.model_accuracy_path,"w") as f1:
+                                f1.write(str(best_f1_score))
 
 
 if __name__ == "__main__":
