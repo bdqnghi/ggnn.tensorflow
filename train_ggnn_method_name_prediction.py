@@ -314,8 +314,12 @@ def main(opt):
                 if average_f1 > best_f1_score:
                     best_f1_score = average_f1
 
+                    checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
+                    saver.save(sess, checkfile)
+
                     checkfile = os.path.join(opt.model_path + "_" + str(epoch), 'cnn_tree.ckpt')
-                    saver.save(sess, checkfile)                  
+                    saver.save(sess, checkfile)
+
                     print('Checkpoint saved, epoch:' + str(epoch) + ', loss: ' + str(err) + '.')
                     with open(opt.model_accuracy_path,"w") as f1:
                         f1.write(str(best_f1_score))
