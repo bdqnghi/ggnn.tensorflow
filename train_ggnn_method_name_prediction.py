@@ -258,7 +258,7 @@ def main(opt):
                 all_predicted_labels = []
                 all_ground_truth_labels = []
 
-                for _, val_batch_data in enumerate(validation_batch_iterator):
+                for val_step, val_batch_data in enumerate(validation_batch_iterator):
             
                     code_vectors, label_embeddings_matrix, softmax_values_data = sess.run(
                         [graph_representation, label_embeddings, softmax_values],
@@ -299,7 +299,7 @@ def main(opt):
                     print("F1:", f1_score, "Step:", val_step)
                     all_predicted_labels.extend(predicted_labels)
                     all_ground_truth_labels.extend(ground_truth_labels)
-                    
+
                 average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
                 # print("F1 score : " + str(f1_score))
                 print("Validation with F1 score ", average_f1)
