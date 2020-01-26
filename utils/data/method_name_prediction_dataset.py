@@ -599,7 +599,7 @@ class MethodNamePredictionData():
             for bucket_idx , buckets_data in buckets.items():
                 # np.random.shuffle(buckets_data)
                 # buckets_to_process[bucket_idx] = random.sample(buckets_data, int(len(buckets_data)/20))  
-                buckets_to_process[bucket_idx] = buckets_data[:2000]
+                buckets_to_process[bucket_idx] = buckets_data[:3000]
         else:
             buckets_to_process = buckets
         
