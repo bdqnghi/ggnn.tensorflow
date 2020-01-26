@@ -326,7 +326,7 @@ class MethodNamePredictionData():
                 raw_file_path = os.path.join(subdir,file)
                 all_files_path.append(raw_file_path)
 
-        print(all_files_path)
+        # print(all_files_path)
         count = 0
         
         # if is_training:
@@ -336,7 +336,7 @@ class MethodNamePredictionData():
 
         for file_path in tqdm(all_files_path):
             with open(file_path,"r") as f:
-                print(raw_file_path)
+                print(file_path)
                 lines = f.readlines()
                 node_id_edge_per_class = []
                 node_type_edge_per_class = []
