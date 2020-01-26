@@ -22,6 +22,6 @@ ${PYTHON} train_ggnn_method_name_prediction.py \
 ${CHECKPOINT_EVERY} --cuda ${CUDA} --validating ${VALIDATING} --graph_size_threshold ${GRAPH_SIZE_THRESHOLD} \
 --node_type_dim ${NODE_TYPE_DIM} --node_token_dim ${NODE_TOKEN_DIM} \
 --node_type_vocabulary_path ${NODE_TYPE_VOCABULARY_PATH} \
---token_vocabulary_path ${TOKEN_VOCABULARY_PATH}
---train_label_vocabulary_path ${TRAIN_LABEL_VOCABULARY_PATH}
---val_label_vocabulary_path ${VAL_LABEL_VOCABULARY_PATH}
+--token_vocabulary_path ${TOKEN_VOCABULARY_PATH} \
+--train_label_vocabulary_path ${TRAIN_LABEL_VOCABULARY_PATH} \
+--val_label_vocabulary_path ${VAL_LABEL_VOCABULARY_PATH} \
