@@ -178,7 +178,9 @@ def main(opt):
     loss_node = ggnn.loss
 
     optimizer = tf.train.AdamOptimizer(opt.lr)
-    training_point = optimizer.minimize(loss_node)
+    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    with tf.control_dependencies(update_ops):
+        training_point = optimizer.minimize(loss_node)
 
     saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
     init = tf.global_variables_initializer()
