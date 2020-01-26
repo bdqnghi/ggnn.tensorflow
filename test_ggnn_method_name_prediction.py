@@ -72,6 +72,8 @@ parser.add_argument('--distributed_function', type=int, default=0,
                     choices=range(0, 2), help='0 for softmax, 1 for sigmoid')
 parser.add_argument('--val_path', default="sample_data/java-small-graph-transformed/validation",
                     help='path of validation data')
+parser.add_argument('--dataset', default="java-small",
+                    help='name of dataset')
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
 opt = parser.parse_args()
@@ -84,6 +86,7 @@ print(opt)
 
 def form_model_path(opt):
     model_traits = {}
+    model_traits["dataset"] = str(opt.dataset)
     model_traits["aggregation"] = str(opt.aggregation)
     model_traits["distributed_function"] = str(opt.distributed_function)
     model_traits["node_type_dim"] = str(opt.node_type_dim)

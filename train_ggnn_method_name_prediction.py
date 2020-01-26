@@ -77,7 +77,7 @@ parser.add_argument('--train_path', default="sample_data/java-small-graph-transf
 parser.add_argument('--val_path', default="sample_data/java-small-graph-transformed/validation",
                     help='path of validation data')
 parser.add_argument('--dataset', default="java-small",
-                    help='log path for tensorboard')
+                    help='name of dataset')
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
 opt = parser.parse_args()
@@ -90,6 +90,7 @@ print(opt)
 
 def form_model_path(opt):
     model_traits = {}
+    model_traits["dataset"] = str(opt.dataset)
     model_traits["aggregation"] = str(opt.aggregation)
     model_traits["distributed_function"] = str(opt.distributed_function)
     model_traits["node_type_dim"] = str(opt.node_type_dim)
@@ -310,12 +311,12 @@ def main(opt):
                 average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
                 # print("F1 score : " + str(f1_score))
                 print("Validation with F1 score ", average_f1)
-                if average_f1 > best_f1_score:
-                    best_f1_score = average_f1
-                    saver.save(sess, checkfile)                  
-                    print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
-                    with open(opt.model_accuracy_path,"w") as f1:
-                        f1.write(str(best_f1_score))
+                # if average_f1 > best_f1_score:
+                best_f1_score = average_f1
+                saver.save(sess, checkfile)                  
+                print('Checkpoint saved, epoch:' + str(epoch) + ', loss: ' + str(err) + '.')
+                with open(opt.model_accuracy_path,"w") as f1:
+                    f1.write(str(best_f1_score))
 
 
 if __name__ == "__main__":
