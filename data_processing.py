@@ -1,5 +1,6 @@
 import os
-from concurrent.futures import ProcessPoolExecutor
+# from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor as executor
 import copy
 import sys
 import argparse
@@ -43,7 +44,7 @@ def generate_folder_graph(src_path, tgt_path):
 def main():
     path = args.path
     worker = args.worker
-    with ProcessPoolExecutor(max_workers=worker) as executor:   
+    with executor(max_workers=worker) as executor:   
         for subdir, dirs, files in os.walk(path):
             for project in dirs:
                 raw_dir_path = os.path.join(subdir, project)
