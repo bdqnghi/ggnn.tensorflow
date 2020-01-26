@@ -64,7 +64,6 @@ class DenseGGNNModel():
         self.prepare_specific_graph_model()
         self.nodes_representation = self.compute_nodes_representation()
         # self.graph_representation = self.pooling_layer(self.nodes_representation)
-        self.nodes_representation = tf.layers.batch_normalization(self.nodes_representation, training=self.placeholders['is_training'])
 
         graph_representation, attention_scores = self.aggregation_layer(self.nodes_representation, self.aggregation_type, self.distributed_function)
 
@@ -136,8 +135,9 @@ class DenseGGNNModel():
         v = self.placeholders['num_vertices']
         # h = self.placeholders['initial_node_representation']                                                # [b, v, h]
         
+        
+
         h = tf.concat([self.node_type_representations, self.node_token_representations], -1)
-        h = tf.layers.batch_normalization(h, training=self.placeholders['is_training'])
         h = tf.reshape(h, [-1, self.node_token_dim + self.node_type_dim])
 
         with tf.variable_scope("gru_scope") as scope:
@@ -148,7 +148,7 @@ class DenseGGNNModel():
                     # print("edge type : " + str(edge_type))
                     # m = tf.matmul(h, tf.nn.dropout(self.weights['edge_weights'][edge_type], rate=1-self.placeholders['edge_weight_dropout_keep_prob'])) # [b*v, h]
                     m = tf.matmul(h, self.weights['edge_weights'][edge_type])                               # [b*v, h]
-                    
+
                     m = tf.reshape(m, [-1, v, node_dim])                                                       # [b, v, h]
                     m += self.weights['edge_biases'][edge_type]                                             # [b, v, h]
 
@@ -156,13 +156,10 @@ class DenseGGNNModel():
                         acts = tf.matmul(self.__adjacency_matrix[edge_type], m)
                     else:
                         acts += tf.matmul(self.__adjacency_matrix[edge_type], m)
-                
-                
                 acts = tf.reshape(acts, [-1, node_dim])                                                        # [b*v, h]
 
                 h = self.weights['node_gru'](acts, h)[1]                                                    # [b*v, h]
             last_h = tf.reshape(h, [-1, v, node_dim])
-            
         return last_h
 
     def pooling_layer(self, nodes_representation):
