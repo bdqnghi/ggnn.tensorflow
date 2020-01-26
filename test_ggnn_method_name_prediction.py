@@ -228,7 +228,8 @@ def main(opt):
                     ggnn.placeholders["node_type_indices"]: val_batch_data["node_type_indices"],
                     ggnn.placeholders["node_token_indices"]: val_batch_data["node_token_indices"],
                     ggnn.placeholders["graph_state_keep_prob"]: 1.0,
-                    ggnn.placeholders["edge_weight_dropout_keep_prob"]: 1.0
+                    ggnn.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
+                    ggnn.placeholders["is_training"]: False
                 }
             )
 
