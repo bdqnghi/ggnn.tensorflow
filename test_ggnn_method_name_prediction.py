@@ -74,6 +74,14 @@ parser.add_argument('--val_path', default="sample_data/java-small-graph-transfor
                     help='path of validation data')
 parser.add_argument('--dataset', default="java-small",
                     help='name of dataset')
+parser.add_argument('--node_type_vocabulary_path', default="preprocessed_data/node_type_vocab.txt",
+                    help='name of dataset')
+parser.add_argument('--token_vocabulary_path', default="preprocessed_data/token_vocab.txt",
+                    help='name of dataset')
+parser.add_argument('--train_label_vocabulary_path', default="preprocessed_data/train_label_vocab.txt",
+                    help='name of dataset')
+parser.add_argument('--val_label_vocabulary_path', default="preprocessed_data/val_label_vocab.txt",
+                    help='name of dataset')
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
 opt = parser.parse_args()
@@ -101,18 +109,14 @@ def form_model_path(opt):
 def main(opt):
 
     train_label_lookup = {}
- 
     node_type_lookup = {}
     node_token_lookup = {}
-
     val_label_lookup = {}
    
-    node_type_vocabulary_path = "preprocessed_data/node_type_vocab.txt"
-
-    train_label_vocabulary_path = "preprocessed_data/train_label_vocab.txt"
-    token_vocabulary_path = "preprocessed_data/token_vocab.txt"
-
-    val_label_vocabulary_path = "preprocessed_data/test_label_vocab.txt"
+    node_type_vocabulary_path = opt.node_type_vocabulary_path
+    train_label_vocabulary_path = opt.train_label_vocabulary_path
+    token_vocabulary_path = opt.token_vocabulary_path
+    val_label_vocabulary_path = opt.val_label_vocabulary_path
 
     with open(train_label_vocabulary_path, "r") as f1:
         data = f1.readlines()
