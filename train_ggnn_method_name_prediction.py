@@ -311,12 +311,14 @@ def main(opt):
                 average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
                 # print("F1 score : " + str(f1_score))
                 print("Validation with F1 score ", average_f1)
-                # if average_f1 > best_f1_score:
-                best_f1_score = average_f1
-                saver.save(sess, checkfile)                  
-                print('Checkpoint saved, epoch:' + str(epoch) + ', loss: ' + str(err) + '.')
-                with open(opt.model_accuracy_path,"w") as f1:
-                    f1.write(str(best_f1_score))
+                if average_f1 > best_f1_score:
+                    best_f1_score = average_f1
+
+                    checkfile = os.path.join(opt.model_path + "_" + str(epoch), 'cnn_tree.ckpt')
+                    saver.save(sess, checkfile)                  
+                    print('Checkpoint saved, epoch:' + str(epoch) + ', loss: ' + str(err) + '.')
+                    with open(opt.model_accuracy_path,"w") as f1:
+                        f1.write(str(best_f1_score))
 
 
 if __name__ == "__main__":
