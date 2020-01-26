@@ -215,8 +215,8 @@ def main(opt):
         validation_batch_iterator = ThreadedIterator(
             validation_dataset.make_minibatch_iterator(), max_queue_size=5)
         
-        f1_scores_of_val_data = []
-        
+        all_predicted_labels = []
+        all_ground_truth_labels = []
         for val_step, val_batch_data in enumerate(validation_batch_iterator):
             print("----------------------------------------")
             label_embeddings_matrix, scores = sess.run(
@@ -253,9 +253,10 @@ def main(opt):
             print(ground_truth_labels)
             print(predicted_labels)
             print("F1:", f1_score, "Step:", val_step)
-            
-            f1_scores_of_val_data.append(f1_score)
-        average_f1 = np.mean(f1_scores_of_val_data)
+            all_predicted_labels.extend(predicted_labels)
+            all_ground_truth_labels.extend(ground_truth_labels)
+                    
+        average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
         # print("F1 score : " + str(f1_score))
         print("Validation with F1 score ", average_f1)
         if average_f1 > best_f1_score:
