@@ -593,12 +593,12 @@ class MethodNamePredictionData():
             for bucket_idx , buckets_data in buckets.items():
                 # np.random.shuffle(buckets_data)
                 buckets_to_process[bucket_idx] = random.sample(buckets_data, int(len(buckets_data)/self.sampling_size))
-        # if self.is_validating:
-        #     print("Select subset of validation data...........")
-        #     # np.random.shuffle(bucket_at_step)
-        #     for bucket_idx , buckets_data in buckets.items():
-        #         # np.random.shuffle(buckets_data)
-        #         buckets_to_process[bucket_idx] = random.sample(buckets_data, int(len(buckets_data)/10))  
+        if self.is_validating:
+            print("Select subset of validation data...........")
+            # np.random.shuffle(bucket_at_step)
+            for bucket_idx , buckets_data in buckets.items():
+                # np.random.shuffle(buckets_data)
+                buckets_to_process[bucket_idx] = random.sample(buckets_data, int(len(buckets_data)/20))  
         else:
             buckets_to_process = buckets
         
