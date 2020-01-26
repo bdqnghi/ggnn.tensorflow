@@ -147,7 +147,7 @@ def main(opt):
     checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
     ckpt = tf.train.get_checkpoint_state(opt.model_path)
     if ckpt and ckpt.model_checkpoint_path:
-        print("Continue training with old model")
+        print("Continue training with old model : " + str(checkfile))
 
     # print(train_label_lookup)
     opt.label_lookup = train_label_lookup
@@ -204,7 +204,7 @@ def main(opt):
         sess.run(init)
 
         if ckpt and ckpt.model_checkpoint_path:
-            print("Continue training with old model")
+            print("Continue training with old model : " + str(checkfile))
             print("Checkpoint path : " + str(ckpt.model_checkpoint_path))
             saver.restore(sess, ckpt.model_checkpoint_path)
             for i, var in enumerate(saver._var_list):
