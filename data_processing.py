@@ -1,6 +1,6 @@
 import os
 # from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import ThreadPoolExecutor as executor
+from concurrent.futures import ThreadPoolExecutor as WorkerExecutor
 import copy
 import sys
 import argparse
@@ -44,7 +44,7 @@ def generate_folder_graph(src_path, tgt_path):
 def main():
     path = args.path
     worker = args.worker
-    with executor(max_workers=worker) as executor:   
+    with WorkerExecutor(max_workers=worker) as executor:   
         for subdir, dirs, files in os.walk(path):
             for project in dirs:
                 raw_dir_path = os.path.join(subdir, project)
@@ -52,6 +52,7 @@ def main():
                 graphs_path = os.path.join(subdir,project + ".txt")
                 if os.path.exists(fbss_path):
                     if not os.path.getsize(fbss_path):
+                        print("Deleting zero size fbs...")
                         os.remove(fbss_path)
                      
                 # if os.path.exists(graphs_path):
