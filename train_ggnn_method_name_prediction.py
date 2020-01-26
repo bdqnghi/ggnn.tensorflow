@@ -240,7 +240,7 @@ def main(opt):
                         ggnn.placeholders["is_training"]: True
                     }
                 )
-                print(softmax_values_data)
+                # print(softmax_values_data)
                 print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "Current F1:", average_f1, "Best F1:", best_f1_score)
 
                 # print(label_embeddings_matrix.shape)
