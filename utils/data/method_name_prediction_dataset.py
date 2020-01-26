@@ -278,7 +278,23 @@ class MethodNamePredictionData():
             out.write(buf)
             out.close()
        
-
+        
+        # buckets, bucket_sizes, bucket_at_step = self.data
+        # bucket_splits = defaultdict(list)
+        # size_of_chunks = 10000
+        # for bucket_idx, bucket_data in buckets.items():
+            
+        #     parts = int(len(bucket_data)/size_of_chunks) + 1
+        #     start = 0 
+        #     end = size_of_chunks
+        #     index_tuples = []
+        #     for part in range(1, parts):
+        #         start = start + size_of_chunks
+        #         end = end + size_of_chunks
+        #         index_tuples.append((start,end))
+            
+        #     bucket_splits[bucket_idx].append(index_tuples)
+    
         # Optional : Remove bucket for training step
         # if self.is_training:
         #     print("Deleting bucket for training data with threshold: " + str(self.bucket_size_threshold))

@@ -76,6 +76,8 @@ parser.add_argument('--train_path', default="sample_data/java-small-graph-transf
                     help='path of training data')
 parser.add_argument('--val_path', default="sample_data/java-small-graph-transformed/validation",
                     help='path of validation data')
+parser.add_argument('--dataset', default="java-small",
+                    help='log path for tensorboard')
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
 opt = parser.parse_args()
@@ -181,7 +183,10 @@ def main(opt):
     loss_node = ggnn.loss
 
     optimizer = tf.train.AdamOptimizer(opt.lr)
-    training_point = optimizer.minimize(loss_node)
+
+    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    with tf.control_dependencies(update_ops):
+        training_point = optimizer.minimize(loss_node)
 
     saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
     init = tf.global_variables_initializer()
@@ -230,7 +235,8 @@ def main(opt):
                         ggnn.placeholders["node_type_indices"]: train_batch_data["node_type_indices"],
                         ggnn.placeholders["node_token_indices"]: train_batch_data["node_token_indices"],
                         ggnn.placeholders["graph_state_keep_prob"]: 0.5,
-                        ggnn.placeholders["edge_weight_dropout_keep_prob"]: 0.5
+                        ggnn.placeholders["edge_weight_dropout_keep_prob"]: 0.5,
+                        ggnn.placeholders["is_training"]: True
                     }
                 )
                 print(softmax_values_data)
@@ -268,7 +274,8 @@ def main(opt):
                             ggnn.placeholders["node_type_indices"]: val_batch_data["node_type_indices"],
                             ggnn.placeholders["node_token_indices"]: val_batch_data["node_token_indices"],
                             ggnn.placeholders["graph_state_keep_prob"]: 1.0,
-                            ggnn.placeholders["edge_weight_dropout_keep_prob"]: 1.0
+                            ggnn.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
+                            ggnn.placeholders["is_training"]: False
                         }
                     )
 

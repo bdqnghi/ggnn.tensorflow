@@ -1,10 +1,11 @@
 DATA=sample_data
 TRAIN_PATH=${DATA}/java-small-graph-transformed/training
 VAL_PATH=${DATA}/java-small-graph-transformed/validation
-BATCH_SIZE=10
+DATASET=java-small
+BATCH_SIZE=12
 VAL_BATCH_SIZE=3
 SAMPLING_SIZE=60
-CHECKPOINT_EVERY=1000
+CHECKPOINT_EVERY=300
 GRAPH_SIZE_THRESHOLD=1500
 CUDA=0
 VALIDATING=1

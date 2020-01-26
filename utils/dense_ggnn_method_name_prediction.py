@@ -109,6 +109,11 @@ class DenseGGNNModel():
         self.placeholders['adjacency_matrix'] = tf.placeholder(tf.float32,[None, self.num_edge_types, None, None], name='adjacency_matrix')     # [b, e, v, v]
         self.__adjacency_matrix = tf.transpose(self.placeholders['adjacency_matrix'], [1, 0, 2, 3])                    # [e, b, v, v]
         
+        # batch normalization
+        self.placeholders['is_training'] = tf.placeholder(tf.bool, name="is_train");
+        self.node_type_representations = tf.layers.batch_normalization(self.node_type_representations, training=self.placeholders['is_training'])
+        self.node_token_representations = tf.layers.batch_normalization(self.node_token_representations, training=self.placeholders['is_training'])
+    
         # weights
         self.weights['edge_weights'] = tf.Variable(glorot_init([self.num_edge_types, node_dim, node_dim]),name='edge_weights')
         self.weights['edge_biases'] = tf.Variable(tf.zeros([self.num_edge_types, 1, node_dim]),name='edge_biases')
