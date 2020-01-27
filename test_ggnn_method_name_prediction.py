@@ -265,8 +265,10 @@ def main(opt):
             all_ground_truth_labels.extend(ground_truth_labels)
                     
         average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
+        average_precision = evaluation.calculate_precisions(all_predicted_labels, all_ground_truth_labels)
+        average_recall = evaluation.calculate_recalls(all_predicted_labels, all_ground_truth_labels)
         # print("F1 score : " + str(f1_score))
-        print("Validation with F1 score ", average_f1)
+        print("F1:", average_f1, "Precision:", average_precision, "Recall:", average_recall)
 
 
 if __name__ == "__main__":

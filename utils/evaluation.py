@@ -33,6 +33,22 @@ def calculate_f1_score(prediction, ground_truth):
         f1_score = float(2*(precision * recall)/(precision + recall))
     return f1_score
 
+def calculate_recalls(predictions, ground_truths):
+    recalls = []
+    for i, prediction in enumerate(predictions):
+        recall = calculate_recall(prediction, ground_truths[i])
+        recalls.append(recall)
+    
+    return np.mean(recalls)
+
+def calculate_precisions(predictions, ground_truths):
+    precisions = []
+    for i, prediction in enumerate(predictions):
+        precision = calculate_precision(prediction, ground_truths[i])
+        precisions.append(precision)
+    
+    return np.mean(precisions)
+
 def calculate_f1_scores(predictions, ground_truths):
     f1_scores = []
     for i, prediction in enumerate(predictions):
