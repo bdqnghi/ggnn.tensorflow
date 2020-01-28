@@ -1,7 +1,8 @@
 DATA=sample_data
 DATASET=java-small
-TRAIN_PATH=${DATA}/java-small-graph-transformed/training
-VAL_PATH=${DATA}/java-small-graph-transformed/validation
+DATASET_TRANSFORMED=java-small-graph-transformed
+TRAIN_PATH=${DATA}/${DATASET_TRANSFORMED}/training
+VAL_PATH=${DATA}/${DATASET_TRANSFORMED}/validation
 NODE_TYPE_VOCABULARY_PATH=preprocessed_data/${DATASET}/node_type_vocab.txt
 TOKEN_VOCABULARY_PATH=preprocessed_data/${DATASET}/token_vocab.txt
 TRAIN_LABEL_VOCABULARY_PATH=preprocessed_data/${DATASET}/train_label_vocab.txt
