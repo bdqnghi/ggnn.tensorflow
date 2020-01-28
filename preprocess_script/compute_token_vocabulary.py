@@ -37,7 +37,7 @@ def main():
 
 	for subdir , dirs, files in os.walk(input_path):
 		for file in files:
-			if file.endswith(".txt")
+			if file.endswith(".txt"):
 				graphs_path = os.path.join(subdir,file)
 				print("Compute token for : " + str(graphs_path))
 				with open(graphs_path,"r") as f:
