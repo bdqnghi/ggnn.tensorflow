@@ -36,26 +36,27 @@ def main():
 	all_vocabularies = []
 
 	for subdir , dirs, files in os.walk(input_path):
-		for project in dirs:
-			graphs_path = os.path.join(subdir,project + ".txt")
-			print(graphs_path)
-			with open(graphs_path,"r") as f:
-				lines = f.readlines()
-				for line in lines:
-					# print(line)
-				
-					line = line.replace("\n","")
-					line = line.replace("'","")
-					line = " ".join(line.split())
-					# line = strip(line)
-					# line
-					splits = line.split(" ")
+		for file in files:
+			if file.endswith(".txt")
+				graphs_path = os.path.join(subdir,file)
+				print("Compute label for : " + str(graphs_path))
+				with open(graphs_path,"r") as f:
+					lines = f.readlines()
+					for line in lines:
+						# print(line)
 					
-					if splits[0] == "?":
-						file_path_splits = splits[1].split("/")
-						file_name = file_path_splits[len(file_path_splits)-1]
-						method_name = file_name.split("_")[1].replace(".java","")
-						all_vocabularies.append(method_name)
+						line = line.replace("\n","")
+						line = line.replace("'","")
+						line = " ".join(line.split())
+						# line = strip(line)
+						# line
+						splits = line.split(" ")
+						
+						if splits[0] == "?":
+							file_path_splits = splits[1].split("/")
+							file_name = file_path_splits[len(file_path_splits)-1]
+							method_name = file_name.split("_")[1].replace(".java","")
+							all_vocabularies.append(method_name)
 
 	all_vocabularies = exclude_tokens(all_vocabularies)
 
