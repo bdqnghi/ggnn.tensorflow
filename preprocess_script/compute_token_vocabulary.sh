@@ -1,7 +1,7 @@
 DATA=sample_data
 DATASET=java-small
 TRAIN_DIR=../${DATA}/${DATASET}/training
-TOKEN_VOCAB_PATH=../preprocessed_data/token_vocab.txt
+TOKEN_VOCAB_PATH=../preprocessed_data/${DATASET}/token_vocab.txt
 
 PYTHON=python3
 

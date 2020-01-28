@@ -1,11 +1,11 @@
 DATA=sample_data
+DATASET=java-small
 TRAIN_PATH=${DATA}/java-small-graph-transformed/training
 VAL_PATH=${DATA}/java-small-graph-transformed/validation
-NODE_TYPE_VOCABULARY_PATH=preprocessed_data/node_type_vocab.txt
-TOKEN_VOCABULARY_PATH=preprocessed_data/token_vocab.txt
-TRAIN_LABEL_VOCABULARY_PATH=preprocessed_data/train_label_vocab.txt
-VAL_LABEL_VOCABULARY_PATH=preprocessed_data/val_label_vocab.txt
-DATASET=java-small
+NODE_TYPE_VOCABULARY_PATH=preprocessed_data/${DATASET}/node_type_vocab.txt
+TOKEN_VOCABULARY_PATH=preprocessed_data/${DATASET}/token_vocab.txt
+TRAIN_LABEL_VOCABULARY_PATH=preprocessed_data/${DATASET}/train_label_vocab.txt
+VAL_LABEL_VOCABULARY_PATH=preprocessed_data/${DATASET}/val_label_vocab.txt
 BATCH_SIZE=12
 VAL_BATCH_SIZE=10
 SAMPLING_SIZE=1
