@@ -181,11 +181,6 @@ def main(opt):
     attention_scores = ggnn.attention_scores
     loss_node = ggnn.loss
 
-    optimizer = tf.train.AdamOptimizer(opt.lr)
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    with tf.control_dependencies(update_ops):
-        training_point = optimizer.minimize(loss_node)
-
     saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
     init = tf.global_variables_initializer()
     # train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=1)
