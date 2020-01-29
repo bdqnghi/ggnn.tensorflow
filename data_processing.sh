@@ -1,8 +1,8 @@
 DATA=sample_data
 DATASET=java-small
-TRAIN_DIR=${DATA}/${DATASET}/training
-TEST_DIR=${DATA}/${DATASET}/test
-VAL_DIR=${DATA}/${DATASET}/validation
+TRAIN_DIR=../${DATA}/${DATASET}/training
+TEST_DIR=../${DATA}/${DATASET}/test
+VAL_DIR=../${DATA}/${DATASET}/validation
 NUM_WORKER=10
 PYTHON=python3
 

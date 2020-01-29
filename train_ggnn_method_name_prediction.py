@@ -189,7 +189,7 @@ def main(opt):
     attention_scores = ggnn.attention_scores
     loss_node = ggnn.loss
 
-    optimizer = tf.train.AdamOptimizer(opt.lr)
+    optimizer = tf.compat.v1.train.AdamOptimizer(opt.lr)
 
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):

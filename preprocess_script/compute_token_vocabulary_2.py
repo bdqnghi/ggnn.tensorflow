@@ -6,12 +6,13 @@ import argparse
 import re
 sys.path.append("../utils")
 import identifier_splitting
+import nltk  
 
 regex = '\\"\s+([^"]+)\s+\\"'
 excluded_tokens = [",","{",";","}",")","(",'"',"'","`",""," ","[]","[","]","/",":","."," "]
 parser = argparse.ArgumentParser()
 parser.add_argument("--input", default="../sample_data/java-small/training", type=str, help="Input path")
-parser.add_argument("--output", default="../preprocessed_data/train_label_vocab.txt", type=str, help="Output path")
+parser.add_argument("--output", default="../preprocessed_data/token_vocab.txt", type=str, help="Output path")
 
 args = parser.parse_args()
 def exclude_tokens(all_vocabularies):
@@ -28,7 +29,7 @@ def process_token(token):
 
 def main():
 	
-	# input = "../sample_data/java-small/training"
+	# input = "../sample_data/java-small-graph/training"
 	# output = "../preprocessed_data/token_vocabulary.csv"
 	input_path = args.input
 	output_path = args.output
@@ -37,35 +38,23 @@ def main():
 
 	for subdir , dirs, files in os.walk(input_path):
 		for file in files:
-			if file.endswith(".txt"):
-				graphs_path = os.path.join(subdir,file)
-				print("Compute label for : " + str(graphs_path))
-				with open(graphs_path,"r") as f:
-					lines = f.readlines()
-					for line in lines:
-						# print(line)
-					
-						line = line.replace("\n","")
-						line = line.replace("'","")
-						line = " ".join(line.split())
-						# line = strip(line)
-						# line
-						splits = line.split(" ")
+			if file.endswith(".java"):
+				file_path = os.path.join(subdir, file)
+				with open(file_path,"r") as f:
+					data = f.readlines()
+					for line in data:
 						
-						if splits[0] == "?":
-							file_path_splits = splits[1].split("/")
-							file_name = file_path_splits[len(file_path_splits)-1]
-							method_name = file_name.split("_")[1].replace(".java","")
-							all_vocabularies.append(method_name)
-
+						words = nltk.word_tokenize(line)  
+						print(words)
+			
 	all_vocabularies = exclude_tokens(all_vocabularies)
 
 	unique_vocabularies = []
 	for vocab in all_vocabularies:
 		if vocab not in unique_vocabularies:
 			unique_vocabularies.append(vocab)
-
-
+	unique_vocabularies.append("<SPECIAL>")
+	
 	with open(output_path, "w") as f1:
 		for i, v in enumerate(unique_vocabularies):
 			f1.write(str(i) + "," + v)
