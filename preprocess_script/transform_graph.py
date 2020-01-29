@@ -176,7 +176,7 @@ def main():
                             file_name = file_name.replace(".java",".txt")
                             file_name = project_name + "_" + file_name
                             new_file_path = os.path.join(output_path,file_name)
-                            print(single_graph_file)
+                            print(new_file_path)
                             with open(new_file_path, "w") as f4:
                                 for new_line in single_graph_file:
                                     f4.write(new_line)
