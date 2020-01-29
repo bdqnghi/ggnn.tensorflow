@@ -174,13 +174,22 @@ def main():
                             single_graph_file.append("? " + str(method_name_index))
 
                             file_name = file_name.replace(".java",".txt")
-                            file_name = project_name + "_" + file_name
-                            new_file_path = os.path.join(output_path,file_name)
+                            file_name_with_project = project_name + "_" + file_name
+                            new_file_path = os.path.join(output_path,file_name_with_project)
                             print(new_file_path)
-                            with open(new_file_path, "w") as f4:
-                                for new_line in single_graph_file:
-                                    f4.write(new_line)
-                                    f4.write("\n")
+                            try:
+                                with open(new_file_path, "w") as f4:
+                                    for new_line in single_graph_file:
+                                        f4.write(new_line)
+                                        f4.write("\n")
+                            except Exception as e:
+                                print(e)
+                                new_file_path = os.path.join(output_path,file_name)
+                                with open(new_file_path, "w") as f4:
+                                    for new_line in single_graph_file:
+                                        f4.write(new_line)
+                                        f4.write("\n")
+
                             # Reset the graph file object
                             single_graph_file = []                
                                     
