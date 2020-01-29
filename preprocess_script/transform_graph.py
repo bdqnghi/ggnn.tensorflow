@@ -166,13 +166,16 @@ def main():
                             splits = line.split(" ")
                             file_path_splits = splits[1].split("/")
                             file_name = file_path_splits[len(file_path_splits)-1]
+                            project_name = file_path_splits[len(file_path_splits)-2]
                             method_name = file_name.split("_")[1].replace(".java","")
                             method_name_index = "-1"
                             if method_name in label_lookup:
                                 method_name_index = label_lookup[method_name]
                             single_graph_file.append("? " + str(method_name_index))
 
-                            new_file_path = os.path.join(output_path,file_name.replace(".java",".txt"))
+                            file_name = file_name.replace(".java",".txt")
+                            file_name = project_name + "_" + file_name
+                            new_file_path = os.path.join(output_path,file_name)
                             print(single_graph_file)
                             with open(new_file_path, "w") as f4:
                                 for new_line in single_graph_file:
