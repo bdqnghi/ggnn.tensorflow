@@ -389,7 +389,7 @@ class MethodNamePredictionData():
         
         # Interesting idea to batch graphs with approximately similar size into the same bucket
         # The difference is that the original code from Microsoft batch exact similar size graphs into the same bucket
-        bucket_sizes = np.array(list(range(30 , 7500 , 100)))
+        bucket_sizes = np.array(list(range(30 , 7500 , 30)))
         
 
         buckets = defaultdict(list)
