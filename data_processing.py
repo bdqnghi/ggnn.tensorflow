@@ -8,6 +8,8 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--worker", default=16, type=int, help="Num worker")
 parser.add_argument("--path", default="../sample_data/java-small/training", type=str, help="Path")
+parser.add_argument("--fbs", default=1, type=int, help="Producing FBS")
+parser.add_argument("--txt", default=0, type=int, help="Producing graph")
 
 args = parser.parse_args()
 
@@ -50,21 +52,25 @@ def main():
                 raw_dir_path = os.path.join(subdir, project)
                 fbss_path = os.path.join(subdir,project + ".fbs")
                 graphs_path = os.path.join(subdir,project + ".txt")
-                if os.path.exists(fbss_path):
-                    if not os.path.getsize(fbss_path):
-                        print("Deleting zero size fbs...")
-                        os.remove(fbss_path)
-                     
-                # if os.path.exists(graphs_path):
-                #     if not os.path.getsize(graphs_path):
-                #         os.remove(graphs_path)
-                if not os.path.exists(fbss_path):
-                    print("Producing fbs....")
-                    future_1 = executor.submit(generate_folder_fbs, raw_dir_path, fbss_path)  
-                # if not os.path.exists(graphs_path): 
-                #     print("Producing graph....")
-                #     if os.path.exists(fbss_path):
-                #         future_2 = executor.submit(generate_folder_graph, fbss_path, graphs_path)
+                
+                if args.fbs == 1:
+                    if os.path.exists(fbss_path):
+                        if not os.path.getsize(fbss_path):
+                            print("Deleting zero size fbs...")
+                            os.remove(fbss_path)
+                    if not os.path.exists(fbss_path):
+                        print("Producing fbs....")
+                        future_1 = executor.submit(generate_folder_fbs, raw_dir_path, fbss_path)  
+                
+                if args.txt == 1:
+                    if os.path.exists(graphs_path):
+                        if not os.path.getsize(graphs_path):
+                            os.remove(graphs_path)
+                
+                    if not os.path.exists(graphs_path): 
+                        print("Producing graph....")
+                        if os.path.exists(fbss_path):
+                            future_2 = executor.submit(generate_folder_graph, fbss_path, graphs_path)
             # print(fbs_path)
 
 if __name__ == "__main__":
