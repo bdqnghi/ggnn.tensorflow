@@ -1,3 +1,4 @@
+# This script is to clean up the folder by copying all of the files in the sub-folders into the parent folder
 import os
 import shutil
 import argparse
@@ -11,9 +12,11 @@ args = parser.parse_args()
 def clean_up(path):
     for project in os.listdir(path):
         project_path = os.path.join(path,project)
+        print(project_path)
         for root, dirs, files in os.walk(project_path):  
             for file in files: 
                 path_file = os.path.join(root,file)
+                print(path_file)
                 try:
                     shutil.copy2(path_file,project_path) # change you destination dir
                 except Exception as e:
