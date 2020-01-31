@@ -613,14 +613,14 @@ class MethodNamePredictionData():
             # if len(bucket_data) > 5:
             for i, element in enumerate(bucket_data):
 
-                if self.is_training:
-                    num_nodes_of_graph = find_num_nodes_of_graph(element["graph"])
-                    if num_nodes_of_graph < self.graph_size_threshold:
-                        elements.append(element)
-                        samples += 1
-                else:
+                # if self.is_training:
+                num_nodes_of_graph = find_num_nodes_of_graph(element["graph"])
+                if num_nodes_of_graph < self.graph_size_threshold:
                     elements.append(element)
                     samples += 1
+                # else:
+                #     elements.append(element)
+                #     samples += 1
                 if (samples >= self.batch_size) or ((i == len(bucket_data)-1)):
                     if len(elements) > 0:
                         batch_data, batch_max_node = self.make_batch(elements)
