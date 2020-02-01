@@ -7,15 +7,16 @@ NODE_TYPE_VOCABULARY_PATH=preprocessed_data/node_type_vocab.txt
 TOKEN_VOCABULARY_PATH=preprocessed_data/${DATASET}/token_vocab.txt
 TRAIN_LABEL_VOCABULARY_PATH=preprocessed_data/${DATASET}/train_label_vocab.txt
 VAL_LABEL_VOCABULARY_PATH=preprocessed_data/${DATASET}/val_label_vocab.txt
-BATCH_SIZE=12
-VAL_BATCH_SIZE=10
+BATCH_SIZE=32
+VAL_BATCH_SIZE=32
 SAMPLING_SIZE=1
-CHECKPOINT_EVERY=300
-GRAPH_SIZE_THRESHOLD_LOWER=1500
+CHECKPOINT_EVERY=1000
+GRAPH_SIZE_THRESHOLD=1500
 CUDA=0
 VALIDATING=1
 NODE_TYPE_DIM=30
 NODE_TOKEN_DIM=50
+TASK=0
 PYTHON=python3
 ${PYTHON} train_ggnn_method_name_prediction.py \
 --dataset ${DATASET} \
@@ -27,3 +28,4 @@ ${CHECKPOINT_EVERY} --cuda ${CUDA} --validating ${VALIDATING} --graph_size_thres
 --token_vocabulary_path ${TOKEN_VOCABULARY_PATH} \
 --train_label_vocabulary_path ${TRAIN_LABEL_VOCABULARY_PATH} \
 --val_label_vocabulary_path ${VAL_LABEL_VOCABULARY_PATH} \
+--task ${TASK}

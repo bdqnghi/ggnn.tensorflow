@@ -88,8 +88,8 @@ class DenseGGNNModel():
         
         # initializer = tf.contrib.layers.xavier_initializer()
         # inputs
-        self.placeholders['graph_state_keep_prob'] = tf.placeholder(tf.float32, None, name='graph_state_keep_prob')
-        self.placeholders['edge_weight_dropout_keep_prob'] = tf.placeholder(tf.float32, None, name='edge_weight_dropout_keep_prob')
+        # self.placeholders['graph_state_keep_prob'] = tf.placeholder(tf.float32, None, name='graph_state_keep_prob')
+        # self.placeholders['edge_weight_dropout_keep_prob'] = tf.placeholder(tf.float32, None, name='edge_weight_dropout_keep_prob')
         self.node_type_embeddings = tf.Variable(glorot_init([len(self.node_type_lookup.keys()), self.node_type_dim]), name='node_type_embeddings')
         self.node_token_embeddings = tf.Variable(glorot_init([len(self.node_token_lookup.keys()), self.node_token_dim]), name='node_token_embeddings')
         self.label_embeddings = tf.Variable(glorot_init([len(self.label_lookup.keys()), self.label_dim]), name='label_embeddings')
