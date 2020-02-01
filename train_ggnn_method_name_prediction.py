@@ -54,8 +54,8 @@ parser.add_argument('--verbal', type=bool, default=True,
 parser.add_argument('--manualSeed', type=int, help='manual seed')
 parser.add_argument('--model_path', default="model",
                     help='path to save the model')
-parser.add_argument('--model_accuracy_path', default="model_accuracy/method_name.txt",
-                    help='path to save the the best accuracy of the model')
+# parser.add_argument('--model_accuracy_path', default="model_accuracy/method_name.txt",
+#                     help='path to save the the best accuracy of the model')
 parser.add_argument('--n_hidden', type=int, default=50,
                     help='number of hidden layers')
 parser.add_argument('--log_path', default="logs/",
@@ -206,16 +206,17 @@ def main(opt):
     
 
     best_f1_score = 0.0
-    if not os.path.exists(opt.model_accuracy_path):
-        try:
-            os.mkdir("model_accuracy")
-        except Exception as e:
-            print(e)
-    else:
-        with open(opt.model_accuracy_path,"r") as f:
-            data = f.readlines()
-            for line in data:
-                best_f1_score = float(line.replace("\n",""))
+    
+    try:
+        os.mkdir("model_accuracy")
+    except Exception as e:
+        print(e)
+    
+    opt.model_accuracy_path = os.path.join("model_accuracy",opt.model_path + ".txt")
+    with open(opt.model_accuracy_path,"r") as f:
+        data = f.readlines()
+        for line in data:
+            best_f1_score = float(line.replace("\n",""))
     
     print("Best f1 score : " + str(best_f1_score))
     with tf.Session() as sess:

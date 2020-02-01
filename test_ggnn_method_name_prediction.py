@@ -192,16 +192,16 @@ def main(opt):
     
 
     best_f1_score = 0.0
-    if not os.path.exists(opt.model_accuracy_path):
-        try:
-            os.mkdir("model_accuracy")
-        except Exception as e:
-            print(e)
-    else:
-        with open(opt.model_accuracy_path,"r") as f:
-            data = f.readlines()
-            for line in data:
-                best_f1_score = float(line.replace("\n",""))
+    try:
+        os.mkdir("model_accuracy")
+    except Exception as e:
+        print(e)
+    
+    opt.model_accuracy_path = os.path.join("model_accuracy",opt.model_path + ".txt")
+    with open(opt.model_accuracy_path,"r") as f:
+        data = f.readlines()
+        for line in data:
+            best_f1_score = float(line.replace("\n",""))
     
     print("Best f1 score : " + str(best_f1_score))
     with tf.Session() as sess:
