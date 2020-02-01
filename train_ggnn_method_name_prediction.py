@@ -194,7 +194,7 @@ def main(opt):
     opt.node_type_lookup = node_type_lookup
     opt.node_token_lookup = node_token_lookup
 
-    if opt.task == 0:
+    if opt.task == 1:
         train_dataset = MethodNamePredictionData(opt, opt.train_path, True, False, False)
     
     val_opt = copy.deepcopy(opt)
