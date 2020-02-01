@@ -150,7 +150,7 @@ def main(opt):
     node_token_lookup = bidict(node_token_lookup)
     val_label_lookup = bidict(val_label_lookup)
 
-    opt.model_path = form_model_path(opt)
+    opt.model_path = os.path.join(opt.model_path, form_model_path(opt))
     checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
     ckpt = tf.train.get_checkpoint_state(opt.model_path)
     if ckpt and ckpt.model_checkpoint_path:
@@ -197,7 +197,7 @@ def main(opt):
     except Exception as e:
         print(e)
     
-    opt.model_accuracy_path = os.path.join("model_accuracy",opt.model_path + ".txt")
+    opt.model_accuracy_path = os.path.join("model_accuracy",form_model_path(opt) + ".txt")
     with open(opt.model_accuracy_path,"r") as f:
         data = f.readlines()
         for line in data:
