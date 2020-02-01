@@ -213,10 +213,17 @@ def main(opt):
         print(e)
     
     opt.model_accuracy_path = os.path.join("model_accuracy",form_model_path(opt) + ".txt")
-    with open(opt.model_accuracy_path,"r") as f:
-        data = f.readlines()
-        for line in data:
-            best_f1_score = float(line.replace("\n",""))
+
+    if os.path.exists(opt.model_accuracy_path):
+        print("Model accuracy path exists : " + str(opt.model_accuracy_path))
+        with open(opt.model_accuracy_path,"r") as f4:
+            data = f4.readlines()
+            for line in data:
+                best_f1_score = float(line.replace("\n",""))
+    else:
+        print("Creating model accuracy path : " + str(opt.model_accuracy_path))
+        with open(opt.model_accuracy_path,"w") as f5:
+            f5.write("0.0")
     
     print("Best f1 score : " + str(best_f1_score))
     with tf.Session() as sess:
