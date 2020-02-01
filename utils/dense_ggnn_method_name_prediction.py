@@ -129,7 +129,7 @@ class DenseGGNNModel():
             cell = tf.contrib.rnn.GRUCell(node_dim)
             # cell = tf.python.ops.rnn_cell.GRUCell(node_dim)
             # cell = tf.nn.rnn_cell.DropoutWrapper(cell, state_keep_prob=self.placeholders['graph_state_keep_prob'])
-            cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(cell, state_keep_prob=self.placeholders['graph_state_keep_prob'])
+            # cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(cell, state_keep_prob=self.placeholders['graph_state_keep_prob'])
             self.weights['node_gru'] = cell
 
     def compute_nodes_representation(self):
@@ -148,8 +148,8 @@ class DenseGGNNModel():
                     tf.get_variable_scope().reuse_variables()
                 for edge_type in range(self.num_edge_types):
                     # print("edge type : " + str(edge_type))
-                    m = tf.matmul(h, tf.nn.dropout(self.weights['edge_weights'][edge_type], rate=1-self.placeholders['edge_weight_dropout_keep_prob'])) # [b*v, h]
-                    # m = tf.matmul(h, self.weights['edge_weights'][edge_type])                               # [b*v, h]
+                    # m = tf.matmul(h, tf.nn.dropout(self.weights['edge_weights'][edge_type], rate=1-self.placeholders['edge_weight_dropout_keep_prob'])) # [b*v, h]
+                    m = tf.matmul(h, self.weights['edge_weights'][edge_type])                               # [b*v, h]
 
                     m = tf.reshape(m, [-1, v, node_dim])                                                       # [b, v, h]
                     m += self.weights['edge_biases'][edge_type]                                             # [b, v, h]
