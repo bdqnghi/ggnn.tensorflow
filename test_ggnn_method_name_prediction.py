@@ -82,6 +82,8 @@ parser.add_argument('--train_label_vocabulary_path', default="preprocessed_data/
                     help='name of dataset')
 parser.add_argument('--val_label_vocabulary_path', default="preprocessed_data/val_label_vocab.txt",
                     help='name of dataset')
+parser.add_argument('--dropout', type=float,
+                    default=0.2, help='drop out rate')
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
 opt = parser.parse_args()
@@ -99,7 +101,8 @@ def form_model_path(opt):
     model_traits["distributed_function"] = str(opt.distributed_function)
     model_traits["node_type_dim"] = str(opt.node_type_dim)
     model_traits["node_token_dim"] = str(opt.node_token_dim)
-    
+    model_traits["dropout"] = str(opt.dropout)
+
     model_path = []
     for k, v in model_traits.items():
         model_path.append(k + "_" + v)

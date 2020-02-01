@@ -122,12 +122,14 @@ class DenseGGNNModel():
         # self.weights["hidden_layer_weights"] = tf.Variable(xavier_initializer([self.node_dim, self.num_labels]), name='hidden_layer_weights')
         # self.weights["hidden_layer_biases"] = tf.Variable(xavier_initializer([self.num_labels,]), name='hidden_layer_biases')
 
-        self.weights['attention_weights'] = tf.Variable(glorot_init([self.node_dim,1]).astype(np.float32),name='attention_weights')
+        self.weights['attention_weights'] = tf.Variable(glorot_init([self.node_dim,1]),name='attention_weights')
         
 
         with tf.variable_scope("gru_scope"):
-            cell = tf.contrib.rnn.GRUCell(node_dim)
+            # cell = tf.contrib.rnn.GRUCell(node_dim)
+            cell = tf.python.ops.rnn_cell.GRUCell(node_dim)
             # cell = tf.nn.rnn_cell.DropoutWrapper(cell, state_keep_prob=self.placeholders['graph_state_keep_prob'])
+            cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(cell, state_keep_prob=self.placeholders['graph_state_keep_prob'])
             self.weights['node_gru'] = cell
 
     def compute_nodes_representation(self):
@@ -140,14 +142,14 @@ class DenseGGNNModel():
         h = tf.concat([self.node_type_representations, self.node_token_representations], -1)
         h = tf.reshape(h, [-1, self.node_token_dim + self.node_type_dim])
 
-        with tf.variable_scope("gru_scope") as scope:
+        with tf.compat.v1.variable_scope("gru_scope") as scope:
             for i in range(self.num_timesteps):
                 if i > 0:
                     tf.get_variable_scope().reuse_variables()
                 for edge_type in range(self.num_edge_types):
                     # print("edge type : " + str(edge_type))
-                    # m = tf.matmul(h, tf.nn.dropout(self.weights['edge_weights'][edge_type], rate=1-self.placeholders['edge_weight_dropout_keep_prob'])) # [b*v, h]
-                    m = tf.matmul(h, self.weights['edge_weights'][edge_type])                               # [b*v, h]
+                    m = tf.matmul(h, tf.nn.dropout(self.weights['edge_weights'][edge_type], rate=1-self.placeholders['edge_weight_dropout_keep_prob'])) # [b*v, h]
+                    # m = tf.matmul(h, self.weights['edge_weights'][edge_type])                               # [b*v, h]
 
                     m = tf.reshape(m, [-1, v, node_dim])                                                       # [b, v, h]
                     m += self.weights['edge_biases'][edge_type]                                             # [b, v, h]
