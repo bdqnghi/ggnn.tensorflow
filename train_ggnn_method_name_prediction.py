@@ -181,7 +181,11 @@ def get_best_f1_score(opt):
     return best_f1_score
     
 def main(opt):
-
+    opt.model_path = os.path.join(opt.model_path, form_model_path(opt))
+    checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
+    ckpt = tf.train.get_checkpoint_state(opt.model_path)
+    if ckpt and ckpt.model_checkpoint_path:
+        print("Continue training with old model : " + str(checkfile))
 
     train_label_lookup, node_type_lookup, node_token_lookup, val_label_lookup = load_vocabs(opt)
 
@@ -218,15 +222,6 @@ def main(opt):
 
     saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
     init = tf.global_variables_initializer()
-
-    opt.model_path = os.path.join(opt.model_path, form_model_path(opt))
-    checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
-    ckpt = tf.train.get_checkpoint_state(opt.model_path)
-    if ckpt and ckpt.model_checkpoint_path:
-        print("Continue training with old model : " + str(checkfile))
-
-
-
    
 
     best_f1_score = get_best_f1_score(opt)
