@@ -593,13 +593,13 @@ class MethodNamePredictionData():
             for bucket_idx , buckets_data in buckets.items():
                 # np.random.shuffle(buckets_data)
                 buckets_to_process[bucket_idx] = random.sample(buckets_data, int(len(buckets_data)/self.sampling_size))
-        if self.is_validating:
-            print("Select subset of validation data...........")
-            # np.random.shuffle(bucket_at_step)
-            for bucket_idx , buckets_data in buckets.items():
-                # np.random.shuffle(buckets_data)
-                # buckets_to_process[bucket_idx] = random.sample(buckets_data, int(len(buckets_data)/20))  
-                buckets_to_process[bucket_idx] = buckets_data[:int(len(buckets_data)/10)]
+        # if self.is_validating:
+        #     print("Select subset of validation data...........")
+        #     # np.random.shuffle(bucket_at_step)
+        #     for bucket_idx , buckets_data in buckets.items():
+        #         # np.random.shuffle(buckets_data)
+        #         # buckets_to_process[bucket_idx] = random.sample(buckets_data, int(len(buckets_data)/20))  
+        #         buckets_to_process[bucket_idx] = buckets_data[:int(len(buckets_data)/10)]
         else:
             buckets_to_process = buckets
         
@@ -613,14 +613,14 @@ class MethodNamePredictionData():
             # if len(bucket_data) > 5:
             for i, element in enumerate(bucket_data):
 
-                if self.is_training:
-                    num_nodes_of_graph = find_num_nodes_of_graph(element["graph"])
-                    if num_nodes_of_graph < self.graph_size_threshold:
-                        elements.append(element)
-                        samples += 1
-                else:
+                # if self.is_training:
+                num_nodes_of_graph = find_num_nodes_of_graph(element["graph"])
+                if num_nodes_of_graph < self.graph_size_threshold:
                     elements.append(element)
                     samples += 1
+                # else:
+                #     elements.append(element)
+                #     samples += 1
                 if (samples >= self.batch_size) or ((i == len(bucket_data)-1)):
                     if len(elements) > 0:
                         batch_data, batch_max_node = self.make_batch(elements)
