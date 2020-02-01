@@ -89,7 +89,7 @@ parser.add_argument('--train_label_vocabulary_path', default="preprocessed_data/
 parser.add_argument('--val_label_vocabulary_path', default="preprocessed_data/val_label_vocab.txt",
                     help='name of dataset')
 parser.add_argument('--dropout', type=float,
-                    default=0.2, help='drop out rate')
+                    default=0.8, help='drop out rate')
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
 opt = parser.parse_args()
