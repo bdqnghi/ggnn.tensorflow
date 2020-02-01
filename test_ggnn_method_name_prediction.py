@@ -101,7 +101,6 @@ def form_model_path(opt):
     model_traits["distributed_function"] = str(opt.distributed_function)
     model_traits["node_type_dim"] = str(opt.node_type_dim)
     model_traits["node_token_dim"] = str(opt.node_token_dim)
-    model_traits["dropout"] = str(opt.dropout)
 
     model_path = []
     for k, v in model_traits.items():
