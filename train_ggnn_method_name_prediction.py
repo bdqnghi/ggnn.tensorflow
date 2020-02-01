@@ -241,7 +241,7 @@ def main(opt):
             for i, var in enumerate(saver._var_list):
                 print('Var {}: {}'.format(i, var))
 
-        if opt.task == 0:
+        if opt.task == 1:
             print("Training model.............")
             average_f1 = 0.0
         
@@ -347,7 +347,7 @@ def main(opt):
                 total_train = t1_train-t0_train
                 print("Epoch:", epoch, "Execution time:", str(total_train))
 
-        if opt.task == 1:
+        if opt.task == 0:
             print("Testing model.............")
             average_f1 = 0.0
             validation_batch_iterator = ThreadedIterator(
