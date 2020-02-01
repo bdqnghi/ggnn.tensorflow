@@ -126,8 +126,8 @@ class DenseGGNNModel():
         
 
         with tf.variable_scope("gru_scope"):
-            # cell = tf.contrib.rnn.GRUCell(node_dim)
-            cell = tf.python.ops.rnn_cell.GRUCell(node_dim)
+            cell = tf.contrib.rnn.GRUCell(node_dim)
+            # cell = tf.python.ops.rnn_cell.GRUCell(node_dim)
             # cell = tf.nn.rnn_cell.DropoutWrapper(cell, state_keep_prob=self.placeholders['graph_state_keep_prob'])
             cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(cell, state_keep_prob=self.placeholders['graph_state_keep_prob'])
             self.weights['node_gru'] = cell
