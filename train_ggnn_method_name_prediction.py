@@ -6,7 +6,7 @@ import pickle
 import tensorflow as tf
 from utils.data.method_name_prediction_dataset import MethodNamePredictionData
 from utils.utils import ThreadedIterator
-from utils.dense_ggnn_method_name_prediction import DenseGGNNModel
+from utils.network.dense_ggnn_method_name_prediction import DenseGGNNModel
 import os
 import sys
 import re
