@@ -39,10 +39,10 @@ def load_graphs_from_file(file_name):
     return data_list
 
 
-def lookup_vector(node_type, embeddings):
-    # look_up_vector = embed_loopkup[node_type]
+# def lookup_vector(node_type, embeddings):
+#     # look_up_vector = embed_loopkup[node_type]
 
-    nodes.append(embeddings[int(n)])
+#     nodes.append(embeddings[int(n)])
 
 
 def load_program_graphs_from_directory(directory, is_training=True, is_testing=True, n_classes=3):
