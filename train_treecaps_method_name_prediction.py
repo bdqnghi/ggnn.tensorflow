@@ -37,7 +37,7 @@ parser.add_argument('--log_path', default="" ,help='log path for tensorboard')
 parser.add_argument('--epoch', type=int, default=0, help='epoch to test')
 parser.add_argument('--embeddings_directory', default="embedding/fast_pretrained_vectors.pkl")
 parser.add_argument('--cuda', default="0",type=str, help='enables cuda')
-parser.add_argument('--train_path', default="sample_data/java-small/training",help='path of training data')
+parser.add_argument('--train_path', default="sample_data/java-small-pkl/training",help='path of training data')
 parser.add_argument('--val_path', default="sample_data/java-small/validation",help='path of validation data')
 parser.add_argument('--dataset', default="java-small",help='name of dataset')
 
@@ -62,6 +62,9 @@ if not os.path.isdir("cached"):
 def main(opt):
     
     train_dataset = MethodNamePredictionData(opt, opt.train_path, True, False, False)
+
+
+    train_dataset.gen_samples()
 
 if __name__ == "__main__":
     main(opt)
