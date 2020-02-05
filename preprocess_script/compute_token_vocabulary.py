@@ -41,7 +41,7 @@ def main():
 				graphs_path = os.path.join(subdir,file)
 				all_graph_paths.append(graphs_path)
 	
-	all_vocabularies = []
+	all_vocabularies = set()
 	print("Total number of paths:", len(all_graph_paths))
 	for path in tqdm(all_graph_paths):
 		print("Compute token for : " + str(path))
@@ -75,8 +75,8 @@ def main():
 							# print("Source token : "  + source_token)
 							source_subtokens = identifier_splitting.split_identifier_into_parts(source_token)
 							for source_subtoken in source_subtokens:
-								if source_subtoken not in excluded_tokens and source_subtoken not in all_vocabularies:
-									all_vocabularies.append(source_subtoken)
+								if source_subtoken not in excluded_tokens:
+									all_vocabularies.add(source_subtoken)
 
 						if len(sink_splits) == 2:
 							sink_token = sink_splits[1]
@@ -84,11 +84,11 @@ def main():
 							# print("Sink token : " + sink_token)
 							sink_subtokens = identifier_splitting.split_identifier_into_parts(sink_token)
 							for sink_subtoken in sink_subtokens:
-								if sink_subtoken not in excluded_tokens and sink_subtoken not in all_vocabularies:
-									all_vocabularies.append(sink_subtoken)
+								if sink_subtoken not in excluded_tokens:
+									all_vocabularies.add(sink_subtoken)
 			
 	# all_vocabularies = exclude_tokens(all_vocabularies)
-
+	all_vocabularies = list(all_vocabularies)
 	# unique_vocabularies = []
 	# for vocab in all_vocabularies:
 	# 	if vocab not in unique_vocabularies:

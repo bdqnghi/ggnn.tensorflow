@@ -42,7 +42,7 @@ def main():
 				graphs_path = os.path.join(subdir,file)
 				all_graph_paths.append(graphs_path)
 
-	all_vocabularies = []
+	all_vocabularies = set()
 	print("Total number of paths:", len(all_graph_paths))
 	for path in tqdm(all_graph_paths):
 		print("Compute label for : " + str(path))
@@ -63,11 +63,11 @@ def main():
 					file_name = file_path_splits[len(file_path_splits)-1]
 					method_name = file_name.split("_")[1].replace(".java","")
 
-					if method_name not in excluded_tokens and method_name not in all_vocabularies:
-						all_vocabularies.append(method_name)
+					if method_name not in excluded_tokens:
+						all_vocabularies.add(method_name)
 
 	# all_vocabularies = exclude_tokens(all_vocabularies)
-
+	all_vocabularies = list(all_vocabularies)
 	# unique_vocabularies = []
 	# for vocab in all_vocabularies:
 	# 	if vocab not in unique_vocabularies:
