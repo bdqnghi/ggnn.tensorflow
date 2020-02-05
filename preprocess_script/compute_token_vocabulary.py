@@ -48,7 +48,7 @@ def main():
 		with open(path,"r") as f:
 			lines = f.readlines()
 			for line in lines:
-				print(line)
+				# print(line)
 			
 				line = line.replace("\n","")
 				line = line.replace("'","")
