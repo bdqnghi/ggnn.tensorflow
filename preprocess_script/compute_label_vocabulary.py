@@ -44,7 +44,7 @@ def main():
 
 	all_vocabularies = []
 	print("Total number of paths:", len(all_graph_paths))
-	for path in all_graph_paths:
+	for path in tqdm(all_graph_paths):
 		print("Compute label for : " + str(path))
 		with open(path,"r") as f:
 			lines = f.readlines()
