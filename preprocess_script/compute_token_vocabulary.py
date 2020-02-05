@@ -34,54 +34,58 @@ def main():
 	input_path = args.input
 	output_path = args.output
 
-	all_vocabularies = []
-
+	all_graph_paths = []
 	for subdir , dirs, files in os.walk(input_path):
 		for file in files:
 			if file.endswith(".txt"):
 				graphs_path = os.path.join(subdir,file)
-				print("Compute token for : " + str(graphs_path))
-				with open(graphs_path,"r") as f:
-					lines = f.readlines()
-					for line in lines:
-						print(line)
-					
-						line = line.replace("\n","")
-						line = line.replace("'","")
-						line = " ".join(line.split())
-						# line = strip(line)
-						# line
-						splits = line.split(" ")
-						
-						if "?" not in line:
-							if len(splits) == 3:
-								source = splits[0]
-								source_splits = source.split(",")
-								source_node_id = source_splits[0].split(":")[0]
-								source_node_type = source_splits[0].split(":")[1]
+				all_graph_paths.append(graphs_path)
+	
+	all_vocabularies = []
+	print("Total number of paths:", len(all_graph_paths))
+	for path in tqdm(all_graph_paths):
+		print("Compute token for : " + str(path))
+		with open(path,"r") as f:
+			lines = f.readlines()
+			for line in lines:
+				print(line)
+			
+				line = line.replace("\n","")
+				line = line.replace("'","")
+				line = " ".join(line.split())
+				# line = strip(line)
+				# line
+				splits = line.split(" ")
+				
+				if "?" not in line:
+					if len(splits) == 3:
+						source = splits[0]
+						source_splits = source.split(",")
+						source_node_id = source_splits[0].split(":")[0]
+						source_node_type = source_splits[0].split(":")[1]
 
-								sink = splits[2]
-								sink_splits = sink.split(",")
-								sink_node_id = sink_splits[0].split(":")[0]
-								sink_node_type = sink_splits[0].split(":")[1]
+						sink = splits[2]
+						sink_splits = sink.split(",")
+						sink_node_id = sink_splits[0].split(":")[0]
+						sink_node_type = sink_splits[0].split(":")[1]
 
-								if len(source_splits) == 2:
-									source_token = source_splits[1]
-									source_token = process_token(source_token)
-									# print("Source token : "  + source_token)
-									source_subtokens = identifier_splitting.split_identifier_into_parts(source_token)
-									for source_subtoken in source_subtokens:
-										if source_subtoken not in excluded_tokens and source_subtoken not in all_vocabularies:
-											all_vocabularies.append(source_subtoken)
+						if len(source_splits) == 2:
+							source_token = source_splits[1]
+							source_token = process_token(source_token)
+							# print("Source token : "  + source_token)
+							source_subtokens = identifier_splitting.split_identifier_into_parts(source_token)
+							for source_subtoken in source_subtokens:
+								if source_subtoken not in excluded_tokens and source_subtoken not in all_vocabularies:
+									all_vocabularies.append(source_subtoken)
 
-								if len(sink_splits) == 2:
-									sink_token = sink_splits[1]
-									sink_token = process_token(sink_token)
-									# print("Sink token : " + sink_token)
-									sink_subtokens = identifier_splitting.split_identifier_into_parts(sink_token)
-									for sink_subtoken in sink_subtokens:
-										if sink_subtoken not in excluded_tokens and sink_subtoken not in all_vocabularies:
-											all_vocabularies.append(sink_subtoken)
+						if len(sink_splits) == 2:
+							sink_token = sink_splits[1]
+							sink_token = process_token(sink_token)
+							# print("Sink token : " + sink_token)
+							sink_subtokens = identifier_splitting.split_identifier_into_parts(sink_token)
+							for sink_subtoken in sink_subtokens:
+								if sink_subtoken not in excluded_tokens and sink_subtoken not in all_vocabularies:
+									all_vocabularies.append(sink_subtoken)
 			
 	# all_vocabularies = exclude_tokens(all_vocabularies)
 

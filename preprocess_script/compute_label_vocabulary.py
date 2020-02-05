@@ -6,6 +6,7 @@ import argparse
 import re
 sys.path.append("../utils")
 import identifier_splitting
+from tqdm import *
 
 regex = '\\"\s+([^"]+)\s+\\"'
 excluded_tokens = [",","{",";","}",")","(",'"',"'","`",""," ","[]","[","]","/",":","."," "]
@@ -33,32 +34,37 @@ def main():
 	input_path = args.input
 	output_path = args.output
 
-	all_vocabularies = []
-
+	all_graph_paths = []
+	
 	for subdir , dirs, files in os.walk(input_path):
 		for file in files:
 			if file.endswith(".txt"):
 				graphs_path = os.path.join(subdir,file)
-				print("Compute label for : " + str(graphs_path))
-				with open(graphs_path,"r") as f:
-					lines = f.readlines()
-					for line in lines:
-						# print(line)
-					
-						line = line.replace("\n","")
-						line = line.replace("'","")
-						line = " ".join(line.split())
-						# line = strip(line)
-						# line
-						splits = line.split(" ")
-						
-						if splits[0] == "?":
-							file_path_splits = splits[1].split("/")
-							file_name = file_path_splits[len(file_path_splits)-1]
-							method_name = file_name.split("_")[1].replace(".java","")
+				all_graph_paths.append(graphs_path)
 
-							if method_name not in excluded_tokens and method_name not in all_vocabularies:
-								all_vocabularies.append(method_name)
+	all_vocabularies = []
+	print("Total number of paths:", len(all_graph_paths))
+	for path in all_graph_paths:
+		print("Compute label for : " + str(path))
+		with open(path,"r") as f:
+			lines = f.readlines()
+			for line in lines:
+				# print(line)
+			
+				line = line.replace("\n","")
+				line = line.replace("'","")
+				line = " ".join(line.split())
+				# line = strip(line)
+				# line
+				splits = line.split(" ")
+				
+				if splits[0] == "?":
+					file_path_splits = splits[1].split("/")
+					file_name = file_path_splits[len(file_path_splits)-1]
+					method_name = file_name.split("_")[1].replace(".java","")
+
+					if method_name not in excluded_tokens and method_name not in all_vocabularies:
+						all_vocabularies.append(method_name)
 
 	# all_vocabularies = exclude_tokens(all_vocabularies)
 
