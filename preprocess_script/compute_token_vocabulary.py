@@ -61,13 +61,13 @@ def main():
 					if len(splits) == 3:
 						source = splits[0]
 						source_splits = source.split(",")
-						source_node_id = source_splits[0].split(":")[0]
-						source_node_type = source_splits[0].split(":")[1]
+						# source_node_id = source_splits[0].split(":")[0]
+						# source_node_type = source_splits[0].split(":")[1]
 
 						sink = splits[2]
 						sink_splits = sink.split(",")
-						sink_node_id = sink_splits[0].split(":")[0]
-						sink_node_type = sink_splits[0].split(":")[1]
+						# sink_node_id = sink_splits[0].split(":")[0]
+						# sink_node_type = sink_splits[0].split(":")[1]
 
 						if len(source_splits) == 2:
 							source_token = source_splits[1]
