@@ -61,15 +61,18 @@ def main():
 				if splits[0] == "?":
 					file_path_splits = splits[1].split("/")
 					file_name = file_path_splits[len(file_path_splits)-1]
+					method_name = file_name.split("_")[1]
 					try:
 						method_name = file_name.split("_")[1].replace(".java","")
-
-						if method_name not in excluded_tokens:
-							all_vocabularies.add(method_name)
+					
 					except Exception as e:
 						print(e)
 						with open("error.txt", "w") as f3:
 							f3.write(method_name + " " + str(e))
+
+					if method_name not in excluded_tokens:
+						all_vocabularies.add(method_name)
+					
 
 	# all_vocabularies = exclude_tokens(all_vocabularies)
 	all_vocabularies = list(all_vocabularies)
