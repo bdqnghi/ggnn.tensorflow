@@ -56,18 +56,20 @@ def main():
 							file_path_splits = splits[1].split("/")
 							file_name = file_path_splits[len(file_path_splits)-1]
 							method_name = file_name.split("_")[1].replace(".java","")
-							all_vocabularies.append(method_name)
 
-	all_vocabularies = exclude_tokens(all_vocabularies)
+							if method_name not in excluded_tokens and method_name not in all_vocabularies:
+								all_vocabularies.append(method_name)
 
-	unique_vocabularies = []
-	for vocab in all_vocabularies:
-		if vocab not in unique_vocabularies:
-			unique_vocabularies.append(vocab)
+	# all_vocabularies = exclude_tokens(all_vocabularies)
+
+	# unique_vocabularies = []
+	# for vocab in all_vocabularies:
+	# 	if vocab not in unique_vocabularies:
+	# 		unique_vocabularies.append(vocab)
 
 
 	with open(output_path, "w") as f1:
-		for i, v in enumerate(unique_vocabularies):
+		for i, v in enumerate(all_vocabularies):
 			f1.write(str(i) + "," + v)
 			f1.write("\n")
 

@@ -6,6 +6,7 @@ import argparse
 import re
 sys.path.append("../utils")
 import identifier_splitting
+from tqdm import *
 
 regex = '\\"\s+([^"]+)\s+\\"'
 excluded_tokens = [",","{",";","}",")","(",'"',"'","`",""," ","[]","[","]","/",":","."," "]
@@ -70,7 +71,8 @@ def main():
 									# print("Source token : "  + source_token)
 									source_subtokens = identifier_splitting.split_identifier_into_parts(source_token)
 									for source_subtoken in source_subtokens:
-										all_vocabularies.append(source_subtoken)
+										if source_subtoken not in excluded_tokens and source_subtoken not in all_vocabularies:
+											all_vocabularies.append(source_subtoken)
 
 								if len(sink_splits) == 2:
 									sink_token = sink_splits[1]
@@ -78,18 +80,19 @@ def main():
 									# print("Sink token : " + sink_token)
 									sink_subtokens = identifier_splitting.split_identifier_into_parts(sink_token)
 									for sink_subtoken in sink_subtokens:
-										all_vocabularies.append(sink_subtoken)
+										if sink_subtoken not in excluded_tokens and sink_subtoken not in all_vocabularies:
+											all_vocabularies.append(sink_subtoken)
 			
-	all_vocabularies = exclude_tokens(all_vocabularies)
+	# all_vocabularies = exclude_tokens(all_vocabularies)
 
-	unique_vocabularies = []
-	for vocab in all_vocabularies:
-		if vocab not in unique_vocabularies:
-			unique_vocabularies.append(vocab)
-	unique_vocabularies.append("<SPECIAL>")
+	# unique_vocabularies = []
+	# for vocab in all_vocabularies:
+	# 	if vocab not in unique_vocabularies:
+	# 		unique_vocabularies.append(vocab)
+	all_vocabularies.append("<SPECIAL>")
 	
 	with open(output_path, "w") as f1:
-		for i, v in enumerate(unique_vocabularies):
+		for i, v in enumerate(all_vocabularies):
 			f1.write(str(i) + "," + v)
 			f1.write("\n")
 
