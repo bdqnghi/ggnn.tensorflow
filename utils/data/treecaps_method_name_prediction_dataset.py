@@ -13,13 +13,24 @@ from collections import defaultdict
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 import pickle
+from utils import identifier_splitting
+
+class Node():
+    def __init__(self, node_type, node_token):
+        self.node_type = node_type
+        self.node_token = node_token
 
 class MethodNamePredictionData():
    
     def __init__(self, opt, data_path, is_training=True, is_testing=False, is_validating=False,):
         
+        self.batch_size = opt.batch_size
+        self.node_type_lookup = opt.node_type_lookup
+        self.node_token_lookup = opt.node_token_lookup
+        self.label_lookup = opt.label_lookup
+
         trees = self.load_program_data(data_path)
-      
+        
         self.trees = trees
         self.data = self.process_raw_trees()
 
@@ -44,7 +55,7 @@ class MethodNamePredictionData():
                     file_name_splits = file_name.split("/")
                     method_name = file_name_splits[len(file_name_splits)-1].split("_")[1]
                     tree, size = self._traverse_tree(root)
-                    
+                
                     tree_data = {
                         "tree": tree,
                         "method_name": method_name,
@@ -54,6 +65,14 @@ class MethodNamePredictionData():
                     trees.append(tree_data)
          
         return trees
+
+    def look_up_for_id_of_token(self, token):
+        
+        token_id = self.node_token_lookup["<SPECIAL>"]
+        if token in self.node_token_lookup:
+            token_id = self.node_token_lookup[token]
+
+        return token_id
 
     def load_tree_from_pickle_file(self, file_path):
         """Builds an AST from a script."""
@@ -66,197 +85,125 @@ class MethodNamePredictionData():
 
     def _traverse_tree(self, root):
         num_nodes = 1
+
         queue = [root]
 
+        root_token = str(root.text)
+        root_sub_tokens = identifier_splitting.split_identifier_into_parts(root_token)
+        
+        root_sub_token_ids = []
+        for sub_token in root_sub_tokens:
+            root_sub_token_ids.append(self.look_up_for_id_of_token(sub_token))
+       
         root_json = {
-            "node": str(root.srcml_kind),
-
+            "node_type": str(root.srcml_kind),
+            "node_token": root_sub_token_ids,
             "children": []
         }
+
         queue_json = [root_json]
+      
         while queue:
         
             current_node = queue.pop(0)
             num_nodes += 1
-            # print (_name(current_node))
             current_node_json = queue_json.pop(0)
-
 
             children = [x for x in current_node.child]
             queue.extend(children)
         
             for child in children:
-                # print "##################"
-                #print child.kind
+                child_sub_tokens = identifier_splitting.split_identifier_into_parts(str(child.text))
+
+                children_sub_token_ids = []
+                for sub_token in child_sub_tokens:
+                    children_sub_token_ids.append(self.look_up_for_id_of_token(sub_token))
 
                 child_json = {
-                    "node": str(child.srcml_kind),
+                    "node_type": str(child.srcml_kind),
+                    "node_token": children_sub_token_ids,
                     "children": []
                 }
 
                 current_node_json['children'].append(child_json)
                 queue_json.append(child_json)
-                # print current_node_json
-    
+
+        
+        # print(node_token_root_json)
         return root_json, num_nodes
 
     def process_raw_trees(self):
-        bucket_sizes = np.array(list(range(30 , 7500 , 30)))
+        bucket_sizes = np.array(list(range(30 , 7500 , 10)))
         buckets = defaultdict(list)
 
         for tree_data in self.trees:
+          
             tree, method_name, tree_size = tree_data["tree"], tree_data["method_name"], tree_data["size"]
 
             chosen_bucket_idx = np.argmax(bucket_sizes > tree_size)
             buckets[chosen_bucket_idx].append(tree_data)
-
+     
         return buckets, bucket_sizes
 
 
-    def batch_samples(self, elements, batch_size):
-        """Batch samples from a generator"""
-        nodes, children, labels = [], [], []
-        samples = 0
-        for n, c, l in elements:
-            # print n
-            # print c
-            # print l
-            # if len(c) > 6000 and len(c) < 20000:
-            nodes.append(n)
-            children.append(c)
-            labels.append(l)
-            samples += 1
-
-
-            if samples >= batch_size:
-                yield _pad_batch(nodes, children, labels)
-                nodes, children, labels = [], [], []
-                samples = 0
-
-        if nodes:
-            yield _pad_batch(nodes, children, labels)
-
-    def make_batch(self, elements):
-        batch_data = {'adjacency_matrix': [], 'node_type_indices': [], "node_token_indices": [],  'labels': []}
-
-        # find graph which has the largest number of nodes in batch
-
-
-        num_nodes_of_batch = find_num_nodes_of_graph(elements[0]["graph"])
-        num_sub_tokens_of_batch = 0
-        for d in elements:
-            num_nodes_of_current_graph = find_num_nodes_of_graph(d["graph"])
-            if num_nodes_of_batch < num_nodes_of_current_graph:
-                num_nodes_of_batch = num_nodes_of_current_graph
-            
-            num_sub_tokens_of_graph = d['node_token_indices'].shape[1]
-            if num_sub_tokens_of_batch < num_sub_tokens_of_graph:
-                num_sub_tokens_of_batch = num_sub_tokens_of_graph
-            
-        for d in elements:
-            adjacency_matrix = graph_to_adj_mat(d["graph"], num_nodes_of_batch, self.n_edge_types, True)
-            batch_data['adjacency_matrix'].append(adjacency_matrix)
-            batch_data['node_type_indices'].append(d['node_type_indices'])
-            batch_data['node_token_indices'].append(d['node_token_indices'])
-            batch_data['labels'].append(d['labels'])
-
-        # batch_data["init"] = self.pad_batch(batch_data['init'], max_node + 1)
-        batch_data['node_type_indices'] = self.pad_node_types(batch_data['node_type_indices'], num_nodes_of_batch)
-        batch_data['node_token_indices'] = self.pad_node_tokens(batch_data['node_token_indices'], num_nodes_of_batch, num_sub_tokens_of_batch)
+    def extract_training_data(self, tree_data):
         
-        batch_data['node_type_indices'] = np.stack( batch_data['node_type_indices'], axis=0 )
+        tree, method_name, size = tree_data["tree"], tree_data["method_name"], tree_data["size"]
+        # print(tree)
+        node_types = []
+        node_tokens = []
+        children_indices = []
+        children_node_types = []
+        children_node_tokens = []
+        label = method_name
 
-        batch_data['node_token_indices'] = np.stack( batch_data['node_token_indices'], axis=0 )
-        
-        batch_data['adjacency_matrix'] = np.stack( batch_data['adjacency_matrix'], axis=0 )
-        # batch_data['init'] = np.array(batch_data['init'])[0:len(batch_data['init'])]
-        
-        batch_data['labels'] = np.stack(batch_data['labels'],  axis=0 )
-
-        # print("adj shape : " + str(batch_data['adjacency_matrix'].shape))
-        # print("init shape : " + str(batch_data['init'].shape))
-
-        return batch_data, num_nodes_of_batch
-
-    # def make_minibatch_iterator(self):
-    #     buckets, bucket_sizes = self.data
-    #     for bucket_idx, bucket_data in buckets.items():
-
-    #         elements = []
-    #         samples = 0
+        queue = [(tree, -1)]
+        # print queue
+        while queue:
+            # print "############"
+            node, parent_ind = queue.pop(0)
+            # print node
+            # print parent_ind
+            node_ind = len(node_types)
+            # print "node ind : " + str(node_ind)
+            # add children and the parent index to the queue
+            queue.extend([(child, node_ind) for child in node['children']])
+            # create a list to store this node's children indices
+            children_indices.append([])
+            children_node_types.append([])
+            children_node_tokens.append([])
+            # add this child to its parent's child list
+            if parent_ind > -1:
+                children_indices[parent_ind].append(node_ind)
+                children_node_types[parent_ind].append(node["node_type"])
+                children_node_tokens[parent_ind].append(node["node_token"])
             
-    #         # if len(bucket_data) > 5:
-    #         for i, element in enumerate(bucket_data):
+            node_type = node['node_type']
+            node_token = node['node_token']
 
-    #             elements.append(element)
-    #             samples += 1
+            node_types.append(int(node_type))
+            node_tokens.append(node_token)
 
-    #             if (samples >= self.batch_size) or ((i == len(bucket_data)-1)):
-    #                 if len(elements) > 0:
-
-    #                     yield batch
-    #                     elements = []
-    #                     samples = 0
-
-    def make_batch(self, elements):
-
-        batch_nodes, batch_children, batch_labels = [], [], []
-
-        for tree_data in elements:
-            # print(file)
-            tree, method_name, size = tree_data["tree"], tree_data["method_name"], tree_data["size"]
-            # print(tree)
-            nodes = []
-            children = []
-            label = method_name
-
-            queue = [(tree, -1)]
-            # print queue
-            while queue:
-                # print "############"
-                node, parent_ind = queue.pop(0)
-                # print node
-                # print parent_ind
-                node_ind = len(nodes)
-                # print "node ind : " + str(node_ind)
-                # add children and the parent index to the queue
-                queue.extend([(child, node_ind) for child in node['children']])
-                # create a list to store this node's children indices
-                children.append([])
-                # add this child to its parent's child list
-                if parent_ind > -1:
-                    children[parent_ind].append(node_ind)
-                
-                n = str(node['node'])
-                nodes.append(int(n))
-
-            batch_nodes.append(nodes)
-            batch_children.append(children)
+        return node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label
+            
+            
+    def make_batch(self, batch_data):
+        batch_node_types = []
+        batch_nodes_tokens = []
+        batch_children_indices = []
+        batch_children_node_types = []
+        batch_children_node_tokens = []
+        batch_labels = []
+        for tree_data in batch_data:
+            node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label = self.extract_training_data(tree_data)
+            batch_node_types.append(node_types)
+            batch_nodes_tokens.append(node_tokens)
+            batch_children_indices.append(children_indices)
+            batch_children_node_types.append(children_node_types)
+            batch_children_node_tokens.append(children_node_tokens)
             batch_labels.append(label)
-
-
-
-    def make_minibatch_iterator(self):
-        """Creates a generator that returns a tree in BFS order with each node
-        replaced by its vector embedding, and a child lookup table."""
-        buckets, bucket_sizes = self.data
-        for bucket_idx, bucket_data in buckets.items():
-
-            elements = []
-            samples = 0
-            
-            # if len(bucket_data) > 5:
-            for i, element in enumerate(bucket_data):
-
-                elements.append(element)
-                samples += 1
-
-                if (samples >= self.batch_size) or ((i == len(bucket_data)-1)):
-                    if len(elements) > 0:
-
-                        yield batch
-                        elements = []
-                        samples = 0
+        
+        return self._pad_batch(batch_node_types, batch_nodes_tokens, batch_children_indices, )
 
 
     def _pad_batch(self, nodes, children, labels):
@@ -264,10 +211,9 @@ class MethodNamePredictionData():
             return [], [], []
         max_nodes = max([len(x) for x in nodes])
         max_children = max([len(x) for x in children])
-        feature_len = len(nodes[0][0])
         child_len = max([len(c) for n in children for c in n])
 
-        nodes = [n + [[0] * feature_len] * (max_nodes - len(n)) for n in nodes]
+        nodes = [n + [0] * (max_nodes - len(n)) for n in nodes]
         # pad batches so that every batch has the same number of nodes
         children = [n + ([[]] * (max_children - len(n))) for n in children]
         # pad every child sample so every node has the same number of children
@@ -277,3 +223,35 @@ class MethodNamePredictionData():
 
     def _onehot(self, i, total):
         return [1.0 if j == i else 0.0 for j in range(total)]
+
+    def make_minibatch_iterator(self):
+        
+        (buckets, bucket_sizes) = self.data
+        
+        batch_nodes, batch_children, batch_labels = [], [], []
+
+
+        for bucket_idx, bucket_data in buckets.items():
+        # for tree_data in self.trees:
+            # print(file)
+
+            elements = []
+            samples = 0
+
+            for i, tree_data in enumerate(bucket_data):
+                elements.append(tree_data)
+                samples += 1
+                
+                if samples >= self.batch_size:
+                    batch_nodes, batch_children, batch_label = self.make_batch(elements)
+                    
+                    # for node in batch_nodes:
+                    #     print(len(node))
+                    batch = {}
+                    batch["batch_nodes"] = np.asarray(batch_nodes)
+                    batch["batch_children"] = batch_children
+                    batch["batch_labels"] = batch_label
+             
+                    yield batch
+                    elements = []
+                    samples = 0
