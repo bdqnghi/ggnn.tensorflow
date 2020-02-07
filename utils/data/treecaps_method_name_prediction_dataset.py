@@ -24,7 +24,7 @@ class MethodNamePredictionData():
    
     def __init__(self, opt, data_path, is_training=True, is_testing=False, is_validating=False,):
         
-        self.batch_size = opt.batch_size
+        self.batch_size = 12
         self.node_type_lookup = opt.node_type_lookup
         self.node_token_lookup = opt.node_token_lookup
         self.label_lookup = opt.label_lookup
@@ -55,7 +55,8 @@ class MethodNamePredictionData():
                     file_name_splits = file_name.split("/")
                     method_name = file_name_splits[len(file_name_splits)-1].split("_")[1]
                     tree, size = self._traverse_tree(root)
-                
+
+                    print("Size : " + str(size))
                     tree_data = {
                         "tree": tree,
                         "method_name": method_name,
@@ -175,7 +176,7 @@ class MethodNamePredictionData():
             # add this child to its parent's child list
             if parent_ind > -1:
                 children_indices[parent_ind].append(node_ind)
-                children_node_types[parent_ind].append(node["node_type"])
+                children_node_types[parent_ind].append(int(node["node_type"]))
                 children_node_tokens[parent_ind].append(node["node_token"])
             
             node_type = node['node_type']
@@ -184,6 +185,13 @@ class MethodNamePredictionData():
             node_types.append(int(node_type))
             node_tokens.append(node_token)
 
+        # print("-------------")
+        # print(node_types)
+        # print(node_tokens)
+        # print(children_indices)
+        # print(children_node_types)
+        # print(children_node_tokens)
+     
         return node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label
             
             
@@ -203,23 +211,61 @@ class MethodNamePredictionData():
             batch_children_node_tokens.append(children_node_tokens)
             batch_labels.append(label)
         
-        return self._pad_batch(batch_node_types, batch_nodes_tokens, batch_children_indices, )
+        return self._pad_batch(batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels)
+
+    #  def _pad_batch(self, nodes, children, labels):
+    #     if not nodes:
+    #         return [], [], []
+    #     max_nodes = max([len(x) for x in nodes])
+    #     max_children = max([len(x) for x in children])
+    #     child_len = max([len(c) for n in children for c in n])
+
+    #     nodes = [n + [0] * (max_nodes - len(n)) for n in nodes]
+    #     # pad batches so that every batch has the same number of nodes
+    #     children = [n + ([[]] * (max_children - len(n))) for n in children]
+    #     # pad every child sample so every node has the same number of children
+    #     children = [[c + [0] * (child_len - len(c)) for c in sample] for sample in children]
 
 
-    def _pad_batch(self, nodes, children, labels):
-        if not nodes:
-            return [], [], []
-        max_nodes = max([len(x) for x in nodes])
-        max_children = max([len(x) for x in children])
-        child_len = max([len(c) for n in children for c in n])
+    #     return nodes, children, labels
 
-        nodes = [n + [0] * (max_nodes - len(n)) for n in nodes]
-        # pad batches so that every batch has the same number of nodes
-        children = [n + ([[]] * (max_children - len(n))) for n in children]
-        # pad every child sample so every node has the same number of children
-        children = [[c + [0] * (child_len - len(c)) for c in sample] for sample in children]
+    def _pad_batch(self, batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels):
+        # if not nodes:
+            # return [], [], []
+        # batch_node_types
+        max_num_nodes = max([len(x) for x in batch_node_types])
+        batch_node_types = [n + [0] * (max_num_nodes - len(n)) for n in batch_node_types]
 
-        return nodes, children, labels
+        # batch_children_indices
+        max_num_nodes = max([len(x) for x in batch_children_indices])
+        max_num_children_per_node = max([len(c) for n in batch_children_indices for c in n])
+        batch_children_indices = [n + ([[]] * (max_num_nodes - len(n))) for n in batch_children_indices]
+        batch_children_indices = [[c + [0] * (max_num_children_per_node - len(c)) for c in sample] for sample in batch_children_indices]
+        
+        # batch_nodes_tokens
+        max_num_nodes = max([len(x) for x in batch_nodes_tokens])
+        max_num_children_per_node = max([len(c) for n in batch_nodes_tokens for c in n])
+        batch_nodes_tokens = [n + ([[]] * (max_num_nodes - len(n))) for n in batch_nodes_tokens]
+        batch_nodes_tokens = [[c + [0] * (max_num_children_per_node - len(c)) for c in sample] for sample in batch_nodes_tokens]
+
+        # batch_children_node_types
+        max_num_nodes = max([len(x) for x in batch_children_node_types])
+        max_num_children_per_node = max([len(c) for n in batch_children_node_types for c in n])
+        batch_children_node_types = [n + ([[]] * (max_num_nodes - len(n))) for n in batch_children_node_types]
+        batch_children_node_types = [[c + [0] * (max_num_children_per_node - len(c)) for c in sample] for sample in batch_children_node_types]
+
+        # batch_children_node_tokens
+        # 0-dimension: number of nodes of the tree
+        # 1-dimension: number of children per node
+        # 2-dimension: number of subtoken per children per node
+        max_num_nodes = max([len(x) for x in batch_children_node_tokens])
+        max_num_children_per_node = max([len(c) for n in batch_children_node_tokens for c in n])
+        max_num_of_subtoken_per_children_per_node = max([len(s) for n in batch_children_node_tokens for c in n for s in c])
+        batch_children_node_tokens = [n + ([[]] * (max_num_nodes - len(n))) for n in batch_children_node_tokens]
+        batch_children_node_tokens = [[c + [[]] * (max_num_children_per_node - len(c)) for c in sample] for sample in batch_children_node_tokens]  
+        batch_children_node_tokens = [[[s + [0] * (max_num_of_subtoken_per_children_per_node - len(s)) for s in c] for c in sample] for sample in batch_children_node_tokens]
+      
+        return batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels
 
     def _onehot(self, i, total):
         return [1.0 if j == i else 0.0 for j in range(total)]
@@ -243,14 +289,17 @@ class MethodNamePredictionData():
                 samples += 1
                 
                 if samples >= self.batch_size:
-                    batch_nodes, batch_children, batch_label = self.make_batch(elements)
+                    batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels = self.make_batch(elements)
                     
                     # for node in batch_nodes:
                     #     print(len(node))
                     batch = {}
-                    batch["batch_nodes"] = np.asarray(batch_nodes)
-                    batch["batch_children"] = batch_children
-                    batch["batch_labels"] = batch_label
+                    batch["batch_node_types"] = np.asarray(batch_node_types)
+                    batch["batch_nodes_tokens"] = np.asarray(batch_nodes_tokens)
+                    batch["batch_children_indices"] = np.asarray(batch_children_indices)
+                    batch["batch_children_node_types"] = np.asarray(batch_children_node_types)
+                    batch["batch_children_node_tokens"] = np.asarray(batch_children_node_tokens)
+                    batch["batch_labels"] = np.asarray(batch_labels)
              
                     yield batch
                     elements = []
