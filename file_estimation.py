@@ -4,12 +4,11 @@ from concurrent.futures import ThreadPoolExecutor as WorkerExecutor
 import copy
 import sys
 import argparse
-import pathlib
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--input", default="sample_data/java-small/training", type=str, help="Input")
 parser.add_argument("--output", default="sample_data/java-small/training", type=str, help="Output")
-parser.add_argument("--file_type", default=".txt", type=str, help="file type")
+parser.add_argument("--file_type", default=".fbs", type=str, help="file type")
 
 
 args = parser.parse_args()
@@ -24,9 +23,10 @@ def main():
             if file.endswith(file_type):
                 file_path = os.path.join(root, file)
                 print(file_path)
-                fname = pathlib.Path(file_path)
-                creation_time = fname.stat().st_ctime
-                last_modified_time = fname.stat().st_mtime
+                stat = os.stat(file_path)
+                
+                creation_time = os.path.getctime(file_path)
+                last_modified_time = os.path.getmtime(file_path)
                 processing_time = last_modified_time - creation_time
                 print(creation_time)
                 print(last_modified_time)

@@ -206,14 +206,36 @@ def main(opt):
     # network.init_net_treecaps(30,30)
     print("Finished initializing tree caps model...........")
 
+    code_caps = treecaps.code_caps
     train_dataset = MethodNamePredictionData(opt, opt.train_path, True, False, False)
 
 
-    train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=5)
-    for train_step, train_batch_data in enumerate(train_batch_iterator):
-        print("--------------------------")
-        # print(train_step)
-        # print(train_batch_data["batch_nodes"].shape)
+    train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=1)
+
+    init = tf.global_variables_initializer()
+    with tf.Session() as sess:
+        sess.run(init)
+
+        for train_step, train_batch_data in enumerate(train_batch_iterator):
+            print("--------------------------")
+            # print(train_step)
+            print(train_batch_data["batch_node_types"].shape)
+            print(train_batch_data["batch_nodes_tokens"].shape)
+            print(train_batch_data["batch_children_indices"].shape)
+            print(train_batch_data["batch_children_node_types"].shape)
+            print(train_batch_data["batch_children_node_tokens"].shape)
+        
+            
+            code_caps_values = sess.run(
+                    [code_caps],
+                    feed_dict={
+                        treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
+                        treecaps.placeholders["node_tokens"]:  train_batch_data["batch_nodes_tokens"],
+                        treecaps.placeholders["children_indices"]:  train_batch_data["batch_children_indices"],
+                        treecaps.placeholders["children_node_types"]: train_batch_data["batch_children_node_types"],
+                        treecaps.placeholders["children_node_tokens"]: train_batch_data["batch_children_node_tokens"]
+                    }
+                )
 
 if __name__ == "__main__":
     main(opt)
