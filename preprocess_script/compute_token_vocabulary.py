@@ -22,10 +22,10 @@ def exclude_tokens(all_vocabularies):
 			temp_vocabs.append(vocab)
 	return temp_vocabs
 
-def process_token(token):
-	for t in excluded_tokens:
-		token = token.replace(t,"")
-	return token
+# def process_token(token):
+# 	for t in excluded_tokens:
+# 		token = token.replace(t,"")
+# 	return token
 
 def main():
 	
