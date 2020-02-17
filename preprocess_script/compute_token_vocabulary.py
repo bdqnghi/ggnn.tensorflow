@@ -22,10 +22,10 @@ def exclude_tokens(all_vocabularies):
 			temp_vocabs.append(vocab)
 	return temp_vocabs
 
-# def process_token(token):
-# 	for t in excluded_tokens:
-# 		token = token.replace(t,"")
-# 	return token
+def process_token(token):
+	for t in excluded_tokens:
+		token = token.replace(t,"")
+	return token
 
 def main():
 	
@@ -76,6 +76,7 @@ def main():
 							source_subtokens = identifier_splitting.split_identifier_into_parts(source_token)
 							for source_subtoken in source_subtokens:
 								if source_subtoken not in excluded_tokens:
+									source_subtoken = process_token(source_subtoken)
 									all_vocabularies.add(source_subtoken)
 
 						if len(sink_splits) == 2:
@@ -85,6 +86,7 @@ def main():
 							sink_subtokens = identifier_splitting.split_identifier_into_parts(sink_token)
 							for sink_subtoken in sink_subtokens:
 								if sink_subtoken not in excluded_tokens:
+									sink_subtoken = process_token(sink_subtoken)
 									all_vocabularies.add(sink_subtoken)
 		print("Num vocabs : ", len(all_vocabularies))	
 	# all_vocabularies = exclude_tokens(all_vocabularies)
