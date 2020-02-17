@@ -42,6 +42,7 @@ def main():
 				all_graph_paths.append(graphs_path)
 	
 	all_vocabularies = set()
+	all_vocabularies.add("<ZERO>")
 	print("Total number of paths:", len(all_graph_paths))
 	for path in tqdm(all_graph_paths):
 		print("Compute token for : " + str(path))
