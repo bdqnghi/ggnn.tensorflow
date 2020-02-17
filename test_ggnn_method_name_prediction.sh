@@ -14,7 +14,7 @@ CUDA=-1
 NODE_TYPE_DIM=30
 NODE_TOKEN_DIM=50
 PYTHON=python3
-TASK=1
+TASK=0
 ${PYTHON} train_ggnn_method_name_prediction.py --val_path ${VAL_PATH} --batch_size ${BATCH_SIZE} \
 --dataset ${DATASET} \
 --val_batch_size ${VAL_BATCH_SIZE} --sampling_size ${SAMPLING_SIZE} --cuda ${CUDA} --node_type_dim ${NODE_TYPE_DIM} \

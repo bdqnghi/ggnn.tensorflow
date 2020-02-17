@@ -16,7 +16,7 @@ CUDA=0
 VALIDATING=1
 NODE_TYPE_DIM=30
 NODE_TOKEN_DIM=50
-TASK=0
+TASK=1
 PYTHON=python3
 ${PYTHON} train_ggnn_method_name_prediction.py \
 --dataset ${DATASET} \
