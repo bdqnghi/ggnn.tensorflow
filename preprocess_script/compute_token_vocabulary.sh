@@ -1,8 +1,7 @@
 DATA=sample_data
 DATASET=java-small
+MODEL=treecaps
 TRAIN_DIR=../${DATA}/${DATASET}/training
-TOKEN_VOCAB_PATH=../preprocessed_data/${DATASET}/token_vocab.txt
-
+TOKEN_VOCAB_PATH=../preprocessed_data/${MODEL}/${DATASET}/token_vocab.txt
 PYTHON=python3
-
 ${PYTHON} compute_token_vocabulary.py --input ${TRAIN_DIR} --output ${TOKEN_VOCAB_PATH} 
