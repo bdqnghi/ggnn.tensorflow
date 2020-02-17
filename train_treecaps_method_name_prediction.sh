@@ -1,12 +1,12 @@
 DATA=sample_data
 DATASET=java-small
-DATASET_TRANSFORMED=java-small-graph-transformed
+DATASET_TRANSFORMED=${DATASET}-pkl
 TRAIN_PATH=${DATA}/${DATASET_TRANSFORMED}/training
 VAL_PATH=${DATA}/${DATASET_TRANSFORMED}/validation
-NODE_TYPE_VOCABULARY_PATH=preprocessed_data/ggnn/node_type_vocab.txt
-TOKEN_VOCABULARY_PATH=preprocessed_data/ggnn/${DATASET}/token_vocab.txt
-TRAIN_LABEL_VOCABULARY_PATH=preprocessed_data/ggnn/${DATASET}/train_label_vocab.txt
-VAL_LABEL_VOCABULARY_PATH=preprocessed_data/ggnn/${DATASET}/val_label_vocab.txt
+NODE_TYPE_VOCABULARY_PATH=preprocessed_data/node_type_vocab.txt
+TOKEN_VOCABULARY_PATH=preprocessed_data/treecaps/${DATASET}/token_vocab.txt
+TRAIN_LABEL_VOCABULARY_PATH=preprocessed_data/treecaps/${DATASET}/train_label_vocab.txt
+VAL_LABEL_VOCABULARY_PATH=preprocessed_data/treecaps/${DATASET}/val_label_vocab.txt
 BATCH_SIZE=32
 VAL_BATCH_SIZE=32
 SAMPLING_SIZE=1
@@ -18,7 +18,7 @@ NODE_TYPE_DIM=30
 NODE_TOKEN_DIM=50
 TASK=0
 PYTHON=python3
-${PYTHON} train_ggnn_method_name_prediction.py \
+${PYTHON} train_treecaps_method_name_prediction.py \
 --dataset ${DATASET} \
 --train_path ${TRAIN_PATH} --val_path ${VAL_PATH} --batch_size ${BATCH_SIZE} \
 --val_batch_size ${VAL_BATCH_SIZE} --sampling_size ${SAMPLING_SIZE} --checkpoint_every \

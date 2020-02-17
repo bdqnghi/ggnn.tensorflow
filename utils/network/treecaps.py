@@ -10,21 +10,21 @@ from utils.utils import glorot_init
 class TreeCapsModel():
     def __init__(self, opt):
   
-        label_size =10
+        
         self.top_a = 20
         self.top_b = 25
         self.num_conv = 8
         self.output_size = 128
         self.caps1_num_dims = 8
         self.caps1_num_caps = int(self.num_conv*self.output_size/self.caps1_num_dims)*self.top_a
-        self.caps1_out_caps = label_size
+        self.caps1_out_caps = opt.label_size
         self.caps1_out_dims = 8
         self.node_token_dim = opt.node_token_dim
         self.node_type_dim = opt.node_type_dim
         self.node_dim = self.node_type_dim + self.node_token_dim
         self.label_dim = self.node_type_dim + self.node_token_dim
-        self.label_size = label_size
-        self.batch_size = 10
+        self.label_size = opt.label_size
+        self.batch_size = opt.batch_size
         self.iter_routing = 3
         self.node_type_lookup = opt.node_type_lookup
         self.node_token_lookup = opt.node_token_lookup
@@ -44,14 +44,15 @@ class TreeCapsModel():
         self.placeholders["children_indices"] = tf.placeholder(tf.int32, shape=(None, None, None), name='children_indices') # batch_size x max_num_nodes x max_children
         self.placeholders["children_node_types"] = tf.placeholder(tf.int32, shape=(None, None, None), name='children_types') # batch_size x max_num_nodes x max_children
         self.placeholders["children_node_tokens"] = tf.placeholder(tf.int32, shape=(None, None, None, None), name='children_tokens') # batch_size x max_num_nodes x max_children x max_sub_tokens
-        # self.placeholders["labels"] = tf.placeholder(tf.float32, (None, self.label_size,))
+        self.placeholders["labels"] = tf.placeholder(tf.float32, (None, self.label_size,))
         # self.placeholders["children_indices"] = tf.placeholder(tf.int32, shape=[None,None], name='node_type_indices')
         # self.placeholders["node_token_indices"] = tf.placeholder(tf.int32, shape=[None,None,None], name='node_token_indices')
 
         self.placeholders["w_t"] = tf.Variable(glorot_init([self.node_dim, self.output_size]), name='w_t')
         self.placeholders["w_l"] = tf.Variable(glorot_init([self.node_dim, self.output_size]), name='w_l')
         self.placeholders["w_r"] = tf.Variable(glorot_init([self.node_dim, self.output_size]), name='w_r')
-
+        self.placeholders['is_training'] = tf.placeholder(tf.bool, name="is_train");
+        
         self.dynamic_routing_shape = [self.batch_size, self.caps1_num_caps, 1, self.caps1_num_dims,1]
         
         shape_of_weight_dynamic_routing = [1, self.dynamic_routing_shape[1], self.caps1_out_dims * self.caps1_out_caps] + self.dynamic_routing_shape[-2:]
@@ -66,10 +67,13 @@ class TreeCapsModel():
         self.node_type_embeddings = tf.Variable(glorot_init([len(self.node_type_lookup.keys()), self.node_type_dim]), name='node_type_embeddings')
         self.node_token_embeddings = tf.Variable(glorot_init([len(self.node_token_lookup.keys()), self.node_token_dim]), name='node_token_embeddings')
 
+        
         # self.init_net_treecaps()
         """The Primary Variable Capsule Layer."""
         parent_node_type_embeddings = self.compute_parent_node_types_tensor(self.placeholders["node_types"])
         parent_node_token_embeddings = self.compute_parent_node_tokens_tensor(self.placeholders["node_tokens"])
+        parent_node_type_embeddings = tf.layers.batch_normalization(parent_node_type_embeddings, training=self.placeholders['is_training'])
+        parent_node_token_embeddings = tf.layers.batch_normalization(parent_node_token_embeddings, training=self.placeholders['is_training'])
         parent_node_embeddings = tf.concat([parent_node_type_embeddings, parent_node_token_embeddings], -1)
 
         # children_vectors will have shape
@@ -77,6 +81,10 @@ class TreeCapsModel():
         # children_vectors = self.children_tensor(nodes, children, node_dim)
         children_node_types_tensor = self.compute_children_node_types_tensor(self.placeholders["children_node_types"])
         children_node_tokens_tensor = self.compute_children_node_tokens_tensor(self.placeholders["children_node_tokens"])
+
+        children_node_types_tensor = tf.layers.batch_normalization(children_node_types_tensor, training=self.placeholders['is_training'])
+        children_node_tokens_tensor = tf.layers.batch_normalization(children_node_tokens_tensor, training=self.placeholders['is_training'])
+
         children_embeddings = tf.concat([children_node_types_tensor, children_node_tokens_tensor], -1)
 
         primary_variable_caps = self.primary_variable_capsule_layer(self.num_conv, self.output_size, parent_node_embeddings, children_embeddings, self.placeholders["children_indices"], self.node_dim, self.caps1_num_dims)
@@ -94,8 +102,12 @@ class TreeCapsModel():
         self.code_caps = tf.squeeze(code_caps, axis=1)
         
         """Obtaining the classification output."""
-        v_length = tf.sqrt(tf.reduce_sum(tf.square(self.code_caps),axis=2, keepdims=True) + 1e-9)
-        out = tf.reshape(v_length,(-1, self.label_size))
+        self.code_caps = tf.sqrt(tf.reduce_sum(tf.square(self.code_caps),axis=2, keepdims=True) + 1e-9)
+        self.code_caps = tf.reshape(self.code_caps,(-1, self.label_size))
+        
+        self.softmax_values = self.softmax_layer(self.code_caps)
+        self.loss = self.loss_layer(self.code_caps)
+
 
     def compute_parent_node_types_tensor(self, parent_node_types_indices):
         parent_node_types_tensor =  tf.nn.embedding_lookup(self.node_type_embeddings,parent_node_types_indices)
@@ -426,22 +438,22 @@ class TreeCapsModel():
             return lrelu(tf.matmul(pooled, weights) + biases, 0.01)
 
 
-    # def loss_layer(self, logits_node, label_size):
-    #     """Create a loss layer for training."""
+    def loss_layer(self, logits_node):
+        """Create a loss layer for training."""
 
-    #     labels = self.placeholders["labels"]
+        labels = self.placeholders["labels"]
 
-    #     with tf.name_scope('loss_layer'):
-    #         max_l = tf.square(tf.maximum(0., 0.9 - logits_node))
-    #         max_r = tf.square(tf.maximum(0., logits_node - 0.1))
-    #         T_c = labels
-    #         L_c = T_c * max_l + 0.5 * (1 - T_c) * max_r
+        with tf.name_scope('loss_layer'):
+            max_l = tf.square(tf.maximum(0., 0.9 - logits_node))
+            max_r = tf.square(tf.maximum(0., logits_node - 0.1))
+            T_c = labels
+            L_c = T_c * max_l + 0.5 * (1 - T_c) * max_r
             
-    #         loss = tf.reduce_mean(tf.reduce_sum(L_c, axis=1))
+            loss = tf.reduce_mean(tf.reduce_sum(L_c, axis=1))
 
-    #         return labels, loss
+            return loss
 
-    def out_layer(self, logits_node):
+    def softmax_layer(self, logits_node):
         """Apply softmax to the output layer."""
         with tf.name_scope('output'):
             return tf.nn.softmax(logits_node)

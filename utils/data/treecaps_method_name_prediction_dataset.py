@@ -15,24 +15,38 @@ from sklearn.preprocessing import OneHotEncoder
 import pickle
 from utils import identifier_splitting
 
-class Node():
-    def __init__(self, node_type, node_token):
-        self.node_type = node_type
-        self.node_token = node_token
+
+def _onehot(i, total):
+    zeros = np.zeros(total)
+    zeros[i] = 1.0
+    return zeros
 
 class MethodNamePredictionData():
    
     def __init__(self, opt, data_path, is_training=True, is_testing=False, is_validating=False,):
         
-        self.batch_size = 12
+        self.batch_size = opt.batch_size
         self.node_type_lookup = opt.node_type_lookup
         self.node_token_lookup = opt.node_token_lookup
         self.label_lookup = opt.label_lookup
+        self.label_size = opt.label_size
 
-        trees = self.load_program_data(data_path)
-        
-        self.trees = trees
-        self.data = self.process_raw_trees()
+        base_name =os.path.basename(data_path)
+        parent_base_name = os.path.basename(os.path.dirname(data_path))
+        base_path = str(os.path.dirname(data_path))
+        saved_input_filename = "%s/%s-%s.pkl" % (base_path, parent_base_name, base_name)
+
+        if os.path.exists(saved_input_filename):
+            print("Loading existing data file: ", str(saved_input_filename))
+            self.data = pickle.load(open(saved_input_filename, "rb"))
+           
+
+        else:
+            trees = self.load_program_data(data_path)
+            self.trees = trees
+            self.data = self.process_raw_trees()
+            print("Serializing......")
+            pickle.dump(self.data, open(saved_input_filename, "wb" ) )
 
 
 
@@ -43,6 +57,7 @@ class MethodNamePredictionData():
             for file in tqdm(files):
                 if file.endswith(".pkl"):
                     pkl_file_path = os.path.join(subdir,file)
+                    print(pkl_file_path)
                     pb_representation = self.load_tree_from_pickle_file(pkl_file_path)
                     # print(pb_representation)
                     root = pb_representation.element
@@ -56,7 +71,7 @@ class MethodNamePredictionData():
                     method_name = file_name_splits[len(file_name_splits)-1].split("_")[1]
                     tree, size = self._traverse_tree(root)
 
-                    print("Size : " + str(size))
+                    # print("Size : " + str(size))
                     tree_data = {
                         "tree": tree,
                         "method_name": method_name,
@@ -156,8 +171,9 @@ class MethodNamePredictionData():
         children_indices = []
         children_node_types = []
         children_node_tokens = []
-        label = method_name
+        label = self.label_lookup[method_name]
 
+        label_one_hot = _onehot(label, self.label_size)
         queue = [(tree, -1)]
         # print queue
         while queue:
@@ -192,7 +208,7 @@ class MethodNamePredictionData():
         # print(children_node_types)
         # print(children_node_tokens)
      
-        return node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label
+        return node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label_one_hot
             
             
     def make_batch(self, batch_data):
@@ -280,15 +296,20 @@ class MethodNamePredictionData():
         for bucket_idx, bucket_data in buckets.items():
         # for tree_data in self.trees:
             # print(file)
-
+          
+            
             elements = []
             samples = 0
 
             for i, tree_data in enumerate(bucket_data):
-                elements.append(tree_data)
-                samples += 1
-                
+
+                _, method_name, _ = tree_data["tree"], tree_data["method_name"], tree_data["size"]
+                if method_name in self.label_lookup:
+                    elements.append(tree_data)
+                    samples += 1
+                    
                 if samples >= self.batch_size:
+                    
                     batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels = self.make_batch(elements)
                     
                     # for node in batch_nodes:
@@ -300,7 +321,7 @@ class MethodNamePredictionData():
                     batch["batch_children_node_types"] = np.asarray(batch_children_node_types)
                     batch["batch_children_node_tokens"] = np.asarray(batch_children_node_tokens)
                     batch["batch_labels"] = np.asarray(batch_labels)
-             
+            
                     yield batch
                     elements = []
                     samples = 0

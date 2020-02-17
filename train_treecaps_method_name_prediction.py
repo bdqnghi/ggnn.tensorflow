@@ -21,6 +21,7 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 from utils import evaluation
 from scipy.spatial import distance
 from datetime import datetime
+from keras_radam.training import RAdamOptimizer
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--workers', type=int,
@@ -78,17 +79,17 @@ parser.add_argument('--distributed_function', type=int, default=0,
                     choices=range(0, 2), help='0 for softmax, 1 for sigmoid')
 parser.add_argument('--train_path', default="sample_data/java-small-pkl/training",
                     help='path of training data')
-parser.add_argument('--val_path', default="sample_data/java-small-graph-transformed/validation",
+parser.add_argument('--val_path', default="sample_data/java-small-pkl/validation",
                     help='path of validation data')
 parser.add_argument('--dataset', default="java-small",
                     help='name of dataset')
 parser.add_argument('--node_type_vocabulary_path', default="preprocessed_data/node_type_vocab.txt",
                     help='name of dataset')
-parser.add_argument('--token_vocabulary_path', default="preprocessed_data/java-small/token_vocab.txt",
+parser.add_argument('--token_vocabulary_path', default="preprocessed_data/treecaps/java-small/token_vocab.txt",
                     help='name of dataset')
-parser.add_argument('--train_label_vocabulary_path', default="preprocessed_data/java-small/train_label_vocab.txt",
+parser.add_argument('--train_label_vocabulary_path', default="preprocessed_data/treecaps/java-small/train_label_vocab.txt",
                     help='name of dataset')
-parser.add_argument('--val_label_vocabulary_path', default="preprocessed_data/java-small/val_label_vocab.txt",
+parser.add_argument('--val_label_vocabulary_path', default="preprocessed_data/treecaps/java-small/val_label_vocab.txt",
                     help='name of dataset')
 parser.add_argument('--task', type=int, default=0,
                     choices=range(0, 2), help='0 for training, 1 for testing')
@@ -118,7 +119,7 @@ def form_model_path(opt):
     for k, v in model_traits.items():
         model_path.append(k + "_" + v)
     
-    return "method_name_prediction" + "_" + "-".join(model_path)
+    return "tree_caps_method_name_prediction" + "_" + "-".join(model_path)
 
 def load_vocabs(opt):
 
@@ -198,7 +199,7 @@ def main(opt):
     train_label_lookup, node_type_lookup, node_token_lookup, val_label_lookup = load_vocabs(opt)
 
     opt.label_lookup = train_label_lookup
-    opt.num_labels = len(train_label_lookup.keys())
+    opt.label_size = len(train_label_lookup.keys())
     opt.node_type_lookup = node_type_lookup
     opt.node_token_lookup = node_token_lookup
 
@@ -207,35 +208,60 @@ def main(opt):
     print("Finished initializing tree caps model...........")
 
     code_caps = treecaps.code_caps
+
+    loss_node = treecaps.loss
+    optimizer = RAdamOptimizer(opt.lr)
+
+    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    with tf.control_dependencies(update_ops):
+        training_point = optimizer.minimize(loss_node)
+    saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
     train_dataset = MethodNamePredictionData(opt, opt.train_path, True, False, False)
 
-
-    train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=1)
+    train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=5)
 
     init = tf.global_variables_initializer()
     with tf.Session() as sess:
         sess.run(init)
+        if ckpt and ckpt.model_checkpoint_path:
+            print("Continue training with old model")
+            print("Checkpoint path : " + str(ckpt.model_checkpoint_path))
+            saver.restore(sess, ckpt.model_checkpoint_path)
+            for i, var in enumerate(saver._var_list):
+                print('Var {}: {}'.format(i, var))
 
-        for train_step, train_batch_data in enumerate(train_batch_iterator):
-            print("--------------------------")
-            # print(train_step)
-            print(train_batch_data["batch_node_types"].shape)
-            print(train_batch_data["batch_nodes_tokens"].shape)
-            print(train_batch_data["batch_children_indices"].shape)
-            print(train_batch_data["batch_children_node_types"].shape)
-            print(train_batch_data["batch_children_node_tokens"].shape)
-        
+        for epoch in range(1,  opt.epochs + 1):
+            for train_step, train_batch_data in enumerate(train_batch_iterator):
+                print("--------------------------")
+                # print("Epoch:", epoch, "Step:", train_step)
+                # print(train_step)
+                # print(train_batch_data["batch_node_types"].shape)
+                # print(train_batch_data["batch_nodes_tokens"].shape)
+                # print(train_batch_data["batch_children_indices"].shape)
+                # print(train_batch_data["batch_children_node_types"].shape)
+                # print(train_batch_data["batch_children_node_tokens"].shape)
             
-            code_caps_values = sess.run(
-                    [code_caps],
-                    feed_dict={
-                        treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
-                        treecaps.placeholders["node_tokens"]:  train_batch_data["batch_nodes_tokens"],
-                        treecaps.placeholders["children_indices"]:  train_batch_data["batch_children_indices"],
-                        treecaps.placeholders["children_node_types"]: train_batch_data["batch_children_node_types"],
-                        treecaps.placeholders["children_node_tokens"]: train_batch_data["batch_children_node_tokens"]
-                    }
-                )
+                
+                _, err = sess.run(
+                        [training_point, loss_node],
+                        feed_dict={
+                            treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
+                            treecaps.placeholders["node_tokens"]:  train_batch_data["batch_nodes_tokens"],
+                            treecaps.placeholders["children_indices"]:  train_batch_data["batch_children_indices"],
+                            treecaps.placeholders["children_node_types"]: train_batch_data["batch_children_node_types"],
+                            treecaps.placeholders["children_node_tokens"]: train_batch_data["batch_children_node_tokens"],
+                            treecaps.placeholders["labels"]: train_batch_data["batch_labels"],
+                            treecaps.placeholders["is_training"]: True
+                        }
+                    )
+                
+                # print(code_caps_values)
+                print("Epoch:", epoch, "Step:", train_step, "Loss:", err)
+
+                if opt.validating == 0:
+                    if train_step % opt.checkpoint_every == 0 and train_step > 0:
+                        saver.save(sess, checkfile)                  
+                        print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
 
 if __name__ == "__main__":
     main(opt)
