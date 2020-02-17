@@ -80,13 +80,13 @@ def main():
 
 						if len(sink_splits) == 2:
 							sink_token = sink_splits[1]
-							sink_token = process_token(sink_token)
+							# sink_token = process_token(sink_token)
 							# print("Sink token : " + sink_token)
 							sink_subtokens = identifier_splitting.split_identifier_into_parts(sink_token)
 							for sink_subtoken in sink_subtokens:
 								if sink_subtoken not in excluded_tokens:
 									all_vocabularies.add(sink_subtoken)
-			
+		print("Num vocabs : ", len(all_vocabularies))	
 	# all_vocabularies = exclude_tokens(all_vocabularies)
 	all_vocabularies = list(all_vocabularies)
 	# unique_vocabularies = []
