@@ -196,6 +196,7 @@ def main(opt):
     if ckpt and ckpt.model_checkpoint_path:
         print("Continue training with old model : " + str(checkfile))
 
+    print("Loading vocabs.........")
     train_label_lookup, node_type_lookup, node_token_lookup, val_label_lookup = load_vocabs(opt)
 
     opt.label_lookup = train_label_lookup
@@ -203,6 +204,7 @@ def main(opt):
     opt.node_type_lookup = node_type_lookup
     opt.node_token_lookup = node_token_lookup
 
+    print("Initializing tree caps model...........")
     treecaps = TreeCapsModel(opt)
     # network.init_net_treecaps(30,30)
     print("Finished initializing tree caps model...........")
