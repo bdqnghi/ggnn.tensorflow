@@ -71,7 +71,7 @@ def main():
 
 						if len(source_splits) == 2:
 							source_token = source_splits[1]
-							source_token = process_token(source_token)
+							# source_token = process_token(source_token)
 							# print("Source token : "  + source_token)
 							source_subtokens = identifier_splitting.split_identifier_into_parts(source_token)
 							for source_subtoken in source_subtokens:
