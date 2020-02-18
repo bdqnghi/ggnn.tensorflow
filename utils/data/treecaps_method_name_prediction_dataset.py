@@ -39,6 +39,7 @@ class MethodNamePredictionData():
         self.node_token_lookup = opt.node_token_lookup
         self.label_lookup = opt.label_lookup
         self.label_size = opt.label_size
+        self.tree_size_threshold = opt.tree_size_threshold
 
         base_name =os.path.basename(data_path)
         parent_base_name = os.path.basename(os.path.dirname(data_path))
@@ -87,7 +88,7 @@ class MethodNamePredictionData():
                             "size": size
                         }
                         # print(tree_data)
-                        if size < opt.tree_size_threshold:
+                        if size < self.tree_size_threshold:
                             trees.append(tree_data)
                 count = count + 1
          
