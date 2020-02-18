@@ -24,7 +24,16 @@ def _onehot(i, total):
 class MethodNamePredictionData():
    
     def __init__(self, opt, data_path, is_training=True, is_testing=False, is_validating=False,):
-        
+        if is_training:
+            print("Processing training data....")
+           
+        if is_testing:
+            print("Processing testing data....")
+     
+        if is_validating:
+            print("Processing validation data....")
+         
+
         self.batch_size = opt.batch_size
         self.node_type_lookup = opt.node_type_lookup
         self.node_token_lookup = opt.node_token_lookup
@@ -47,8 +56,6 @@ class MethodNamePredictionData():
             self.data = self.process_raw_trees()
             print("Serializing......")
             pickle.dump(self.data, open(saved_input_filename, "wb" ) )
-
-
 
 
     def load_program_data(self, directory):
@@ -78,7 +85,8 @@ class MethodNamePredictionData():
                         "size": size
                     }
                     # print(tree_data)
-                    trees.append(tree_data)
+                    if size < opt.tree_size_threshold:
+                        trees.append(tree_data)
          
         return trees
 
@@ -171,7 +179,8 @@ class MethodNamePredictionData():
         children_indices = []
         children_node_types = []
         children_node_tokens = []
-        label = self.label_lookup[method_name]
+        label = 0
+        # label = self.label_lookup[method_name]
 
         label_one_hot = _onehot(label, self.label_size)
         queue = [(tree, -1)]
@@ -304,9 +313,9 @@ class MethodNamePredictionData():
             for i, tree_data in enumerate(bucket_data):
 
                 _, method_name, _ = tree_data["tree"], tree_data["method_name"], tree_data["size"]
-                if method_name in self.label_lookup:
-                    elements.append(tree_data)
-                    samples += 1
+                # if method_name in self.label_lookup:
+                elements.append(tree_data)
+                samples += 1
                     
                 if samples >= self.batch_size:
                     
