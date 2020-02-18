@@ -46,7 +46,7 @@ def main():
 
     input_path = args.input
     output_path = args.output
-
+    
     node_type_lookup = {}
     node_token_lookup = {}
     label_lookup = {}
