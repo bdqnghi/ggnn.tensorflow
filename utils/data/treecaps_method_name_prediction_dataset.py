@@ -221,7 +221,7 @@ class MethodNamePredictionData():
         # print(children_node_types)
         # print(children_node_tokens)
      
-        return node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label_one_hot
+        return node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label_one_hot, size
             
             
     def make_batch(self, batch_data):
@@ -231,16 +231,18 @@ class MethodNamePredictionData():
         batch_children_node_types = []
         batch_children_node_tokens = []
         batch_labels = []
+        batch_tree_size = []
         for tree_data in batch_data:
-            node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label = self.extract_training_data(tree_data)
+            node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label, size = self.extract_training_data(tree_data)
             batch_node_types.append(node_types)
             batch_nodes_tokens.append(node_tokens)
             batch_children_indices.append(children_indices)
             batch_children_node_types.append(children_node_types)
             batch_children_node_tokens.append(children_node_tokens)
             batch_labels.append(label)
+            batch_tree_size.append(size)
         
-        return self._pad_batch(batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels)
+        return self._pad_batch(batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels, batch_tree_size)
 
     #  def _pad_batch(self, nodes, children, labels):
     #     if not nodes:
@@ -258,7 +260,7 @@ class MethodNamePredictionData():
 
     #     return nodes, children, labels
 
-    def _pad_batch(self, batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels):
+    def _pad_batch(self, batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels, batch_tree_size):
         # if not nodes:
             # return [], [], []
         # batch_node_types
@@ -294,7 +296,7 @@ class MethodNamePredictionData():
         batch_children_node_tokens = [[c + [[]] * (max_num_children_per_node - len(c)) for c in sample] for sample in batch_children_node_tokens]  
         batch_children_node_tokens = [[[s + [0] * (max_num_of_subtoken_per_children_per_node - len(s)) for s in c] for c in sample] for sample in batch_children_node_tokens]
       
-        return batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels
+        return batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels, batch_tree_size
 
     def _onehot(self, i, total):
         return [1.0 if j == i else 0.0 for j in range(total)]
@@ -323,7 +325,7 @@ class MethodNamePredictionData():
                     
                 if samples >= self.batch_size:
                     
-                    batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels = self.make_batch(elements)
+                    batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels , batch_tree_size = self.make_batch(elements)
                     
                     # for node in batch_nodes:
                     #     print(len(node))
@@ -334,6 +336,7 @@ class MethodNamePredictionData():
                     batch["batch_children_node_types"] = np.asarray(batch_children_node_types)
                     batch["batch_children_node_tokens"] = np.asarray(batch_children_node_tokens)
                     batch["batch_labels"] = np.asarray(batch_labels)
+                    batch["batch_tree_size"] = batch_tree_size
             
                     yield batch
                     elements = []
