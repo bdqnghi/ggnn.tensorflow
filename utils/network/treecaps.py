@@ -51,12 +51,12 @@ class TreeCapsModel():
         self.placeholders["w_t"] = tf.Variable(glorot_init([self.node_dim, self.output_size]), name='w_t')
         self.placeholders["w_l"] = tf.Variable(glorot_init([self.node_dim, self.output_size]), name='w_l')
         self.placeholders["w_r"] = tf.Variable(glorot_init([self.node_dim, self.output_size]), name='w_r')
-        # self.placeholders['is_training'] = tf.placeholder(tf.bool, name="is_training")
+        self.placeholders['is_training'] = tf.placeholder(tf.bool, name="is_training")
 
-        # self.dynamic_routing_shape = [self.batch_size, self.caps1_num_caps, 1, self.caps1_num_dims,1]
+        self.dynamic_routing_shape = [self.batch_size, self.caps1_num_caps, 1, self.caps1_num_dims,1]
         
-        # shape_of_weight_dynamic_routing = [1, self.dynamic_routing_shape[1], self.caps1_out_dims * self.caps1_out_caps] + self.dynamic_routing_shape[-2:]
-        # shape_of_bias_dynamic_routing = [1, 1, self.caps1_out_caps, self.caps1_out_dims, 1]
+        shape_of_weight_dynamic_routing = [1, self.dynamic_routing_shape[1], self.caps1_out_dims * self.caps1_out_caps] + self.dynamic_routing_shape[-2:]
+        shape_of_bias_dynamic_routing = [1, 1, self.caps1_out_caps, self.caps1_out_dims, 1]
 
         # self.placeholders["w_dynamic_routing"] = tf.Variable(glorot_init(shape_of_weight_dynamic_routing), name='w_dynamic_routing')
         # self.placeholders["b_dynamic_routing"] = tf.Variable(glorot_init(shape_of_bias_dynamic_routing), name='b_dynamic_routing')
