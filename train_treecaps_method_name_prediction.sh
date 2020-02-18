@@ -36,4 +36,4 @@ ${CHECKPOINT_EVERY} --cuda ${CUDA} --validating ${VALIDATING} --graph_size_thres
 --val_label_vocabulary_path ${VAL_LABEL_VOCABULARY_PATH} \
 --task ${TASK} \
 --top_a ${TOP_A} --top_b ${TOP_B} --num_conv ${NUM_CONV} --output_size ${OUTPUT_SIZE} \
---caps1_num_dims ${CAPS1_NUM_DIMS} ----caps1_out_dims ${CAPS1_OUT_DIMS}
+--caps1_num_dims ${CAPS1_NUM_DIMS} --caps1_out_dims ${CAPS1_OUT_DIMS}
