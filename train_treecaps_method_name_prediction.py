@@ -209,61 +209,61 @@ def main(opt):
     # network.init_net_treecaps(30,30)
     print("Finished initializing tree caps model...........")
 
-    code_caps = treecaps.code_caps
+    # code_caps = treecaps.code_caps
 
-    loss_node = treecaps.loss
-    optimizer = RAdamOptimizer(opt.lr)
+    # loss_node = treecaps.loss
+    # optimizer = RAdamOptimizer(opt.lr)
 
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    with tf.control_dependencies(update_ops):
-        training_point = optimizer.minimize(loss_node)
-    saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
-    train_dataset = MethodNamePredictionData(opt, opt.train_path, True, False, False)
+    # update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    # with tf.control_dependencies(update_ops):
+    #     training_point = optimizer.minimize(loss_node)
+    # saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
+    # train_dataset = MethodNamePredictionData(opt, opt.train_path, True, False, False)
 
-    train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=5)
+    # train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=5)
 
-    init = tf.global_variables_initializer()
-    with tf.Session() as sess:
-        sess.run(init)
-        if ckpt and ckpt.model_checkpoint_path:
-            print("Continue training with old model")
-            print("Checkpoint path : " + str(ckpt.model_checkpoint_path))
-            saver.restore(sess, ckpt.model_checkpoint_path)
-            for i, var in enumerate(saver._var_list):
-                print('Var {}: {}'.format(i, var))
+    # init = tf.global_variables_initializer()
+    # with tf.Session() as sess:
+    #     sess.run(init)
+    #     if ckpt and ckpt.model_checkpoint_path:
+    #         print("Continue training with old model")
+    #         print("Checkpoint path : " + str(ckpt.model_checkpoint_path))
+    #         saver.restore(sess, ckpt.model_checkpoint_path)
+    #         for i, var in enumerate(saver._var_list):
+    #             print('Var {}: {}'.format(i, var))
 
-        for epoch in range(1,  opt.epochs + 1):
-            for train_step, train_batch_data in enumerate(train_batch_iterator):
-                print("--------------------------")
-                # print("Epoch:", epoch, "Step:", train_step)
-                # print(train_step)
-                # print(train_batch_data["batch_node_types"].shape)
-                # print(train_batch_data["batch_nodes_tokens"].shape)
-                # print(train_batch_data["batch_children_indices"].shape)
-                # print(train_batch_data["batch_children_node_types"].shape)
-                # print(train_batch_data["batch_children_node_tokens"].shape)
+    #     for epoch in range(1,  opt.epochs + 1):
+    #         for train_step, train_batch_data in enumerate(train_batch_iterator):
+    #             print("--------------------------")
+    #             # print("Epoch:", epoch, "Step:", train_step)
+    #             # print(train_step)
+    #             # print(train_batch_data["batch_node_types"].shape)
+    #             # print(train_batch_data["batch_nodes_tokens"].shape)
+    #             # print(train_batch_data["batch_children_indices"].shape)
+    #             # print(train_batch_data["batch_children_node_types"].shape)
+    #             # print(train_batch_data["batch_children_node_tokens"].shape)
             
                 
-                _, err = sess.run(
-                        [training_point, loss_node],
-                        feed_dict={
-                            treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
-                            treecaps.placeholders["node_tokens"]:  train_batch_data["batch_nodes_tokens"],
-                            treecaps.placeholders["children_indices"]:  train_batch_data["batch_children_indices"],
-                            treecaps.placeholders["children_node_types"]: train_batch_data["batch_children_node_types"],
-                            treecaps.placeholders["children_node_tokens"]: train_batch_data["batch_children_node_tokens"],
-                            treecaps.placeholders["labels"]: train_batch_data["batch_labels"],
-                            treecaps.placeholders["is_training"]: True
-                        }
-                    )
+    #             _, err = sess.run(
+    #                     [training_point, loss_node],
+    #                     feed_dict={
+    #                         treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
+    #                         treecaps.placeholders["node_tokens"]:  train_batch_data["batch_nodes_tokens"],
+    #                         treecaps.placeholders["children_indices"]:  train_batch_data["batch_children_indices"],
+    #                         treecaps.placeholders["children_node_types"]: train_batch_data["batch_children_node_types"],
+    #                         treecaps.placeholders["children_node_tokens"]: train_batch_data["batch_children_node_tokens"],
+    #                         treecaps.placeholders["labels"]: train_batch_data["batch_labels"],
+    #                         treecaps.placeholders["is_training"]: True
+    #                     }
+    #                 )
                 
-                # print(code_caps_values)
-                print("Epoch:", epoch, "Step:", train_step, "Loss:", err)
+    #             # print(code_caps_values)
+    #             print("Epoch:", epoch, "Step:", train_step, "Loss:", err)
 
-                if opt.validating == 0:
-                    if train_step % opt.checkpoint_every == 0 and train_step > 0:
-                        saver.save(sess, checkfile)                  
-                        print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
+    #             if opt.validating == 0:
+    #                 if train_step % opt.checkpoint_every == 0 and train_step > 0:
+    #                     saver.save(sess, checkfile)                  
+    #                     print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
 
 if __name__ == "__main__":
     main(opt)
