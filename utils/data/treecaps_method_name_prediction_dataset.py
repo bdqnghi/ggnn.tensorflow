@@ -55,7 +55,7 @@ class MethodNamePredictionData():
         trees = []
         for subdir , dirs, files in os.walk(directory): 
             for file in tqdm(files):
-                if file.endswith(".pkl"):
+                if file.endswith(".pkl") not file.endswith(".slice.pkl"):
                     pkl_file_path = os.path.join(subdir,file)
                     print(pkl_file_path)
                     pb_representation = self.load_tree_from_pickle_file(pkl_file_path)
