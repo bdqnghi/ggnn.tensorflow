@@ -9,12 +9,16 @@ import json
 from utils.utils import glorot_init
 class TreeCapsModel():
     def __init__(self, opt):
-  
         
-        self.top_a = 20
-        self.top_b = 25
+        # self.top_a = 20
+        # self.top_b = 25
+        # self.num_conv = 8
+        # self.output_size = 128
+        
+        self.top_a = 10
+        self.top_b = 15
         self.num_conv = 8
-        self.output_size = 128
+        self.output_size = 64
         self.caps1_num_dims = 8
         self.caps1_num_caps = int(self.num_conv*self.output_size/self.caps1_num_dims)*self.top_a
         self.caps1_out_caps = opt.label_size
