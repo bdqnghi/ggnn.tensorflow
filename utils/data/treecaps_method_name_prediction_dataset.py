@@ -183,8 +183,8 @@ class MethodNamePredictionData():
         children_indices = []
         children_node_types = []
         children_node_tokens = []
-        label = 0
-        # label = self.label_lookup[method_name]
+        # label = 0
+        label = self.label_lookup[method_name]
 
         label_one_hot = _onehot(label, self.label_size)
         queue = [(tree, -1)]
@@ -309,7 +309,7 @@ class MethodNamePredictionData():
         for bucket_idx, bucket_data in buckets.items():
         # for tree_data in self.trees:
             # print(file)
-          
+            random.shuffle(bucket_data)
             
             elements = []
             samples = 0
@@ -317,9 +317,9 @@ class MethodNamePredictionData():
             for i, tree_data in enumerate(bucket_data):
 
                 _, method_name, _ = tree_data["tree"], tree_data["method_name"], tree_data["size"]
-                # if method_name in self.label_lookup:
-                elements.append(tree_data)
-                samples += 1
+                if method_name in self.label_lookup:
+                    elements.append(tree_data)
+                    samples += 1
                     
                 if samples >= self.batch_size:
                     
