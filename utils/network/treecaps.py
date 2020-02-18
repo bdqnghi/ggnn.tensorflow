@@ -90,10 +90,10 @@ class TreeCapsModel():
         children_node_types_tensor = self.compute_children_node_types_tensor(parent_node_type_embeddings, self.placeholders["children_indices"], self.node_type_dim)
         children_node_tokens_tensor = self.compute_children_node_tokens_tensor(self.placeholders["children_node_tokens"])
 
-        # parent_node_type_embeddings = tf.layers.batch_normalization(parent_node_type_embeddings, training=self.placeholders['is_training'])
-        # parent_node_token_embeddings = tf.layers.batch_normalization(parent_node_token_embeddings, training=self.placeholders['is_training'])
-        # children_node_types_tensor = tf.layers.batch_normalization(children_node_types_tensor, training=self.placeholders['is_training'])
-        # children_node_tokens_tensor = tf.layers.batch_normalization(children_node_tokens_tensor, training=self.placeholders['is_training'])
+        parent_node_type_embeddings = tf.layers.batch_normalization(parent_node_type_embeddings, training=self.placeholders['is_training'])
+        parent_node_token_embeddings = tf.layers.batch_normalization(parent_node_token_embeddings, training=self.placeholders['is_training'])
+        children_node_types_tensor = tf.layers.batch_normalization(children_node_types_tensor, training=self.placeholders['is_training'])
+        children_node_tokens_tensor = tf.layers.batch_normalization(children_node_tokens_tensor, training=self.placeholders['is_training'])
 
         parent_node_embeddings = tf.concat([parent_node_type_embeddings, parent_node_token_embeddings], -1)
         children_embeddings = tf.concat([children_node_types_tensor, children_node_tokens_tensor], -1)
