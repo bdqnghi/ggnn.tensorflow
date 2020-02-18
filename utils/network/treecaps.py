@@ -14,15 +14,24 @@ class TreeCapsModel():
         # self.top_b = 25
         # self.num_conv = 8
         # self.output_size = 128
-        
-        self.top_a = 10
-        self.top_b = 15
-        self.num_conv = 8
-        self.output_size = 64
-        self.caps1_num_dims = 8
+        self.top_a = opt.top_a
+        self.top_b = opt.top_b
+        self.num_conv = opt.num_conv
+        self.output_size = opt.output_size
+        self.caps1_num_dims = opt.caps1_num_dims
         self.caps1_num_caps = int(self.num_conv*self.output_size/self.caps1_num_dims)*self.top_a
         self.caps1_out_caps = opt.label_size
-        self.caps1_out_dims = 8
+        self.caps1_out_dims = opt.caps1_num_dims
+
+        # self.top_a = 10
+        # self.top_b = 15
+        # self.num_conv = 8
+        # self.output_size = 16
+        # self.caps1_num_dims = 8
+        # self.caps1_num_caps = int(self.num_conv*self.output_size/self.caps1_num_dims)*self.top_a
+        # self.caps1_out_caps = opt.label_size
+        # self.caps1_out_dims = 8
+        
         self.node_token_dim = opt.node_token_dim
         self.node_type_dim = opt.node_type_dim
         self.node_dim = self.node_type_dim + self.node_token_dim
@@ -63,7 +72,7 @@ class TreeCapsModel():
         shape_of_bias_dynamic_routing = [1, 1, self.caps1_out_caps, self.caps1_out_dims, 1]
 
         self.placeholders["w_dynamic_routing"] = tf.Variable(tf.contrib.layers.xavier_initializer()(shape_of_weight_dynamic_routing), name='w_dynamic_routing')
-        self.placeholders["b_dynamic_routing"] = tf.Variable(tf.contrib.layers.xavier_initializer()(shape_of_bias_dynamic_routing), name='b_dynamic_routing')
+        self.placeholders["b_dynamic_routing"] = tf.Variable(tf.zeros(shape_of_bias_dynamic_routing), name='b_dynamic_routing')
     
         self.placeholders["b_conv"] = tf.Variable(tf.zeros([self.output_size,]),name='b_conv')
 
