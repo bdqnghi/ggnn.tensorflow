@@ -60,33 +60,36 @@ class MethodNamePredictionData():
 
     def load_program_data(self, directory):
         trees = []
+        count = 0
         for subdir , dirs, files in os.walk(directory): 
             for file in tqdm(files):
-                if file.endswith(".pkl") and not file.endswith(".slice.pkl"):
-                    pkl_file_path = os.path.join(subdir,file)
-                    # print(pkl_file_path)
-                    pb_representation = self.load_tree_from_pickle_file(pkl_file_path)
-                    # print(pb_representation)
-                    root = pb_representation.element
+                if count < 20000:
+                    if file.endswith(".pkl") and not file.endswith(".slice.pkl"):
+                        pkl_file_path = os.path.join(subdir,file)
+                        # print(pkl_file_path)
+                        pb_representation = self.load_tree_from_pickle_file(pkl_file_path)
+                        # print(pb_representation)
+                        root = pb_representation.element
 
-                   
-                    # print(pb_representation)
-                    # root = pb_representation.element
-                    # filename: "/e/java-small/training/project_2/DelaunayTriangulator_trim.java"
-                    file_name = root.unit.filename.replace(".java","")
-                    file_name_splits = file_name.split("/")
-                    method_name = file_name_splits[len(file_name_splits)-1].split("_")[1]
-                    tree, size = self._traverse_tree(root)
+                    
+                        # print(pb_representation)
+                        # root = pb_representation.element
+                        # filename: "/e/java-small/training/project_2/DelaunayTriangulator_trim.java"
+                        file_name = root.unit.filename.replace(".java","")
+                        file_name_splits = file_name.split("/")
+                        method_name = file_name_splits[len(file_name_splits)-1].split("_")[1]
+                        tree, size = self._traverse_tree(root)
 
-                    # print("Size : " + str(size))
-                    tree_data = {
-                        "tree": tree,
-                        "method_name": method_name,
-                        "size": size
-                    }
-                    # print(tree_data)
-                    if size < opt.tree_size_threshold:
-                        trees.append(tree_data)
+                        # print("Size : " + str(size))
+                        tree_data = {
+                            "tree": tree,
+                            "method_name": method_name,
+                            "size": size
+                        }
+                        # print(tree_data)
+                        if size < opt.tree_size_threshold:
+                            trees.append(tree_data)
+                count = count + 1
          
         return trees
 
