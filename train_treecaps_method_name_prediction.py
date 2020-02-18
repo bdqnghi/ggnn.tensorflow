@@ -120,7 +120,13 @@ def form_model_path(opt):
     model_traits["distributed_function"] = str(opt.distributed_function)
     model_traits["node_type_dim"] = str(opt.node_type_dim)
     model_traits["node_token_dim"] = str(opt.node_token_dim)
+    model_traits["output_size"] = str(opt.output_size)
+    model_traits["top_a"] = str(opt.top_a)
+    model_traits["top_b"] = str(opt.top_b)
+    model_traits["caps1_num_dims"] = str(opt.caps1_num_dims)
+    model_traits["caps1_out_dims"] = str(opt.caps1_out_dims)
     
+
     model_path = []
     for k, v in model_traits.items():
         model_path.append(k + "_" + v)
