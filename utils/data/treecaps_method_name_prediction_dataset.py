@@ -57,7 +57,7 @@ class MethodNamePredictionData():
             for file in tqdm(files):
                 if file.endswith(".pkl") and not file.endswith(".slice.pkl"):
                     pkl_file_path = os.path.join(subdir,file)
-                    print(pkl_file_path)
+                    # print(pkl_file_path)
                     pb_representation = self.load_tree_from_pickle_file(pkl_file_path)
                     # print(pb_representation)
                     root = pb_representation.element
