@@ -67,8 +67,8 @@ parser.add_argument('--checkpoint_every', type=int,
                     default=500, help='check point to save model')
 parser.add_argument('--validating', type=int,
                     default=1, help='validating or not')
-parser.add_argument('--graph_size_threshold', type=int,
-                    default=1000, help='graph size threshold')
+parser.add_argument('--tree_size_threshold', type=int,
+                    default=1000, help='tree size threshold')
 parser.add_argument('--sampling_size', type=int,
                     default=60, help='sampling size for each epoch')
 parser.add_argument('--best_f1', type=float,
