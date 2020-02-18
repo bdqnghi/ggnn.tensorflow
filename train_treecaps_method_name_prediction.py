@@ -263,7 +263,7 @@ def main(opt):
                     # print(train_batch_data["batch_children_node_types"].shape)
                     # print(train_batch_data["batch_children_node_tokens"].shape)
                 
-                    
+                    print(train_batch_data["batch_tree_size"])
                     _, err = sess.run(
                             [training_point, loss_node],
                             feed_dict={
