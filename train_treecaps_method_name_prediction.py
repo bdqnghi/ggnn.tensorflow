@@ -241,7 +241,7 @@ def main(opt):
     saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
   
 
-    train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=5)
+    train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=10)
 
     init = tf.global_variables_initializer()
 
