@@ -71,8 +71,12 @@ class TreeCapsModel():
 
         self.dynamic_routing_shape = [self.batch_size, self.caps1_num_caps, 1, self.caps1_num_dims,1]
         
-       
+        shape_of_weight_dynamic_routing = [1, self.dynamic_routing_shape[1], self.caps1_out_dims * self.caps1_out_caps] + self.dynamic_routing_shape[-2:]
+        shape_of_bias_dynamic_routing = [1, 1, self.caps1_out_caps, self.caps1_out_dims, 1]
 
+        self.placeholders["w_dynamic_routing"] = tf.Variable(tf.contrib.layers.xavier_initializer()(shape_of_weight_dynamic_routing), name='w_dynamic_routing')
+        self.placeholders["b_dynamic_routing"] = tf.Variable(tf.zeros(shape_of_bias_dynamic_routing), name='b_dynamic_routing')
+    
         self.placeholders["b_conv"] = tf.Variable(tf.zeros([self.output_size,]),name='b_conv')
 
         self.label_embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([len(self.label_lookup.keys()), self.label_dim]), name='label_embeddings')
@@ -205,45 +209,27 @@ class TreeCapsModel():
     #         out = tf.reshape(v_length,(-1, self.label_size))
 
        
-    def get_shape(self, inputs, name=None):
-        name = "shape" if name is None else name
-        with tf.name_scope(name):
-            static_shape = inputs.get_shape().as_list()
-            dynamic_shape = tf.shape(inputs)
-            shape = []
-            for i, dim in enumerate(static_shape):
-                dim = dim if dim is not None else dynamic_shape[i]
-                shape.append(dim)
-            return(shape)
 
     def dynamic_routing(self, dynamic_routing_shape, primary_static_caps, num_outputs=10, num_dims=16):
         """The Dynamic Routing Algorithm proposed by Sabour et al."""
         
         # [1, (8*128/8)*20, 8*10] + [8,1] = 
         # [1, 2560, 80, 8, 1]
+        # [2, 1280, 80, 8, 1]
 
         # [1,2560,8,1]
         # [2,1280,1,8,1]
         # [2,1280,80,8,1]
         
-        # w_dynamic_routing = self.placeholders["w_dynamic_routing"]
-        # b_dynamic_routing = self.placeholders["b_dynamic_routing"]
-        input_shape = self.get_shape(primary_static_caps)
-
-        # shape_of_weight_dynamic_routing = [1, self.dynamic_routing_shape[1], self.caps1_out_dims * self.caps1_out_caps] + self.dynamic_routing_shape[-2:]
-        # shape_of_bias_dynamic_routing = [1, 1, self.caps1_out_caps, self.caps1_out_dims, 1]
-
-        shape_of_weight_dynamic_routing = [1, input_shape[1], num_dims * num_outputs] + input_shape[-2:]
-        shape_of_bias_dynamic_routing = (1, 1, num_outputs, num_dims, 1)
-        self.placeholders["w_dynamic_routing"] = tf.get_variable('w_dynamic_routing', shape=shape_of_weight_dynamic_routing, dtype=tf.float32, initializer=tf.contrib.layers.xavier_initializer())
-        self.placeholders["b_dynamic_routing"] = tf.get_variable('b_dynamic_routing', shape=shape_of_bias_dynamic_routing)
+        w_dynamic_routing = self.placeholders["w_dynamic_routing"]
+        b_dynamic_routing = self.placeholders["b_dynamic_routing"]
         
     
         delta_IJ = tf.zeros([self.batch_size, self.caps1_num_caps, num_outputs, 1, 1], dtype=tf.dtypes.float32)
 
         primary_static_caps = tf.tile(primary_static_caps, [1, 1, num_dims * num_outputs, 1, 1])
 
-        u_hat = tf.reduce_sum(self.placeholders["w_dynamic_routing"] * primary_static_caps, axis=3, keep_dims=True)
+        u_hat = tf.reduce_sum(w_dynamic_routing * primary_static_caps, axis=3, keep_dims=True)
         u_hat = tf.reshape(u_hat, shape=[-1, self.caps1_num_caps, num_outputs, num_dims, 1])
 
         u_hat_stopped = tf.stop_gradient(u_hat, name='stop_gradient')
@@ -254,11 +240,11 @@ class TreeCapsModel():
 
                 if r_iter == self.iter_routing - 1:
                     s_J = tf.multiply(gamma_IJ, u_hat)
-                    s_J = tf.reduce_sum(s_J, axis=1, keepdims=True) + self.placeholders["b_dynamic_routing"]
+                    s_J = tf.reduce_sum(s_J, axis=1, keepdims=True) + b_dynamic_routing
                     v_J = self.squash(s_J)
                 elif r_iter < self.iter_routing - 1:  # Inner iterations, do not apply backpropagation
                     s_J = tf.multiply(gamma_IJ, u_hat_stopped)
-                    s_J = tf.reduce_sum(s_J, axis=1, keepdims=True) + self.placeholders["b_dynamic_routing"]
+                    s_J = tf.reduce_sum(s_J, axis=1, keepdims=True) + b_dynamic_routing
                     v_J = self.squash(s_J)
                     v_J_tiled = tf.tile(v_J, [1,self.caps1_num_caps, 1, 1, 1])
                     u_produce_v = tf.reduce_sum(u_hat_stopped * v_J_tiled, axis=3, keepdims=True)
