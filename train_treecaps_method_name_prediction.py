@@ -287,79 +287,79 @@ def main(opt):
                             }
                         )
                     
-                    print(scores)
-                    # print("Epoch:", epoch, "Step:", train_step, "Loss:", err)
+                    # print(scores)
+                    print("Epoch:", epoch, "Step:", train_step, "Loss:", err)
 
-                    # if opt.validating == 0:
-                    #     if train_step % opt.checkpoint_every == 0 and train_step > 0:
-                    #         saver.save(sess, checkfile)                  
-                    #         print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
+                    if opt.validating == 0:
+                        if train_step % opt.checkpoint_every == 0 and train_step > 0:
+                            saver.save(sess, checkfile)                  
+                            print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
                     
-                    # if opt.validating == 1:
-                    #     if train_step % opt.checkpoint_every == 0 and train_step > 0:
-                    #         print("Validating at epoch:", epoch)
-                    #         # predictions = []
-                    #         validation_batch_iterator = ThreadedIterator(
-                    #             validation_dataset.make_minibatch_iterator(), max_queue_size=5)
+                    if opt.validating == 1:
+                        if train_step % opt.checkpoint_every == 0 and train_step > 0:
+                            print("Validating at epoch:", epoch)
+                            # predictions = []
+                            validation_batch_iterator = ThreadedIterator(
+                                validation_dataset.make_minibatch_iterator(), max_queue_size=5)
                             
-                    #         # f1_scores_of_val_data = []
-                    #         all_predicted_labels = []
-                    #         all_ground_truth_labels = []
+                            # f1_scores_of_val_data = []
+                            all_predicted_labels = []
+                            all_ground_truth_labels = []
 
-                    #         for val_step, val_batch_data in enumerate(validation_batch_iterator):
+                            for val_step, val_batch_data in enumerate(validation_batch_iterator):
                                 
                                
-                    #             scores = sess.run(
-                    #                 [logits],
-                    #                 feed_dict={
-                    #                     treecaps.placeholders["node_types"]: val_batch_data["batch_node_types"],
-                    #                     treecaps.placeholders["node_tokens"]:  val_batch_data["batch_nodes_tokens"],
-                    #                     treecaps.placeholders["children_indices"]:  val_batch_data["batch_children_indices"],
-                    #                     treecaps.placeholders["children_node_types"]: val_batch_data["batch_children_node_types"],
-                    #                     treecaps.placeholders["children_node_tokens"]: val_batch_data["batch_children_node_tokens"],
-                    #                     treecaps.placeholders["labels"]: val_batch_data["batch_labels"],
-                    #                     treecaps.placeholders["is_training"]: False
-                    #                 }
-                    #             )
-                    #             print(scores[0])
+                                scores = sess.run(
+                                    [logits],
+                                    feed_dict={
+                                        treecaps.placeholders["node_types"]: val_batch_data["batch_node_types"],
+                                        treecaps.placeholders["node_tokens"]:  val_batch_data["batch_nodes_tokens"],
+                                        treecaps.placeholders["children_indices"]:  val_batch_data["batch_children_indices"],
+                                        treecaps.placeholders["children_node_types"]: val_batch_data["batch_children_node_types"],
+                                        treecaps.placeholders["children_node_tokens"]: val_batch_data["batch_children_node_tokens"],
+                                        treecaps.placeholders["labels"]: val_batch_data["batch_labels"],
+                                        treecaps.placeholders["is_training"]: False
+                                    }
+                                )
+                                print(scores[0])
                                 
-                    #             predictions = np.argmax(scores[0], axis=1)
+                                predictions = np.argmax(scores[0], axis=1)
                             
-                    #             ground_truths = np.argmax(val_batch_data['batch_labels'], axis=1)
+                                ground_truths = np.argmax(val_batch_data['batch_labels'], axis=1)
                             
-                    #             predicted_labels = []
-                    #             for prediction in predictions:
-                    #                 predicted_labels.append(train_label_lookup.inverse[prediction])
+                                predicted_labels = []
+                                for prediction in predictions:
+                                    predicted_labels.append(train_label_lookup.inverse[prediction])
 
-                    #             ground_truth_labels = []
-                    #             for ground_truth in ground_truths:
-                    #                 ground_truth_labels.append(
-                    #                     val_label_lookup.inverse[ground_truth])
+                                ground_truth_labels = []
+                                for ground_truth in ground_truths:
+                                    ground_truth_labels.append(
+                                        val_label_lookup.inverse[ground_truth])
                                 
-                    #             # print("Predicted : " + str(predicted_labels))
-                    #             # print("Ground truth : " + str(ground_truth_labels))
-                    #             f1_score = evaluation.calculate_f1_scores(predicted_labels, ground_truth_labels)
-                    #             print(ground_truth_labels)
-                    #             print(predicted_labels)
-                    #             print("F1:", f1_score, "Step:", val_step)
-                    #             all_predicted_labels.extend(predicted_labels)
-                    #             all_ground_truth_labels.extend(ground_truth_labels)
+                                # print("Predicted : " + str(predicted_labels))
+                                # print("Ground truth : " + str(ground_truth_labels))
+                                f1_score = evaluation.calculate_f1_scores(predicted_labels, ground_truth_labels)
+                                print(ground_truth_labels)
+                                print(predicted_labels)
+                                print("F1:", f1_score, "Step:", val_step)
+                                all_predicted_labels.extend(predicted_labels)
+                                all_ground_truth_labels.extend(ground_truth_labels)
 
-                    #         average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
-                    #         # print("F1 score : " + str(f1_score))
-                    #         print("Validation with F1 score ", average_f1)
-                    #         if average_f1 > best_f1_score:
-                    #             best_f1_score = average_f1
+                            average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
+                            # print("F1 score : " + str(f1_score))
+                            print("Validation with F1 score ", average_f1)
+                            if average_f1 > best_f1_score:
+                                best_f1_score = average_f1
 
-                    #             checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
-                    #             saver.save(sess, checkfile)
+                                checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
+                                saver.save(sess, checkfile)
 
-                    #             checkfile = os.path.join(opt.model_path + "_" + str(datetime.utcnow().timestamp()), 'cnn_tree.ckpt')
-                    #             saver.save(sess, checkfile)
+                                checkfile = os.path.join(opt.model_path + "_" + str(datetime.utcnow().timestamp()), 'cnn_tree.ckpt')
+                                saver.save(sess, checkfile)
 
-                    #             print('Checkpoint saved, epoch:' + str(epoch) + ', loss: ' + str(err) + '.')
-                    #             with open(opt.model_accuracy_path,"w") as f1:
-                    #                 f1.write(str(best_f1_score))
+                                print('Checkpoint saved, epoch:' + str(epoch) + ', loss: ' + str(err) + '.')
+                                with open(opt.model_accuracy_path,"w") as f1:
+                                    f1.write(str(best_f1_score))
 
 if __name__ == "__main__":
     main(opt)
