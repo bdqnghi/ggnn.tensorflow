@@ -93,9 +93,8 @@ parser.add_argument('--val_label_vocabulary_path', default="preprocessed_data/tr
                     help='name of dataset')
 parser.add_argument('--task', type=int, default=0,
                     choices=range(0, 2), help='0 for training, 1 for testing')
-
 parser.add_argument('--num_conv', type=int, default=1)
-parser.add_argument('--output_size', type=int, default=16)
+
 
 
 opt = parser.parse_args()
@@ -118,8 +117,7 @@ def form_model_path(opt):
     model_traits["distributed_function"] = str(opt.distributed_function)
     model_traits["node_type_dim"] = str(opt.node_type_dim)
     model_traits["node_token_dim"] = str(opt.node_token_dim)
-    model_traits["output_size"] = str(opt.output_size)
-   
+    model_traits["num_conv"] = str(opt.num_conv)
     
 
     model_path = []
