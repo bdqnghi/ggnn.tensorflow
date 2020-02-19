@@ -274,8 +274,8 @@ def main(opt):
                     # print(train_batch_data["batch_children_node_tokens"].shape)
                 
                     print(train_batch_data["batch_tree_size"])
-                    scores = sess.run(
-                            [primary_variable_caps],
+                    _, err = sess.run(
+                            [training_point, loss_node],
                             feed_dict={
                                 treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
                                 treecaps.placeholders["node_tokens"]:  train_batch_data["batch_nodes_tokens"],
