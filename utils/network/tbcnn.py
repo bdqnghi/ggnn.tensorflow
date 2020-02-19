@@ -351,21 +351,6 @@ class TBCNNModel():
             loss = tf.reduce_mean(cross_entropy, name='cross_entropy_mean')
             return loss
 
-    def loss_layer(self, logits_node):
-        """Create a loss layer for training."""
-
-        labels = self.placeholders["labels"]
-
-        with tf.name_scope('loss_layer'):
-            max_l = tf.square(tf.maximum(0., 0.9 - logits_node))
-            max_r = tf.square(tf.maximum(0., logits_node - 0.1))
-            T_c = labels
-            L_c = T_c * max_l + 0.5 * (1 - T_c) * max_r
-            
-            loss = tf.reduce_mean(tf.reduce_sum(L_c, axis=1))
-
-            return loss
-
     def softmax_layer(self, logits_node):
         """Apply softmax to the output layer."""
         with tf.name_scope('output'):
