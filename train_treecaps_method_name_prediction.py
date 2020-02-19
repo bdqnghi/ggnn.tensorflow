@@ -93,6 +93,7 @@ parser.add_argument('--val_label_vocabulary_path', default="preprocessed_data/tr
                     help='name of dataset')
 parser.add_argument('--task', type=int, default=0,
                     choices=range(0, 2), help='0 for training, 1 for testing')
+parser.add_argument('--num_files_threshold', type=int, default=20000)
 parser.add_argument('--top_a', type=int, default=10)
 parser.add_argument('--top_b', type=int, default=15)
 parser.add_argument('--num_conv', type=int, default=8)
