@@ -21,7 +21,7 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 from utils import evaluation
 from scipy.spatial import distance
 from datetime import datetime
-from keras_radam.training import RAdamOptimizer
+# from keras_radam.training import RAdamOptimizer
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--workers', type=int,
@@ -275,8 +275,8 @@ def main(opt):
                     # print(train_batch_data["batch_children_node_tokens"].shape)
                 
                     print(train_batch_data["batch_tree_size"])
-                    _, err = sess.run(
-                            [training_point, loss_node],
+                    _, err, scores = sess.run(
+                            [training_point, loss_node, logits],
                             feed_dict={
                                 treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
                                 treecaps.placeholders["node_tokens"]:  train_batch_data["batch_nodes_tokens"],
@@ -322,7 +322,7 @@ def main(opt):
                                         treecaps.placeholders["is_training"]: False
                                     }
                                 )
-                                print(scores[0])
+                                # print(scores[0])
                                 
                                 predictions = np.argmax(scores[0], axis=1)
                             
