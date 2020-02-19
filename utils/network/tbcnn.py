@@ -102,7 +102,7 @@ class TBCNNModel():
 
         # equal to logits
         self.logits = tf.matmul(self.code_representations, self.label_embeddings, transpose_b=True)
-        # self.softmax_values = self.softmax_layer(self.logits)
+        self.softmax_values = self.softmax_layer(self.logits)
         self.loss = self.loss_layer(self.logits)
 
     # def compute_children_node_types_tensor(self, parent_node_embeddings, children_indices, node_type_dim):
