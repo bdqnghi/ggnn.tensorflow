@@ -79,17 +79,20 @@ class MethodNamePredictionData():
                         # filename: "/e/java-small/training/project_2/DelaunayTriangulator_trim.java"
                         file_name = root.unit.filename.replace(".java","")
                         file_name_splits = file_name.split("/")
-                        method_name = file_name_splits[len(file_name_splits)-1].split("_")[1]
-                        if method_name in self.label_lookup:
-                            tree, size = self._traverse_tree(root)
+                        try:
+                            method_name = file_name_splits[len(file_name_splits)-1].split("_")[1]
+                            if method_name in self.label_lookup:
+                                tree, size = self._traverse_tree(root)
 
-                            # print("Size : " + str(size))
-                            tree_data = {
-                                "tree": tree,
-                                "method_name": method_name,
-                                "size": size
-                            }
-                            trees.append(tree_data)
+                                # print("Size : " + str(size))
+                                tree_data = {
+                                    "tree": tree,
+                                    "method_name": method_name,
+                                    "size": size
+                                }
+                                trees.append(tree_data)
+                        except Exception as e:
+                            print(e + " " + str(file_name))
                         # print(tree_data)
                         # if size < self.tree_size_threshold:
                         #     
