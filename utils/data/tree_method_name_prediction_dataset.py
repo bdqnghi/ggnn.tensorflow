@@ -328,9 +328,9 @@ class MethodNamePredictionData():
             for i, tree_data in enumerate(bucket_data):
             
                 _, method_name, size = tree_data["tree"], tree_data["method_name"], tree_data["size"]
-                # if size < self.tree_size_threshold:
-                elements.append(tree_data)
-                samples += 1
+                if size < self.tree_size_threshold:
+                    elements.append(tree_data)
+                    samples += 1
                     
                 if samples >= self.batch_size:
                 
