@@ -92,7 +92,7 @@ class MethodNamePredictionData():
                                 }
                                 trees.append(tree_data)
                         except Exception as e:
-                            print(e + " " + str(file_name))
+                            print(str(e) + " " + str(file_name))
                         # print(tree_data)
                         # if size < self.tree_size_threshold:
                         #     
