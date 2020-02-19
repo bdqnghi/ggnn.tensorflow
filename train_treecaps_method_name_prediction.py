@@ -234,6 +234,7 @@ def main(opt):
     code_caps = treecaps.code_caps
     loss_node = treecaps.loss
     softmax_values = treecaps.softmax_values
+    logits = treecaps.logits
     # optimizer = RAdamOptimizer(opt.lr)
     optimizer = tf.compat.v1.train.AdamOptimizer(opt.lr)
 
