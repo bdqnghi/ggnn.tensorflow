@@ -39,7 +39,8 @@ class TBCNNModel():
 
     
         self.num_conv = opt.num_conv
-       
+        self.output_size = self.node_dim
+     
      
         self.placeholders = {}
         self.weights = {}
