@@ -236,6 +236,7 @@ class TreeCapsModel():
         u_hat = tf.reshape(u_hat, shape=[-1, self.caps1_num_caps, num_outputs, num_dims, 1])
 
         # u_hat_stopped = tf.stop_gradient(u_hat, name='stop_gradient')
+        u_hat_stopped = u_hat
 
         for r_iter in range(self.iter_routing):
             with tf.variable_scope('iter_' + str(r_iter)):
