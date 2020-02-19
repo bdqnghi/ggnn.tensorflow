@@ -94,20 +94,17 @@ class TreeCapsModel():
         # children_vectors will have shape
         # (batch_size x max_tree_size x max_children x node_dim)
         # children_vectors = self.children_tensor(nodes, children, node_dim)
-        children_node_types_tensor = self.compute_children_node_types_tensor(self.placeholders["children_indices"])
-        # children_node_types_tensor = self.compute_children_node_types_tensor(parent_node_type_embeddings, self.placeholders["children_indices"], self.node_type_dim)
-        children_node_tokens_tensor = self.compute_children_node_tokens_tensor(self.placeholders["children_node_tokens"])
+        # children_node_types_tensor = self.compute_children_node_types_tensor(self.placeholders["children_indices"])
+        self.children_node_types_tensor = self.compute_children_node_types_tensor(self.parent_node_type_embeddings, self.placeholders["children_indices"], self.node_type_dim)
+        self.children_node_tokens_tensor = self.compute_children_node_tokens_tensor(self.placeholders["children_node_tokens"])
 
-        # self.parent_node_type_embeddings = tf.layers.batch_normalization(self.parent_node_type_embeddings, training=self.placeholders['is_training'])
-        # self.parent_node_token_embeddings = tf.layers.batch_normalization(self.parent_node_token_embeddings, training=self.placeholders['is_training'])
-        # children_node_types_tensor = tf.layers.batch_normalization(children_node_types_tensor, training=self.placeholders['is_training'])
-        # children_node_tokens_tensor = tf.layers.batch_normalization(children_node_tokens_tensor, training=self.placeholders['is_training'])
+        self.parent_node_type_embeddings = tf.layers.batch_normalization(self.parent_node_type_embeddings, training=self.placeholders['is_training'])
+        self.parent_node_token_embeddings = tf.layers.batch_normalization(self.parent_node_token_embeddings, training=self.placeholders['is_training'])
+        self.children_node_types_tensor = tf.layers.batch_normalization(self.children_node_types_tensor, training=self.placeholders['is_training'])
+        self.children_node_tokens_tensor = tf.layers.batch_normalization(self.children_node_tokens_tensor, training=self.placeholders['is_training'])
 
         self.parent_node_embeddings = tf.concat([self.parent_node_type_embeddings, self.parent_node_token_embeddings], -1)
-        self.children_embeddings = tf.concat([children_node_types_tensor, children_node_tokens_tensor], -1)
-
-        self.parent_node_embeddings = tf.layers.batch_normalization(self.parent_node_embeddings, training=self.placeholders['is_training'])
-        self.children_embeddings = tf.layers.batch_normalization(self.children_embeddings, training=self.placeholders['is_training'])
+        self.children_embeddings = tf.concat([self.children_node_types_tensor, self.children_node_tokens_tensor], -1)
 
         self.primary_variable_caps = self.primary_variable_capsule_layer(self.num_conv, self.output_size, self.parent_node_embeddings, self.children_embeddings, self.placeholders["children_indices"], self.node_dim, self.caps1_num_dims)
         
@@ -133,31 +130,31 @@ class TreeCapsModel():
         self.softmax_values = self.softmax_layer(self.logits)
         self.loss = self.loss_layer(self.logits)
 
-    # def compute_children_node_types_tensor(self, parent_node_embeddings, children_indices, node_type_dim):
-    #     """Build the children tensor from the input nodes and child lookup."""
+    def compute_children_node_types_tensor(self, parent_node_embeddings, children_indices, node_type_dim):
+        """Build the children tensor from the input nodes and child lookup."""
     
-    #     max_children = tf.shape(children_indices)[2]
-    #     batch_size = tf.shape(parent_node_embeddings)[0]
-    #     num_nodes = tf.shape(parent_node_embeddings)[1]
+        max_children = tf.shape(children_indices)[2]
+        batch_size = tf.shape(parent_node_embeddings)[0]
+        num_nodes = tf.shape(parent_node_embeddings)[1]
 
-    #     # replace the root node with the zero vector so lookups for the 0th
-    #     # vector return 0 instead of the root vector
-    #     # zero_vecs is (batch_size, num_nodes, 1)
-    #     zero_vecs = tf.zeros((batch_size, 1, node_type_dim))
-    #     # vector_lookup is (batch_size x num_nodes x node_dim)
-    #     vector_lookup = tf.concat([zero_vecs, parent_node_embeddings[:, 1:, :]], axis=1)
-    #     # children is (batch_size x num_nodes x num_children x 1)
-    #     children_indices = tf.expand_dims(children_indices, axis=3)
-    #     # prepend the batch indices to the 4th dimension of children
-    #     # batch_indices is (batch_size x 1 x 1 x 1)
-    #     batch_indices = tf.reshape(tf.range(0, batch_size), (batch_size, 1, 1, 1))
-    #     # batch_indices is (batch_size x num_nodes x num_children x 1)
-    #     batch_indices = tf.tile(batch_indices, [1, num_nodes, max_children, 1])
-    #     # children is (batch_size x num_nodes x num_children x 2)
-    #     children_indices = tf.concat([batch_indices, children_indices], axis=3)
-    #     # output will have shape (batch_size x num_nodes x num_children x node_type_dim)
-    #     # NOTE: tf < 1.1 contains a bug that makes backprop not work for this!
-    #     return tf.gather_nd(vector_lookup, children_indices)
+        # replace the root node with the zero vector so lookups for the 0th
+        # vector return 0 instead of the root vector
+        # zero_vecs is (batch_size, num_nodes, 1)
+        zero_vecs = tf.zeros((batch_size, 1, node_type_dim))
+        # vector_lookup is (batch_size x num_nodes x node_dim)
+        vector_lookup = tf.concat([zero_vecs, parent_node_embeddings[:, 1:, :]], axis=1)
+        # children is (batch_size x num_nodes x num_children x 1)
+        children_indices = tf.expand_dims(children_indices, axis=3)
+        # prepend the batch indices to the 4th dimension of children
+        # batch_indices is (batch_size x 1 x 1 x 1)
+        batch_indices = tf.reshape(tf.range(0, batch_size), (batch_size, 1, 1, 1))
+        # batch_indices is (batch_size x num_nodes x num_children x 1)
+        batch_indices = tf.tile(batch_indices, [1, num_nodes, max_children, 1])
+        # children is (batch_size x num_nodes x num_children x 2)
+        children_indices = tf.concat([batch_indices, children_indices], axis=3)
+        # output will have shape (batch_size x num_nodes x num_children x node_type_dim)
+        # NOTE: tf < 1.1 contains a bug that makes backprop not work for this!
+        return tf.gather_nd(vector_lookup, children_indices)
 
 
     def compute_parent_node_types_tensor(self, parent_node_types_indices):
@@ -169,9 +166,9 @@ class TreeCapsModel():
         parent_node_tokens_tensor = tf.reduce_mean(parent_node_tokens_tensor, axis=2)
         return parent_node_tokens_tensor
 
-    def compute_children_node_types_tensor(self, children_node_types_indices):
-        children_node_types_tensor =  tf.nn.embedding_lookup(self.node_type_embeddings, children_node_types_indices)
-        return children_node_types_tensor
+    # def compute_children_node_types_tensor(self, children_node_types_indices):
+    #     children_node_types_tensor =  tf.nn.embedding_lookup(self.node_type_embeddings, children_node_types_indices)
+    #     return children_node_types_tensor
     
     def compute_children_node_tokens_tensor(self, children_node_tokens_indices):
         children_node_tokens_tensor = tf.nn.embedding_lookup(self.node_token_embeddings, children_node_tokens_indices)
@@ -235,8 +232,7 @@ class TreeCapsModel():
         u_hat = tf.reduce_sum(w_dynamic_routing * primary_static_caps, axis=3, keep_dims=True)
         u_hat = tf.reshape(u_hat, shape=[-1, self.caps1_num_caps, num_outputs, num_dims, 1])
 
-        # u_hat_stopped = tf.stop_gradient(u_hat, name='stop_gradient')
-        u_hat_stopped = u_hat
+        u_hat_stopped = tf.stop_gradient(u_hat, name='stop_gradient')
 
         for r_iter in range(self.iter_routing):
             with tf.variable_scope('iter_' + str(r_iter)):
