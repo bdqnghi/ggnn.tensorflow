@@ -94,6 +94,7 @@ parser.add_argument('--val_label_vocabulary_path', default="preprocessed_data/tr
 parser.add_argument('--task', type=int, default=0,
                     choices=range(0, 2), help='0 for training, 1 for testing')
 parser.add_argument('--num_conv', type=int, default=1)
+parser.add_argument('--num_files_threshold', type=int, default=20000)
 
 
 
@@ -312,7 +313,7 @@ def main(opt):
                                         tbcnn.placeholders["is_training"]: False
                                     }
                                 )
-                                print(scores[0])
+                                # print(scores[0])
                                 
                                 predictions = np.argmax(scores[0], axis=1)
                             

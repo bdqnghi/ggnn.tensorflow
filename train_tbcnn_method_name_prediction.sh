@@ -17,8 +17,8 @@ VALIDATING=1
 NODE_TYPE_DIM=30
 NODE_TOKEN_DIM=50
 NUM_CONV=1
-
 TASK=1
+NUM_FILES_THRESHOLD=20000
 PYTHON=python3
 ${PYTHON} train_tbcnn_method_name_prediction.py \
 --dataset ${DATASET} \
@@ -31,4 +31,4 @@ ${CHECKPOINT_EVERY} --cuda ${CUDA} --validating ${VALIDATING} --tree_size_thresh
 --train_label_vocabulary_path ${TRAIN_LABEL_VOCABULARY_PATH} \
 --val_label_vocabulary_path ${VAL_LABEL_VOCABULARY_PATH} \
 --task ${TASK} \
---num_conv ${NUM_CONV}
+--num_conv ${NUM_CONV} --num_files_threshold ${NUM_FILES_THRESHOLD}

@@ -40,6 +40,7 @@ class MethodNamePredictionData():
         self.label_lookup = opt.label_lookup
         self.label_size = opt.label_size
         self.tree_size_threshold = opt.tree_size_threshold
+        self.num_files_threshold = opt.num_files_threshold
 
         base_name =os.path.basename(data_path)
         parent_base_name = os.path.basename(os.path.dirname(data_path))
@@ -64,35 +65,35 @@ class MethodNamePredictionData():
         count = 0
         for subdir , dirs, files in os.walk(directory): 
             for file in tqdm(files):
-         
-                if file.endswith(".pkl") and not file.endswith(".slice.pkl"):
-                    pkl_file_path = os.path.join(subdir,file)
-                    # print(pkl_file_path)
-                    pb_representation = self.load_tree_from_pickle_file(pkl_file_path)
-                    # print(pb_representation)
-                    root = pb_representation.element
+                if count < self.num_files_threshold:
+                    if file.endswith(".pkl") and not file.endswith(".slice.pkl"):
+                        pkl_file_path = os.path.join(subdir,file)
+                        # print(pkl_file_path)
+                        pb_representation = self.load_tree_from_pickle_file(pkl_file_path)
+                        # print(pb_representation)
+                        root = pb_representation.element
 
-                
-                    # print(pb_representation)
-                    # root = pb_representation.element
-                    # filename: "/e/java-small/training/project_2/DelaunayTriangulator_trim.java"
-                    file_name = root.unit.filename.replace(".java","")
-                    file_name_splits = file_name.split("/")
-                    method_name = file_name_splits[len(file_name_splits)-1].split("_")[1]
-                    if method_name in self.label_lookup:
-                        tree, size = self._traverse_tree(root)
+                    
+                        # print(pb_representation)
+                        # root = pb_representation.element
+                        # filename: "/e/java-small/training/project_2/DelaunayTriangulator_trim.java"
+                        file_name = root.unit.filename.replace(".java","")
+                        file_name_splits = file_name.split("/")
+                        method_name = file_name_splits[len(file_name_splits)-1].split("_")[1]
+                        if method_name in self.label_lookup:
+                            tree, size = self._traverse_tree(root)
 
-                        # print("Size : " + str(size))
-                        tree_data = {
-                            "tree": tree,
-                            "method_name": method_name,
-                            "size": size
-                        }
-                        trees.append(tree_data)
+                            # print("Size : " + str(size))
+                            tree_data = {
+                                "tree": tree,
+                                "method_name": method_name,
+                                "size": size
+                            }
+                            trees.append(tree_data)
                         # print(tree_data)
                         # if size < self.tree_size_threshold:
                         #     
-                # count = count + 1
+                count = count + 1
          
         return trees
 
@@ -148,6 +149,11 @@ class MethodNamePredictionData():
                 children_sub_token_ids = []
                 for sub_token in child_sub_tokens:
                     children_sub_token_ids.append(self.look_up_for_id_of_token(sub_token))
+
+                # To limit the number of sub tokens to 5 to reduce computation intensity
+                children_sub_token_ids = list(set(children_sub_token_ids))
+                if len(children_sub_token_ids) > 5:
+                    children_sub_token_ids = random.sample(children_sub_token_ids, 5)
 
                 child_json = {
                     "node_type": str(child.srcml_kind),
@@ -313,6 +319,7 @@ class MethodNamePredictionData():
         for bucket_idx, bucket_data in buckets.items():
         # for tree_data in self.trees:
             # print(file)
+            print("Shuffling data.....")
             random.shuffle(bucket_data)
             
             elements = []
