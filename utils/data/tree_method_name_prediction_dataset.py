@@ -15,11 +15,17 @@ from sklearn.preprocessing import OneHotEncoder
 import pickle
 from utils import identifier_splitting
 
+excluded_tokens = [",","{",";","}",")","(",'"',"'","`",""," ","[]","[","]","/",":","."," "]
 
 def _onehot(i, total):
     zeros = np.zeros(total)
     zeros[i] = 1.0
     return zeros
+
+def process_token(token):
+    for t in excluded_tokens:
+        token = token.replace(t, "")
+    return token
 
 class MethodNamePredictionData():
    
@@ -117,6 +123,11 @@ class MethodNamePredictionData():
             return tree
         return "error"
 
+    # def process_sub_token_list(self, tokens_list):
+    #     temp_tokens_list = []
+    #     if len(tokens_list) >= 2:
+    #         for token in tokens_list:
+
     def _traverse_tree(self, root):
         num_nodes = 1
 
@@ -151,6 +162,7 @@ class MethodNamePredictionData():
 
                 children_sub_token_ids = []
                 for sub_token in child_sub_tokens:
+                    sub_token = process_token(sub_token)
                     children_sub_token_ids.append(self.look_up_for_id_of_token(sub_token))
 
                 # To limit the number of sub tokens to 5 to reduce computation intensity
