@@ -373,7 +373,7 @@ class MethodNamePredictionData():
                     
             # print(node_id_edge_per_class)
             if len(node_id_edge_per_class) > 0:
-                node_id_data_list.append([node_id_edge_per_class, label_id])
+                node_id_data_list.append([node_id_edge_per_class, label_id, file_path])
                 node_type_data_list.append([node_type_edge_per_class, label_id])
                 node_token_data_list.append([node_token_edge_per_class, label_id])
                 
@@ -399,7 +399,7 @@ class MethodNamePredictionData():
             # print("--------------")
             graph = self.all_data_node_id[i][0]
             label = self.all_data_node_id[i][1]
-          
+            path = self.all_data_node_id[i][2]
             # label_one_hot = self.label_lookup_onehot[int(label)]
 
             graph_node_type = self.all_data_node_type[i][0]
@@ -462,7 +462,8 @@ class MethodNamePredictionData():
                 "graph": graph,
                 "node_type_indices": node_type_indices,
                 "node_token_indices": node_token_indices,
-                "labels": int(label)      
+                "labels": int(label),
+                "path": path   
             })
 
         print("Merging buckets.....")
@@ -540,7 +541,7 @@ class MethodNamePredictionData():
         return node_token_indices
 
     def make_batch(self, elements):
-        batch_data = {'adjacency_matrix': [], 'node_type_indices': [], "node_token_indices": [],  'labels': []}
+        batch_data = {'adjacency_matrix': [], 'node_type_indices': [], "node_token_indices": [],  'labels': [], 'paths':[]}
 
         # find graph which has the largest number of nodes in batch
 
@@ -562,6 +563,7 @@ class MethodNamePredictionData():
             batch_data['node_type_indices'].append(d['node_type_indices'])
             batch_data['node_token_indices'].append(d['node_token_indices'])
             batch_data['labels'].append(d['labels'])
+            batch_data['paths'].append(d['path'])
 
         # batch_data["init"] = self.pad_batch(batch_data['init'], max_node + 1)
         batch_data['node_type_indices'] = self.pad_node_types(batch_data['node_type_indices'], num_nodes_of_batch)
@@ -642,7 +644,8 @@ class MethodNamePredictionData():
                             "num_vertices": batch_max_node,
                             "adjacency_matrix": batch_data['adjacency_matrix'],
                             "labels": batch_labels_one_hot,
-                            "labels_index": batch_data['labels']
+                            "labels_index": batch_data['labels'],
+                            "paths": batch_data['paths']
                         }
 
                         yield batch
