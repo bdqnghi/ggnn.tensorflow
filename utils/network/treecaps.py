@@ -160,14 +160,17 @@ class TreeCapsModel():
         u_i = tf.reshape(u_i, (-1, num_dims))
         u_i = tf.stop_gradient(u_i)
         
+        # input = tf.reshape(input, shape=(self.batch_size, 128, 8, -1))
         # shape = (1, num_output, num_conv, top_a)
         # Example: (1, 128, 8, 10)
         input,_ = tf.nn.top_k(input,k=top_a)
-        return input
-        # input = tf.transpose(input,perm=[0,3,1,2])
+        # return input
+        # Example: (1, 10, 128, 8)
+        input = tf.transpose(input,perm=[0,3,1,2])
         # v_J = input
+        # (1280, 8)
         # v_J = tf.reshape(v_J, (-1, num_dims))
-            
+        return input 
         # for rout in range(1):
         #     u_produce_v = tf.matmul(u_i, v_J,transpose_b=True)
         #     alpha_IJ += u_produce_v
