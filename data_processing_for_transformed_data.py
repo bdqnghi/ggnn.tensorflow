@@ -1,6 +1,6 @@
 import os
-# from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import ThreadPoolExecutor as WorkerExecutor
+from concurrent.futures import ProcessPoolExecutor as WorkerExecutor
+# from concurrent.futures import ThreadPoolExecutor as WorkerExecutor
 import copy
 import sys
 import argparse
