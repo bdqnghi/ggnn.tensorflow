@@ -15,12 +15,13 @@ def clean_up(path):
         print(project_path)
         for root, dirs, files in os.walk(project_path):  
             for file in files: 
-                path_file = os.path.join(root,file)
-                print(path_file)
-                try:
-                    shutil.copy2(path_file,project_path) # change you destination dir
-                except Exception as e:
-                    print(e)
+                if file.endswith(".java"):
+                    path_file = os.path.join(root,file)
+                    print(path_file)
+                    try:
+                        shutil.copy2(path_file,project_path) # change you destination dir
+                    except Exception as e:
+                        print(e)
 
         if os.path.isdir(project_path):
             for content in os.listdir(project_path):
