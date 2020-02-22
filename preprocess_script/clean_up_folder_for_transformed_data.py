@@ -4,9 +4,9 @@ import shutil
 import argparse
 
 # N = 60  # the number of files in seach subfolder folder
-# parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser()
 parser.add_argument("--path", default="../transformed_data", type=str, help="Path")
-# args = parser.parse_args()
+args = parser.parse_args()
 
 
 def clean_up(path):
