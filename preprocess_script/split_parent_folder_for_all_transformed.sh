@@ -1,13 +1,14 @@
 DATA=transformed_data
 DATASET=java-med
-BOOLEAN_EXCHANGE_DIR=../${DATA}/BooleanExchange/${DATASET}/test
-LOOP_EXCHANGE_DIR=../${DATA}/LoopExchange/${DATASET}/test
-PERMUTE_STATEMENT_DIR=../${DATA}/PermuteStatement/${DATASET}/test
-RENAME_VARIABLE_DIR=../${DATA}/RenameVariable/${DATASET}/test
-SWITCH_CONDITIONAL_DIR=../${DATA}/SwitchConditional/${DATASET}/test
-TRY_CATCH_DIR=../${DATA}/TryCatch/${DATASET}/test
-UNREACHABLE_STATEMENT_DIR=../${DATA}/UnreachableStatement/${DATASET}/test
-UNUSED_STATEMENT_STATEMENT_DIR=../${DATA}/UnusedStatement/${DATASET}/test
+PART=test
+BOOLEAN_EXCHANGE_DIR=../${DATA}/BooleanExchange/${DATASET}/${PART}
+LOOP_EXCHANGE_DIR=../${DATA}/LoopExchange/${DATASET}/${PART}
+PERMUTE_STATEMENT_DIR=../${DATA}/PermuteStatement/${DATASET}/${PART}
+RENAME_VARIABLE_DIR=../${DATA}/RenameVariable/${DATASET}/${PART}
+SWITCH_CONDITIONAL_DIR=../${DATA}/SwitchConditional/${DATASET}/${PART}
+TRY_CATCH_DIR=../${DATA}/TryCatch/${DATASET}/${PART}
+UNREACHABLE_STATEMENT_DIR=../${DATA}/UnreachableStatement/${DATASET}/${PART}
+UNUSED_STATEMENT_STATEMENT_DIR=../${DATA}/UnusedStatement/${DATASET}/${PART}
 PYTHON=python3
 ${PYTHON} split_parent_folder.py --path ${BOOLEAN_EXCHANGE_DIR} 
 ${PYTHON} split_parent_folder.py --path ${LOOP_EXCHANGE_DIR} 
