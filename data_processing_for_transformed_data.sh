@@ -15,7 +15,6 @@ TXT=0
 PKL=0
 PB=0
 PYTHON=python3
-PYTHON=python3
 ${PYTHON} data_processing.py --path ${BOOLEAN_EXCHANGE_DIR} --worker ${NUM_WORKER} --fbs ${FBS} --txt ${TXT} --pkl ${PKL} --pb ${PB}
 ${PYTHON} data_processing.py --path ${LOOP_EXCHANGE_DIR} --worker ${NUM_WORKER} --fbs ${FBS} --txt ${TXT} --pkl ${PKL} --pb ${PB}
 ${PYTHON} data_processing.py --path ${PERMUTE_STATEMENT_DIR} --worker ${NUM_WORKER} --fbs ${FBS} --txt ${TXT} --pkl ${PKL} --pb ${PB}
