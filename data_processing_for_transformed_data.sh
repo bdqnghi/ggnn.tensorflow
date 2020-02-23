@@ -16,11 +16,11 @@ PKL=0
 PB=0
 PYTHON=python3
 PYTHON=python3
-${PYTHON} split_parent_folder.py --path ${BOOLEAN_EXCHANGE_DIR} 
-${PYTHON} split_parent_folder.py --path ${LOOP_EXCHANGE_DIR} 
-${PYTHON} split_parent_folder.py --path ${PERMUTE_STATEMENT_DIR}
-${PYTHON} split_parent_folder.py --path ${RENAME_VARIABLE_DIR}
-${PYTHON} split_parent_folder.py --path ${SWITCH_CONDITIONAL_DIR}
-${PYTHON} split_parent_folder.py --path ${TRY_CATCH_DIR}
-${PYTHON} split_parent_folder.py --path ${UNREACHABLE_STATEMENT_DIR}
-${PYTHON} split_parent_folder.py --path ${UNUSED_STATEMENT_STATEMENT_DIR}
+${PYTHON} data_processing.py --path ${BOOLEAN_EXCHANGE_DIR} --worker ${NUM_WORKER} --fbs ${FBS} --txt ${TXT} --pkl ${PKL} --pb ${PB}
+${PYTHON} data_processing.py --path ${LOOP_EXCHANGE_DIR} --worker ${NUM_WORKER} --fbs ${FBS} --txt ${TXT} --pkl ${PKL} --pb ${PB}
+${PYTHON} data_processing.py --path ${PERMUTE_STATEMENT_DIR} --worker ${NUM_WORKER} --fbs ${FBS} --txt ${TXT} --pkl ${PKL} --pb ${PB}
+${PYTHON} data_processing.py --path ${RENAME_VARIABLE_DIR} --worker ${NUM_WORKER} --fbs ${FBS} --txt ${TXT} --pkl ${PKL} --pb ${PB}
+${PYTHON} data_processing.py --path ${SWITCH_CONDITIONAL_DIR} --worker ${NUM_WORKER} --fbs ${FBS} --txt ${TXT} --pkl ${PKL} --pb ${PB}
+${PYTHON} data_processing.py --path ${TRY_CATCH_DIR} --worker ${NUM_WORKER} --fbs ${FBS} --txt ${TXT} --pkl ${PKL} --pb ${PB}
+${PYTHON} data_processing.py --path ${UNREACHABLE_STATEMENT_DIR} --worker ${NUM_WORKER} --fbs ${FBS} --txt ${TXT} --pkl ${PKL} --pb ${PB}
+${PYTHON} data_processing.py --path ${UNUSED_STATEMENT_STATEMENT_DIR} --worker ${NUM_WORKER} --fbs ${FBS} --txt ${TXT} --pkl ${PKL} --pb ${PB}
