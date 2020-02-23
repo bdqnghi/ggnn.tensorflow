@@ -12,7 +12,8 @@ PYTHON=python3
 ${PYTHON} split_parent_folder.py --path ${BOOLEAN_EXCHANGE_DIR} 
 ${PYTHON} split_parent_folder.py --path ${LOOP_EXCHANGE_DIR} 
 ${PYTHON} split_parent_folder.py --path ${PERMUTE_STATEMENT_DIR}
-${PYTHON} split_parent_folder.py --path ${PERMUTE_STATEMENT_DIR}
-${PYTHON} split_parent_folder.py --path ${PERMUTE_STATEMENT_DIR}
-${PYTHON} split_parent_folder.py --path ${PERMUTE_STATEMENT_DIR}
-${PYTHON} split_parent_folder.py --path ${PERMUTE_STATEMENT_DIR}
+${PYTHON} split_parent_folder.py --path ${RENAME_VARIABLE_DIR}
+${PYTHON} split_parent_folder.py --path ${SWITCH_CONDITIONAL_DIR}
+${PYTHON} split_parent_folder.py --path ${TRY_CATCH_DIR}
+${PYTHON} split_parent_folder.py --path ${UNREACHABLE_STATEMENT_DIR}
+${PYTHON} split_parent_folder.py --path ${UNUSED_STATEMENT_STATEMENT_DIR}
