@@ -121,65 +121,134 @@ class TreeCapsModel():
         # shape = (1, batch_size x max_tree_size, num_output, num_conv)
         # Example with batch size = 12: shape = (1, 576, 128, 8)
         # Example with batch size = 1: shape = (1, 48, 128, 8)
-        self.primary_variable_caps = self.primary_variable_capsule_layer(self.conv_output, self.num_conv, self.output_size)
+        self.primary_variable_caps = self.primary_variable_capsule_layer(self.conv_output)
         
         """The Primary Static Capsule Layer."""
         # shape = (1, num_output x top_a, num_conv, 1)
         # Example with batch size = 12 and top_a = 10: shape = (1, 1280, 8, 1)
         # Example with batch size = 12 and top_b = 1: shape = (1, 1280, 8, 1)
-        self.primary_static_caps = self.vts_routing(self.primary_variable_caps,self.top_a,self.top_b,self.caps1_num_caps,self.caps1_num_dims)        
-        # [2,1280,1,8,1].
-        # self.primary_static_caps = tf.reshape(self.primary_static_caps, shape=(self.batch_size, -1, 1, self.caps1_num_dims, 1))
+        self.primary_static_caps = self.vts_routing(self.primary_variable_caps,self.top_a,self.top_b,self.caps1_num_caps,self.caps1_num_dims, self.num_conv, self.output_size)     
+        # self.primary_variable_caps = tf.reshape(self.primary_variable_caps,shape=(1,-1, self.output_size, self.num_conv))
+        # self.primary_static_caps = self.vts_routing(self.primary_variable_caps,self.top_a,self.top_b,self.caps1_num_caps,self.caps1_num_dims)       
+        # batch size = 1: (12, 1280, 1, 8, 1)
+        self.primary_static_caps = tf.reshape(self.primary_static_caps, shape=(self.batch_size, -1, 1, self.caps1_num_dims, 1))
         
         """The Code Capsule Layer."""
         #Get the input shape to the dynamic routing algorithm
-    
-        # self.code_caps = self.dynamic_routing(self.dynamic_routing_shape, self.primary_static_caps, num_outputs=self.caps1_out_caps, num_dims=self.caps1_out_dims)
-        # self.code_caps = tf.squeeze(self.code_caps, axis=1)
+
+        # batch size = 1: (12, 1, 80, 8, 1)
+        self.code_caps = self.dynamic_routing(self.dynamic_routing_shape, self.primary_static_caps, num_outputs=self.caps1_out_caps, num_dims=self.caps1_out_dims)
+        # batch size = 1: (12, 80, 8, 1)
+        self.code_caps = tf.squeeze(self.code_caps, axis=1)
         
         """Obtaining the classification output."""
-        # self.code_caps = tf.sqrt(tf.reduce_sum(tf.square(self.code_caps),axis=2, keepdims=True) + 1e-9)
+        # batch size = 12: (12, 80, 1, 1)
+        self.code_caps = tf.sqrt(tf.reduce_sum(tf.square(self.code_caps),axis=2, keepdims=True) + 1e-9)
         
-        # self.code_caps = tf.reshape(self.code_caps,(-1, self.caps1_out_caps))
+        # batch size = 12: (12, 80)
+        self.code_caps = tf.reshape(self.code_caps,(-1, self.caps1_out_caps))
         
         # equal to logits
-        # self.logits = tf.matmul(self.code_caps, self.label_embeddings, transpose_b=True)
-        # self.softmax_values = self.softmax_layer(self.logits)
-        # self.loss = self.loss_layer(self.logits)
+        # (12 x 80) x (80 x 55) = (1 x 55)
+        self.logits = tf.matmul(self.code_caps, self.label_embeddings, transpose_b=True)
+        self.softmax_values = self.softmax_layer(self.logits)
+        self.loss = self.loss_layer(self.logits)
 
-    def vts_routing(self, input, top_a, top_b, num_outputs, num_dims):
+  
+        
+    def vts_routing(self, primary_variable_caps, top_a, top_b, num_outputs, num_dims, num_conv, output_size):
         """The proposed Variable-to-Static Routing Algorithm."""
-        # input is primary_static_capsule which has shape = (1, batch_size x max_tree_size, num_output, num_conv)
+        # top_a = 10
+        # top_b = 15
+        # num_outputs = 1280
+        # num_dims = 8
+        # num_conv = 8
+        # output_size = 128
+        # primary_variable_caps = (12, 48, 128, 8)
 
-        alpha_IJ = tf.zeros((int(num_outputs/top_a*top_b), num_outputs), dtype=tf.float32)
-        # shape = (1, num_output, num_conv, batch_size x max_tree_size)
-        # Example: (1, 128, 8, 576)
-        input = tf.transpose(input,perm=[0,2,3,1])
-        u_i,_ = tf.nn.top_k(input,k=top_b)
+        # (12, 1920, 1280)
+        alpha_IJ = tf.zeros((self.batch_size, int(num_outputs/top_a*top_b), num_outputs), dtype=tf.float32)
+        # (12, 128, 8, 48)
+        primary_variable_caps_1 = tf.transpose(primary_variable_caps,perm=[0,2,3,1])
+        # (12, 128, 8, 10)
+        primary_static_caps, _ = tf.nn.top_k(primary_variable_caps_1,k=top_a)
+        # (1, 120, 128, 8)
+        primary_static_caps = tf.reshape(primary_static_caps,shape=(1,-1, output_size, num_conv))
+        # (1, 8, 120, 128)
+        primary_static_caps = tf.transpose(primary_static_caps,perm=[0,3,1,2])
+        v_J = primary_static_caps
+        # (12, 1280, 8)
+        v_J = tf.reshape(v_J, (self.batch_size, -1, num_dims))
+
+        # input is primary_variable_capsule which has shape = (batch_size, max_tree_size, output_size, num_conv)
+        # reshape the primary_capsule_variable into shape = (1, batch_size x max_tree_size, output_size, num_conv)
+        # primary_variable_caps = tf.reshape(primary_variable_caps,shape=(1,-1, output_size, num_conv))
+        # (12, 128, 8, 48)
+        primary_variable_caps_2 = tf.transpose(primary_variable_caps,perm=[0,2,3,1])
+        # (12, 128, 8, 15)
+        u_i,_ = tf.nn.top_k(primary_variable_caps_2,k=top_b)
+        # (1, 180, 128, 8)
+        u_i = tf.reshape(u_i,shape=(1,-1, output_size, num_conv))
+        # (1, 8, 180, 128)
         u_i = tf.transpose(u_i,perm=[0,3,1,2])
-        u_i = tf.reshape(u_i, (-1, num_dims))
+        # (12, 1920, 8)
+        u_i = tf.reshape(u_i, (self.batch_size, -1, num_dims))
         u_i = tf.stop_gradient(u_i)
-        
-        # input = tf.reshape(input, shape=(self.batch_size, 128, 8, -1))
-        # shape = (1, num_output, num_conv, top_a)
-        # Example: (1, 128, 8, 10)
-        input,_ = tf.nn.top_k(input,k=top_a)
-        # return input
-        # Example: (1, 10, 128, 8)
-        input = tf.transpose(input,perm=[0,3,1,2])
-        # v_J = input
-        # (1280, 8)
-        # v_J = tf.reshape(v_J, (-1, num_dims))
-        return input 
-        # for rout in range(1):
-        #     u_produce_v = tf.matmul(u_i, v_J,transpose_b=True)
-        #     alpha_IJ += u_produce_v
-        #     beta_IJ = tf.nn.softmax(alpha_IJ,axis=-1)
-        #     v_J = tf.matmul(beta_IJ,u_i,transpose_a=True)
-        
-        # v_J = tf.reshape(v_J,(1, num_outputs, num_dims, 1))
-    # return self.squash(v_J)
 
+        
+        for rout in range(1):
+            # (12, 1920, 1280)
+            u_produce_v = tf.matmul(u_i, v_J,transpose_b=True)
+            # (12, 1920, 1280)
+            alpha_IJ += u_produce_v
+            # (12, 1920, 1280)
+            beta_IJ = tf.nn.softmax(alpha_IJ,axis=-1)
+            # (12, 1280, 8)
+            v_J = tf.matmul(beta_IJ,u_i,transpose_a=True)
+
+        # (12, 1, 1280, 8, 1)
+        v_J = tf.reshape(v_J,(self.batch_size, num_outputs, num_dims, 1))
+
+        # return primary_variable_caps_2
+        return self.squash(v_J)      
+    # return self.squash(v_J)
+        # def vts_routing(self, input, top_a, top_b, num_outputs, num_dims):
+    #     """The proposed Variable-to-Static Routing Algorithm."""
+    #     # input shape = (1, 576, 128, 8)
+    #     # (1920, 1280)
+    #     alpha_IJ = tf.zeros((int(num_outputs/top_a*top_b), num_outputs), dtype=tf.float32)
+    #     #(1, 128, 8, 576)
+    #     input = tf.transpose(input,perm=[0,2,3,1])
+    #     # (1, 128, 8, 15)
+    #     u_i,_ = tf.nn.top_k(input,k=top_b)
+    #     #(1, 15, 128, 8)
+    #     u_i = tf.transpose(u_i,perm=[0,3,1,2])
+    #     # (1920, 8)
+    #     u_i = tf.reshape(u_i, (-1, num_dims))
+    #     u_i = tf.stop_gradient(u_i)
+        
+    #     # (1, 128, 8, 10)
+    #     input,_ = tf.nn.top_k(input,k=top_a)
+    #     # (1, 10, 128, 8)
+    #     input = tf.transpose(input,perm=[0,3,1,2])
+    #     v_J = input
+    #     # (1280, 8)
+    #     v_J = tf.reshape(v_J, (-1, num_dims))
+            
+    #     for rout in range(1):
+    #         # (1920, 1280)
+    #         u_produce_v = tf.matmul(u_i, v_J,transpose_b=True)
+    #         # (1920, 1280)
+    #         alpha_IJ += u_produce_v
+    #         # (1920, 1280)
+    #         beta_IJ = tf.nn.softmax(alpha_IJ,axis=-1)
+    #         # (1280, 8)
+    #         v_J = tf.matmul(beta_IJ,u_i,transpose_a=True)
+        
+    #     # (1, 1280, 8, 1)
+    #     v_J = tf.reshape(v_J,(1, num_outputs, num_dims, 1))
+      
+    #     return self.squash(v_J)
     def compute_children_node_types_tensor(self, parent_node_embeddings, children_indices, node_type_dim):
         """Build the children tensor from the input nodes and child lookup."""
     
@@ -236,14 +305,8 @@ class TreeCapsModel():
     def dynamic_routing(self, dynamic_routing_shape, primary_static_caps, num_outputs=10, num_dims=16):
         """The Dynamic Routing Algorithm proposed by Sabour et al."""
         
-        # [1, (8*128/8)*20, 8*10] + [8,1] = 
-        # [1, 2560, 80, 8, 1]
-        # [2, 1280, 80, 8, 1]
-
-        # [1,2560,8,1]
-        # [2,1280,1,8,1]
-        # [2,1280,80,8,1]
-        
+       
+ 
         w_dynamic_routing = self.placeholders["w_dynamic_routing"]
         b_dynamic_routing = self.placeholders["b_dynamic_routing"]
         
@@ -275,33 +338,23 @@ class TreeCapsModel():
 
         return(v_J)
 
-
-    # def primary_variable_capsule_layer(self, num_conv, output_size, parent_node_embeddings, children_embeddings, children_indices, node_dim, num_dims):
-    #     """The proposed Primary Variable Capsule Layer."""
-    
-    #     with tf.name_scope('primary_variable_capsule_layer'):
-    #         nodes = [
-    #             tf.expand_dims(self.conv_node(parent_node_embeddings, children_embeddings, children_indices, node_dim, output_size),axis=-1)
-    #             for _ in range(num_conv)
-    #         ]    
-    #         conv_output = tf.concat(nodes, axis=-1)
-    #         primary_variable_capsules = tf.reshape(conv_output,shape=(1,-1,output_size,num_conv))
-    #         return primary_variable_capsules
-
     def conv_layer(self, parent_node_embeddings, children_embeddings, children_indices, num_conv, output_size, node_dim):
         with tf.name_scope('conv_layer'):
             nodes = [
                 tf.expand_dims(self.conv_node(parent_node_embeddings, children_embeddings, children_indices, node_dim, output_size),axis=-1)
                 for _ in range(num_conv)
             ] 
-            conv_output = tf.concat(nodes, axis=-1)
-            return conv_output 
+            return nodes 
     
-    def primary_variable_capsule_layer(self, conv_output, num_conv, output_size):
-        """The proposed Primary Variable Capsule Layer."""
-        with tf.name_scope('primary_variable_capsule_layer'):
-            primary_variable_capsules = tf.reshape(conv_output,shape=(1,-1,output_size,num_conv))
-            return primary_variable_capsules
+    def primary_variable_capsule_layer(self, conv_output):
+        primary_variable_caps= tf.concat(conv_output, axis=-1)
+        return primary_variable_caps
+
+    # def primary_variable_capsule_layer(self, conv_output, num_conv, output_size):
+    #     """The proposed Primary Variable Capsule Layer."""
+    #     with tf.name_scope('primary_variable_capsule_layer'):
+    #         primary_variable_capsules = tf.reshape(conv_output,shape=(1,-1,output_size,num_conv))
+    #         return primary_variable_capsules
 
 
     def conv_step(self, parent_node_embeddings, children_embeddings, children_indices, node_dim, w_t, w_r, w_l, b_conv):
@@ -500,4 +553,3 @@ class TreeCapsModel():
         vec_squashed = scalar_factor * vector  # element-wise
         return(vec_squashed)
 
-   

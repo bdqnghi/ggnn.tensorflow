@@ -129,7 +129,7 @@ class MethodNamePredictionData():
     #         for token in tokens_list:
 
     def _traverse_tree(self, root):
-        num_nodes = 1
+        num_nodes = 0
 
         queue = [root]
 
@@ -334,8 +334,8 @@ class MethodNamePredictionData():
         for bucket_idx, bucket_data in buckets.items():
         # for tree_data in self.trees:
             # print(file)
-            print("Shuffling data.....")
-            random.shuffle(bucket_data)
+            # print("Shuffling data.....")
+            # random.shuffle(bucket_data)
             
             elements = []
             samples = 0

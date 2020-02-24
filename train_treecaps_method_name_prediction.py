@@ -21,7 +21,7 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 from utils import evaluation
 from scipy.spatial import distance
 from datetime import datetime
-# from keras_radam.training import RAdamOptimizer
+from keras_radam.training import RAdamOptimizer
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--workers', type=int,
@@ -235,22 +235,31 @@ def main(opt):
     loss_node = treecaps.loss
     softmax_values = treecaps.softmax_values
     logits = treecaps.logits
-    # optimizer = RAdamOptimizer(opt.lr)
-    optimizer = tf.compat.v1.train.AdamOptimizer(opt.lr)
+    optimizer = RAdamOptimizer(opt.lr)
+    # optimizer = tf.compat.v1.train.AdamOptimizer(opt.lr)
 
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
         training_point = optimizer.minimize(loss_node)
     saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
   
-
-
     init = tf.global_variables_initializer()
 
     best_f1_score = get_best_f1_score(opt)
     print("Best f1 score : " + str(best_f1_score))
 
-    primary_variable_caps = treecaps.code_caps_1
+    parent_node_type_embeddings = treecaps.parent_node_type_embeddings
+    parent_node_token_embeddings = treecaps.parent_node_token_embeddings
+    children_node_types_tensor = treecaps.children_node_types_tensor
+    children_node_tokens_tensor = treecaps.children_node_tokens_tensor
+    parent_node_embeddings = treecaps.parent_node_embeddings
+    children_embeddings = treecaps.children_embeddings
+
+    conv_output = treecaps.conv_output
+    primary_variable_caps = treecaps.primary_variable_caps
+    primary_static_caps = treecaps.primary_static_caps
+    code_caps = treecaps.code_caps
+
     with tf.Session() as sess:
         sess.run(init)
         if ckpt and ckpt.model_checkpoint_path:
@@ -275,8 +284,9 @@ def main(opt):
                     # print(train_batch_data["batch_children_node_tokens"].shape)
                 
                     print(train_batch_data["batch_tree_size"])
-                    _, err, scores = sess.run(
-                            [training_point, loss_node, logits],
+                    
+                    _, err, logits_scores, code_caps_scores = sess.run(
+                            [training_point, loss_node, logits, code_caps],
                             feed_dict={
                                 treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
                                 treecaps.placeholders["node_tokens"]:  train_batch_data["batch_nodes_tokens"],
@@ -288,7 +298,30 @@ def main(opt):
                             }
                         )
                     
-                    # print(scores)
+                    # parent_node_type_embeddings_scores, parent_node_token_embeddings_scores, children_node_types_tensor_scores, children_node_tokens_tensor_scores, parent_node_embeddings_scores, children_embeddings_scores, conv_output_scores, primary_variable_caps_scores, primary_static_caps_scores, code_caps_scores = sess.run(
+                    #         [parent_node_type_embeddings, parent_node_token_embeddings, children_node_types_tensor, children_node_tokens_tensor, parent_node_embeddings, children_embeddings, conv_output, primary_variable_caps, primary_static_caps, code_caps],
+                    #         feed_dict={
+                    #             treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
+                    #             treecaps.placeholders["node_tokens"]:  train_batch_data["batch_nodes_tokens"],
+                    #             treecaps.placeholders["children_indices"]:  train_batch_data["batch_children_indices"],
+                    #             treecaps.placeholders["children_node_types"]: train_batch_data["batch_children_node_types"],
+                    #             treecaps.placeholders["children_node_tokens"]: train_batch_data["batch_children_node_tokens"],
+                    #             treecaps.placeholders["labels"]: train_batch_data["batch_labels"],
+                    #             treecaps.placeholders["is_training"]: True
+                    #         }
+                    #     )
+
+                    # print(parent_node_type_embeddings_scores.shape)   
+                    # print(parent_node_token_embeddings_scores.shape)
+                    # print(children_node_types_tensor_scores.shape)    
+                    # print(children_node_tokens_tensor_scores.shape)
+                    # print(parent_node_embeddings_scores.shape)
+                    # print(children_embeddings_scores.shape)
+                    # print(len(conv_output_scores))
+                    # print(conv_output_scores[0].shape)
+                    # print(primary_variable_caps_scores.shape)
+                    # print(primary_static_caps_scores.shape)
+                    print(logits_scores)
                     print("Epoch:", epoch, "Step:", train_step, "Loss:", err)
 
                     if opt.validating == 0:
