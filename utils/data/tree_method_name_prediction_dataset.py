@@ -334,8 +334,8 @@ class MethodNamePredictionData():
         for bucket_idx, bucket_data in buckets.items():
         # for tree_data in self.trees:
             # print(file)
-            # print("Shuffling data.....")
-            # random.shuffle(bucket_data)
+            print("Shuffling data.....")
+            random.shuffle(bucket_data)
             
             elements = []
             samples = 0
