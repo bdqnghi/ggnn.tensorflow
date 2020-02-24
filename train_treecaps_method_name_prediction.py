@@ -126,6 +126,7 @@ def form_model_path(opt):
     model_traits["top_b"] = str(opt.top_b)
     model_traits["caps1_num_dims"] = str(opt.caps1_num_dims)
     model_traits["caps1_out_dims"] = str(opt.caps1_out_dims)
+    model_traits["num_conv"] = str(opt.num_conv)
     
 
     model_path = []
