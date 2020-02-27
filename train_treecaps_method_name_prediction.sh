@@ -11,14 +11,15 @@ BATCH_SIZE=12
 VAL_BATCH_SIZE=32
 SAMPLING_SIZE=1
 CHECKPOINT_EVERY=10
-TREE_SIZE_THRESHOLD=1500
+TREE_SIZE_THRESHOLD_UPPER=1500
+TREE_SIZE_THRESHOLD_LOWER=1500
 CUDA=0
 VALIDATING=1
 NODE_TYPE_DIM=30
 NODE_TOKEN_DIM=50
 TOP_A=10
 TOP_B=15
-NUM_CONV=7
+NUM_CONV=8
 OUTPUT_SIZE=128
 CAPS1_NUM_DIMS=8
 CAPS1_OUT_DIMS=8
@@ -29,7 +30,9 @@ ${PYTHON} train_treecaps_method_name_prediction.py \
 --dataset ${DATASET} \
 --train_path ${TRAIN_PATH} --val_path ${VAL_PATH} --batch_size ${BATCH_SIZE} \
 --val_batch_size ${VAL_BATCH_SIZE} --sampling_size ${SAMPLING_SIZE} --checkpoint_every \
-${CHECKPOINT_EVERY} --cuda ${CUDA} --validating ${VALIDATING} --tree_size_threshold ${TREE_SIZE_THRESHOLD} \
+${CHECKPOINT_EVERY} --cuda ${CUDA} --validating ${VALIDATING} \
+--tree_size_threshold_upper ${TREE_SIZE_THRESHOLD_UPPER} \
+--tree_size_threshold_lower ${TREE_SIZE_THRESHOLD_LOWER} \
 --node_type_dim ${NODE_TYPE_DIM} --node_token_dim ${NODE_TOKEN_DIM} \
 --node_type_vocabulary_path ${NODE_TYPE_VOCABULARY_PATH} \
 --token_vocabulary_path ${TOKEN_VOCABULARY_PATH} \
