@@ -45,7 +45,8 @@ class MethodNamePredictionData():
         self.node_token_lookup = opt.node_token_lookup
         self.label_lookup = opt.label_lookup
         self.label_size = opt.label_size
-        self.tree_size_threshold = opt.tree_size_threshold
+        self.tree_size_threshold_upper = opt.tree_size_threshold_upper
+        self.tree_size_threshold_lower = opt.tree_size_threshold_lower
         self.num_files_threshold = opt.num_files_threshold
 
         base_name =os.path.basename(data_path)
@@ -343,7 +344,7 @@ class MethodNamePredictionData():
             for i, tree_data in enumerate(bucket_data):
             
                 _, method_name, size = tree_data["tree"], tree_data["method_name"], tree_data["size"]
-                if size < self.tree_size_threshold:
+                if size > tree_size_threshold_lower and size < self.tree_size_threshold_upper:
                     elements.append(tree_data)
                     samples += 1
                     
