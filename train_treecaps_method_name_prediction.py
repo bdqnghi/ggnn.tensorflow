@@ -445,18 +445,6 @@ def main(opt):
             average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
             # print("F1 score : " + str(f1_score))
             print("Validation with F1 score ", average_f1)
-            if average_f1 > best_f1_score:
-                best_f1_score = average_f1
-
-                checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
-                saver.save(sess, checkfile)
-
-                checkfile = os.path.join(opt.model_path + "_" + str(datetime.utcnow().timestamp()), 'cnn_tree.ckpt')
-                saver.save(sess, checkfile)
-
-                print('Checkpoint saved...')
-                with open(opt.model_accuracy_path,"w") as f1:
-                    f1.write(str(best_f1_score))
 
 
 if __name__ == "__main__":
