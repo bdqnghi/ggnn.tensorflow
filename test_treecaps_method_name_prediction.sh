@@ -1,28 +1,27 @@
-DATA=sample_data
+DATA=code2vec_data
 DATASET=java-small
 DATASET_TRANSFORMED=${DATASET}-pkl
 TRAIN_PATH=${DATA}/${DATASET_TRANSFORMED}/training
-VAL_PATH=${DATA}/${DATASET_TRANSFORMED}/test
+VAL_PATH=${DATA}/${DATASET_TRANSFORMED}/training
 NODE_TYPE_VOCABULARY_PATH=preprocessed_data/node_type_vocab.txt
 TOKEN_VOCABULARY_PATH=preprocessed_data/treecaps/${DATASET}/token_vocab.txt
 TRAIN_LABEL_VOCABULARY_PATH=preprocessed_data/treecaps/${DATASET}/train_label_vocab.txt
-VAL_LABEL_VOCABULARY_PATH=preprocessed_data/treecaps/${DATASET}/val_label_vocab.txt
-BATCH_SIZE=1
+VAL_LABEL_VOCABULARY_PATH=preprocessed_data/treecaps/${DATASET}/train_label_vocab.txt
+BATCH_SIZE=12
 VAL_BATCH_SIZE=32
 SAMPLING_SIZE=1
 CHECKPOINT_EVERY=10
 TREE_SIZE_THRESHOLD_UPPER=1500
-TREE_SIZE_THRESHOLD_LOWER=20
+TREE_SIZE_THRESHOLD_LOWER=10
 CUDA=0
 VALIDATING=1
 NODE_TYPE_DIM=30
 NODE_TOKEN_DIM=50
-TOP_A=15
-TOP_B=20
+TOP_A=10
 NUM_CONV=8
-OUTPUT_SIZE=128
-CAPS1_NUM_DIMS=8
-CAPS1_OUT_DIMS=8
+OUTPUT_SIZE=64
+NUM_CHANNEL=8
+NUM_CHANNEL_DYNAMIC_ROUTING=8
 NUM_FILES_THRESHOLD=20000
 TASK=0
 PYTHON=python3
@@ -39,5 +38,5 @@ ${CHECKPOINT_EVERY} --cuda ${CUDA} --validating ${VALIDATING} \
 --train_label_vocabulary_path ${TRAIN_LABEL_VOCABULARY_PATH} \
 --val_label_vocabulary_path ${VAL_LABEL_VOCABULARY_PATH} \
 --task ${TASK} \
---top_a ${TOP_A} --top_b ${TOP_B} --num_conv ${NUM_CONV} --output_size ${OUTPUT_SIZE} \
---caps1_num_dims ${CAPS1_NUM_DIMS} --caps1_out_dims ${CAPS1_OUT_DIMS} --num_files_threshold ${NUM_FILES_THRESHOLD}
+--top_a ${TOP_A} --num_conv ${NUM_CONV} --output_size ${OUTPUT_SIZE} \
+--num_channel ${NUM_CHANNEL} --num_channel_dynamic_routing ${NUM_CHANNEL_DYNAMIC_ROUTING} --num_files_threshold ${NUM_FILES_THRESHOLD}
