@@ -40,7 +40,9 @@ class TreeCapsModel():
         self.top_a = opt.top_a
      
         self.num_conv = opt.num_conv
-        self.output_size = opt.output_size
+        # self.output_size = opt.output_size
+        # Use output_size = node_dim for convolutional
+        self.output_size = self.node_dim
         self.num_channel = opt.num_channel
         # Num set of capsules 
         self.num_caps_top_a = int(self.num_conv*self.output_size/self.num_channel)*self.top_a
@@ -61,9 +63,9 @@ class TreeCapsModel():
         self.placeholders["labels"] = tf.placeholder(tf.float32, (None, self.label_size,))
         self.placeholders["alpha_IJ"] = tf.placeholder(tf.float32, shape=(None, None), name='alpha_IJ')
 
-        self.placeholders["w_t"] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_t')
-        self.placeholders["w_l"] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_l')
-        self.placeholders["w_r"] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_r')
+        self.placeholders["w_t"] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.node_dim]), name='w_t')
+        self.placeholders["w_l"] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.node_dim]), name='w_l')
+        self.placeholders["w_r"] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.node_dim]), name='w_r')
         self.placeholders['is_training'] = tf.placeholder(tf.bool, name="is_training")
 
         self.dynamic_routing_shape = [self.batch_size, self.num_caps_top_a, 1, self.num_channel,1]
@@ -74,7 +76,7 @@ class TreeCapsModel():
         self.placeholders["w_dynamic_routing"] = tf.Variable(tf.contrib.layers.xavier_initializer()(shape_of_weight_dynamic_routing), name='w_dynamic_routing')
         self.placeholders["b_dynamic_routing"] = tf.Variable(tf.zeros(shape_of_bias_dynamic_routing), name='b_dynamic_routing')
     
-        self.placeholders["b_conv"] = tf.Variable(tf.zeros([self.output_size,]),name='b_conv')
+        self.placeholders["b_conv"] = tf.Variable(tf.zeros([self.node_dim,]),name='b_conv')
 
         self.label_embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([len(self.label_lookup.keys()), self.num_output_dynamic_routing]), name='label_embeddings')
         self.node_type_embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([len(self.node_type_lookup.keys()), self.node_type_dim]), name='node_type_embeddings')
@@ -320,7 +322,7 @@ class TreeCapsModel():
         children_node_tokens_tensor = tf.reduce_mean(children_node_tokens_tensor, axis=3)
         return children_node_tokens_tensor
 
-    def conv_node(self, parent_node_embeddings, children_embeddings, children_indices, node_dim, output_size):
+    def conv_node(self, parent_node_embeddings, children_embeddings, children_indices, node_dim):
         """Perform convolutions over every batch sample."""
         with tf.name_scope('conv_node'):
             w_t, w_l, w_r = self.placeholders["w_t"], self.placeholders["w_l"], self.placeholders["w_r"]
@@ -366,10 +368,16 @@ class TreeCapsModel():
 
     def conv_layer(self, parent_node_embeddings, children_embeddings, children_indices, num_conv, output_size, node_dim):
         with tf.name_scope('conv_layer'):
-            nodes = [
-                tf.expand_dims(self.conv_node(parent_node_embeddings, children_embeddings, children_indices, node_dim, output_size),axis=-1)
-                for _ in range(num_conv)
-            ] 
+            # nodes = [
+            #     tf.expand_dims(self.conv_node(parent_node_embeddings, children_embeddings, children_indices, node_dim, output_size),axis=-1)
+            #     for _ in range(num_conv)
+            # ]
+            nodes = []
+            for i in range(num_conv):
+                parent_node_embeddings = self.conv_node(parent_node_embeddings, children_embeddings, children_indices, node_dim)
+                # The function compute_children_node_types_tensor is for node type, but can also be use for node
+                children_embeddings = self.compute_children_node_types_tensor(parent_node_embeddings, children_indices, node_dim)
+                nodes.append(tf.expand_dims(parent_node_embeddings, axis=-1))
             return nodes 
     
     def primary_variable_capsule_layer(self, conv_output):

@@ -259,7 +259,7 @@ def main(opt):
     primary_static_caps = treecaps.primary_static_caps
     code_caps = treecaps.code_caps
 
-    num_caps_top_a = int(opt.num_conv*opt.output_size/opt.num_channel)*opt.top_a
+    num_caps_top_a = int(opt.num_conv*(opt.node_type_dim + opt.node_token_dim)/opt.num_channel)*opt.top_a
     with tf.Session() as sess:
         sess.run(init)
         if ckpt and ckpt.model_checkpoint_path:
@@ -408,8 +408,9 @@ def main(opt):
             all_ground_truth_labels = []
 
             for val_step, val_batch_data in enumerate(validation_batch_iterator):
-                
-                
+                alpha_IJ_shape = (int(num_caps_top_a/opt.top_a*val_batch_data["batch_node_types"].shape[1]), num_caps_top_a)
+                alpha_IJ = np.zeros(alpha_IJ_shape)
+                            
                 scores = sess.run(
                     [logits],
                     feed_dict={
@@ -419,11 +420,14 @@ def main(opt):
                         treecaps.placeholders["children_node_types"]: val_batch_data["batch_children_node_types"],
                         treecaps.placeholders["children_node_tokens"]: val_batch_data["batch_children_node_tokens"],
                         treecaps.placeholders["labels"]: val_batch_data["batch_labels"],
+                        treecaps.placeholders["alpha_IJ"]: alpha_IJ,
                         treecaps.placeholders["is_training"]: False
                     }
                 )
                 # print(scores[0])
                 
+                print(scores[0].shape)
+                print(val_batch_data['batch_labels'].shape)
                 predictions = np.argmax(scores[0], axis=1)
             
                 ground_truths = np.argmax(val_batch_data['batch_labels'], axis=1)
