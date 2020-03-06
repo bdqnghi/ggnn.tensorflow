@@ -97,11 +97,10 @@ parser.add_argument('--task', type=int, default=0,
                     choices=range(0, 2), help='0 for training, 1 for testing')
 parser.add_argument('--num_files_threshold', type=int, default=20000)
 parser.add_argument('--top_a', type=int, default=10)
-parser.add_argument('--top_b', type=int, default=15)
 parser.add_argument('--num_conv', type=int, default=8)
 parser.add_argument('--output_size', type=int, default=16)
-parser.add_argument('--caps1_num_dims', type=int, default=8)
-parser.add_argument('--caps1_out_dims', type=int, default=8)
+parser.add_argument('--num_channel', type=int, default=8)
+parser.add_argument('--num_channel_dynamic_routing', type=int, default=8)
 
 opt = parser.parse_args()
 
@@ -119,15 +118,12 @@ os.environ['CUDA_VISIBLE_DEVICES'] = opt.cuda
 def form_model_path(opt):
     model_traits = {}
     model_traits["dataset"] = str(opt.dataset)
-    model_traits["aggregation"] = str(opt.aggregation)
-    model_traits["distributed_function"] = str(opt.distributed_function)
     model_traits["node_type_dim"] = str(opt.node_type_dim)
     model_traits["node_token_dim"] = str(opt.node_token_dim)
     model_traits["output_size"] = str(opt.output_size)
     model_traits["top_a"] = str(opt.top_a)
-    model_traits["top_b"] = str(opt.top_b)
-    model_traits["caps1_num_dims"] = str(opt.caps1_num_dims)
-    model_traits["caps1_out_dims"] = str(opt.caps1_out_dims)
+    model_traits["num_channel"] = str(opt.num_channel)
+    model_traits["num_channel_dynamic_routing"] = str(opt.num_channel_dynamic_routing)
     model_traits["num_conv"] = str(opt.num_conv)
     
 
@@ -263,6 +259,7 @@ def main(opt):
     primary_static_caps = treecaps.primary_static_caps
     code_caps = treecaps.code_caps
 
+    num_caps_top_a = int(opt.num_conv*opt.output_size/opt.num_channel)*opt.top_a
     with tf.Session() as sess:
         sess.run(init)
         if ckpt and ckpt.model_checkpoint_path:
@@ -285,9 +282,12 @@ def main(opt):
                     # print(train_batch_data["batch_children_indices"].shape)
                     # print(train_batch_data["batch_children_node_types"].shape)
                     # print(train_batch_data["batch_children_node_tokens"].shape)
-                
+                    
                     print(train_batch_data["batch_tree_size"])
                     
+                    alpha_IJ_shape = (int(num_caps_top_a/opt.top_a*train_batch_data["batch_node_types"].shape[1]), num_caps_top_a)
+                    alpha_IJ = np.zeros(alpha_IJ_shape)
+
                     _, err, logits_scores, code_caps_scores = sess.run(
                             [training_point, loss_node, logits, code_caps],
                             feed_dict={
@@ -297,6 +297,7 @@ def main(opt):
                                 treecaps.placeholders["children_node_types"]: train_batch_data["batch_children_node_types"],
                                 treecaps.placeholders["children_node_tokens"]: train_batch_data["batch_children_node_tokens"],
                                 treecaps.placeholders["labels"]: train_batch_data["batch_labels"],
+                                treecaps.placeholders["alpha_IJ"]: alpha_IJ,
                                 treecaps.placeholders["is_training"]: True
                             }
                         )
@@ -324,7 +325,7 @@ def main(opt):
                     # print(conv_output_scores[0].shape)
                     # print(primary_variable_caps_scores.shape)
                     # print(primary_static_caps_scores.shape)
-                    print(logits_scores)
+                    # print(logits_scores)
                     print("Epoch:", epoch, "Step:", train_step, "Loss:", err)
 
                     if opt.validating == 0:
@@ -345,7 +346,9 @@ def main(opt):
 
                             for val_step, val_batch_data in enumerate(validation_batch_iterator):
                                 
-                               
+                                alpha_IJ_shape = (int(num_caps_top_a/opt.top_a*val_batch_data["batch_node_types"].shape[1]), num_caps_top_a)
+                                alpha_IJ = np.zeros(alpha_IJ_shape)
+                                
                                 scores = sess.run(
                                     [logits],
                                     feed_dict={
@@ -355,6 +358,7 @@ def main(opt):
                                         treecaps.placeholders["children_node_types"]: val_batch_data["batch_children_node_types"],
                                         treecaps.placeholders["children_node_tokens"]: val_batch_data["batch_children_node_tokens"],
                                         treecaps.placeholders["labels"]: val_batch_data["batch_labels"],
+                                        treecaps.placeholders["alpha_IJ"]: alpha_IJ,
                                         treecaps.placeholders["is_training"]: False
                                     }
                                 )

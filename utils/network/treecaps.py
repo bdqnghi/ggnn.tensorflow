@@ -21,10 +21,10 @@ class TreeCapsModel():
         # self.top_b = 15
         # self.num_conv = 8
         # self.output_size = 16
-        # self.caps1_num_dims = 8
-        # self.caps1_num_caps = int(self.num_conv*self.output_size/self.caps1_num_dims)*self.top_a
-        # self.caps1_out_caps = opt.label_size
-        # self.caps1_out_dims = 8
+        # self.num_channel = 8
+        # self.num_caps_top_a = int(self.num_conv*self.output_size/self.num_channel)*self.top_a
+        # self.num_output_dynamic_routing = opt.label_size
+        # self.num_channel_dynamic_routing = 8
         
         self.node_token_dim = opt.node_token_dim
         self.node_type_dim = opt.node_type_dim
@@ -38,15 +38,15 @@ class TreeCapsModel():
         self.label_lookup = opt.label_lookup
 
         self.top_a = opt.top_a
-        self.top_b = opt.top_b
+     
         self.num_conv = opt.num_conv
         self.output_size = opt.output_size
-        self.caps1_num_dims = opt.caps1_num_dims
+        self.num_channel = opt.num_channel
         # Num set of capsules 
-        self.caps1_num_caps = int(self.num_conv*self.output_size/self.caps1_num_dims)*self.top_a
-        # self.caps1_out_caps = self.node_dim
-        self.caps1_out_caps = 20
-        self.caps1_out_dims = opt.caps1_num_dims
+        self.num_caps_top_a = int(self.num_conv*self.output_size/self.num_channel)*self.top_a
+        # self.num_output_dynamic_routing = self.node_dim
+        self.num_output_dynamic_routing = self.node_dim
+        self.num_channel_dynamic_routing = opt.num_channel_dynamic_routing
 
      
         self.placeholders = {}
@@ -59,24 +59,24 @@ class TreeCapsModel():
         self.placeholders["children_node_types"] = tf.placeholder(tf.int32, shape=(None, None, None), name='children_types') # batch_size x max_num_nodes x max_children
         self.placeholders["children_node_tokens"] = tf.placeholder(tf.int32, shape=(None, None, None, None), name='children_tokens') # batch_size x max_num_nodes x max_children x max_sub_tokens
         self.placeholders["labels"] = tf.placeholder(tf.float32, (None, self.label_size,))
-        std = 1.0 / math.sqrt(self.node_dim)
+        self.placeholders["alpha_IJ"] = tf.placeholder(tf.float32, shape=(None, None), name='alpha_IJ')
 
         self.placeholders["w_t"] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_t')
         self.placeholders["w_l"] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_l')
         self.placeholders["w_r"] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_r')
         self.placeholders['is_training'] = tf.placeholder(tf.bool, name="is_training")
 
-        self.dynamic_routing_shape = [self.batch_size, self.caps1_num_caps, 1, self.caps1_num_dims,1]
+        self.dynamic_routing_shape = [self.batch_size, self.num_caps_top_a, 1, self.num_channel,1]
         
-        shape_of_weight_dynamic_routing = [1, self.dynamic_routing_shape[1], self.caps1_out_dims * self.caps1_out_caps] + self.dynamic_routing_shape[-2:]
-        shape_of_bias_dynamic_routing = [1, 1, self.caps1_out_caps, self.caps1_out_dims, 1]
+        shape_of_weight_dynamic_routing = [1, self.dynamic_routing_shape[1], self.num_channel_dynamic_routing * self.num_output_dynamic_routing] + self.dynamic_routing_shape[-2:]
+        shape_of_bias_dynamic_routing = [1, 1, self.num_output_dynamic_routing, self.num_channel_dynamic_routing, 1]
 
         self.placeholders["w_dynamic_routing"] = tf.Variable(tf.contrib.layers.xavier_initializer()(shape_of_weight_dynamic_routing), name='w_dynamic_routing')
         self.placeholders["b_dynamic_routing"] = tf.Variable(tf.zeros(shape_of_bias_dynamic_routing), name='b_dynamic_routing')
     
         self.placeholders["b_conv"] = tf.Variable(tf.zeros([self.output_size,]),name='b_conv')
 
-        self.label_embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([len(self.label_lookup.keys()), self.caps1_out_caps]), name='label_embeddings')
+        self.label_embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([len(self.label_lookup.keys()), self.num_output_dynamic_routing]), name='label_embeddings')
         self.node_type_embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([len(self.node_type_lookup.keys()), self.node_type_dim]), name='node_type_embeddings')
         self.node_token_embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([len(self.node_token_lookup.keys()), self.node_token_dim]), name='node_token_embeddings')
         
@@ -129,17 +129,17 @@ class TreeCapsModel():
         # shape = (1, num_output x top_a, num_conv, 1)
         # Example with batch size = 12 and top_a = 10: shape = (12, 1280, 8, 1)
         # Example with batch size = 12 and top_b = 1: shape = (1, 1280, 8, 1)
-        self.primary_static_caps = self.vts_routing(self.primary_variable_caps,self.top_a,self.top_b,self.caps1_num_caps,self.caps1_num_dims, self.num_conv, self.output_size)     
+        self.primary_static_caps = self.vts_routing(self.placeholders["alpha_IJ"], self.primary_variable_caps,self.top_a,self.num_caps_top_a,self.num_channel, self.num_conv, self.output_size)     
         # self.primary_variable_caps = tf.reshape(self.primary_variable_caps,shape=(1,-1, self.output_size, self.num_conv))
-        # self.primary_static_caps = self.vts_routing(self.primary_variable_caps,self.top_a,self.top_b,self.caps1_num_caps,self.caps1_num_dims)       
+        # self.primary_static_caps = self.vts_routing(self.primary_variable_caps,self.top_a,self.top_b,self.num_caps_top_a,self.num_channel)       
         # batch size = 1: (12, 1280, 1, 8, 1)
-        self.primary_static_caps = tf.reshape(self.primary_static_caps, shape=(self.batch_size, -1, 1, self.caps1_num_dims, 1))
+        self.primary_static_caps = tf.reshape(self.primary_static_caps, shape=(self.batch_size, -1, 1, self.num_channel, 1))
         
         """The Code Capsule Layer."""
         #Get the input shape to the dynamic routing algorithm
 
         # batch size = 1: (12, 1, 80, 8, 1)
-        self.code_caps = self.dynamic_routing(self.dynamic_routing_shape, self.primary_static_caps, num_outputs=self.caps1_out_caps, num_dims=self.caps1_out_dims)
+        self.code_caps = self.dynamic_routing(self.dynamic_routing_shape, self.primary_static_caps, num_outputs=self.num_output_dynamic_routing, num_dims=self.num_channel_dynamic_routing)
         # batch size = 1: (12, 80, 8, 1)
         self.code_caps = tf.squeeze(self.code_caps, axis=1)
         
@@ -148,7 +148,7 @@ class TreeCapsModel():
         self.code_caps = tf.sqrt(tf.reduce_sum(tf.square(self.code_caps),axis=2, keepdims=True) + 1e-9)
         
         # batch size = 12: (12, 80)
-        self.code_caps = tf.reshape(self.code_caps,(-1, self.caps1_out_caps))
+        self.code_caps = tf.reshape(self.code_caps,(-1, self.num_output_dynamic_routing))
         
         # equal to logits
         # (12 x 80) x (80 x 55) = (1 x 55)
@@ -182,10 +182,9 @@ class TreeCapsModel():
 
         return input_scaled
 
-    def vts_routing(self, primary_variable_caps, top_a, top_b, num_outputs, num_dims, num_conv, output_size):
+    def vts_routing(self, alpha_IJ, primary_variable_caps, top_a, num_outputs, num_dims, num_conv, output_size):
         """The proposed Variable-to-Static Routing Algorithm."""
         # top_a = 10
-        # top_b = 15
         # num_outputs = 1280
         # num_dims = 8
         # num_conv = 8
@@ -193,7 +192,7 @@ class TreeCapsModel():
         # primary_variable_caps = (12, 48, 128, 8)
 
         # (12, 1920, 1280)
-        alpha_IJ = tf.zeros((self.batch_size, int(num_outputs/top_a*top_b), num_outputs), dtype=tf.float32)
+        # alpha_IJ = tf.zeros((self.batch_size, int(num_outputs/top_a*top_b), num_outputs), dtype=tf.float32)
         # (12, 128, 8, 48)
         primary_variable_caps_reshaped = tf.transpose(primary_variable_caps,perm=[0,2,3,1])
         # (12, 128, 8, 10)
@@ -210,13 +209,16 @@ class TreeCapsModel():
         # reshape the primary_capsule_variable into shape = (1, batch_size x max_tree_size, output_size, num_conv)
         # primary_variable_caps = tf.reshape(primary_variable_caps,shape=(1,-1, output_size, num_conv))
         # (12, 128, 8, 15)
-        u_i,_ = tf.nn.top_k(primary_variable_caps_reshaped,k=top_b)
+        # u_i,_ = tf.nn.top_k(primary_variable_caps_reshaped,k=top_b)
         # (1, 180, 128, 8)
-        u_i = tf.reshape(u_i,shape=(1,-1, output_size, num_conv))
+        # u_i = tf.reshape(u_i,shape=(1,-1, output_size, num_conv))
         # (1, 8, 180, 128)
-        u_i = tf.transpose(u_i,perm=[0,3,1,2])
+        # u_i = tf.transpose(u_i,perm=[0,3,1,2])
         # (12, 1920, 8)
-        u_i = tf.reshape(u_i, (self.batch_size, -1, num_dims))
+        # u_i = tf.reshape(u_i, (self.batch_size, -1, num_dims))
+        # u_i = tf.stop_gradient(u_i)
+
+        u_i = tf.reshape(primary_variable_caps, (self.batch_size, -1, num_dims))
         u_i = tf.stop_gradient(u_i)
 
         
@@ -335,12 +337,12 @@ class TreeCapsModel():
         b_dynamic_routing = self.placeholders["b_dynamic_routing"]
         
     
-        delta_IJ = tf.zeros([self.batch_size, self.caps1_num_caps, num_outputs, 1, 1], dtype=tf.dtypes.float32)
+        delta_IJ = tf.zeros([self.batch_size, self.num_caps_top_a, num_outputs, 1, 1], dtype=tf.dtypes.float32)
 
         primary_static_caps = tf.tile(primary_static_caps, [1, 1, num_dims * num_outputs, 1, 1])
 
         u_hat = tf.reduce_sum(w_dynamic_routing * primary_static_caps, axis=3, keep_dims=True)
-        u_hat = tf.reshape(u_hat, shape=[-1, self.caps1_num_caps, num_outputs, num_dims, 1])
+        u_hat = tf.reshape(u_hat, shape=[-1, self.num_caps_top_a, num_outputs, num_dims, 1])
 
         u_hat_stopped = tf.stop_gradient(u_hat, name='stop_gradient')
 
@@ -356,7 +358,7 @@ class TreeCapsModel():
                     s_J = tf.multiply(gamma_IJ, u_hat_stopped)
                     s_J = tf.reduce_sum(s_J, axis=1, keepdims=True) + b_dynamic_routing
                     v_J = self.squash(s_J)
-                    v_J_tiled = tf.tile(v_J, [1,self.caps1_num_caps, 1, 1, 1])
+                    v_J_tiled = tf.tile(v_J, [1,self.num_caps_top_a, 1, 1, 1])
                     u_produce_v = tf.reduce_sum(u_hat_stopped * v_J_tiled, axis=3, keepdims=True)
                     delta_IJ += u_produce_v
 
