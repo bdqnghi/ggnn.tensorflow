@@ -10,7 +10,7 @@ VAL_LABEL_VOCABULARY_PATH=preprocessed_data/treecaps/${DATASET}/val_label_vocab.
 BATCH_SIZE=12
 VAL_BATCH_SIZE=32
 SAMPLING_SIZE=1
-CHECKPOINT_EVERY=100
+CHECKPOINT_EVERY=10
 TREE_SIZE_THRESHOLD_UPPER=1500
 TREE_SIZE_THRESHOLD_LOWER=10
 CUDA=0
@@ -19,6 +19,7 @@ NODE_TYPE_DIM=30
 NODE_TOKEN_DIM=50
 TOP_A=10
 NUM_CONV=8
+OUTPUT_SIZE=64
 NUM_CHANNEL=8
 NUM_CHANNEL_DYNAMIC_ROUTING=8
 NUM_FILES_THRESHOLD=20000
@@ -37,5 +38,5 @@ ${CHECKPOINT_EVERY} --cuda ${CUDA} --validating ${VALIDATING} \
 --train_label_vocabulary_path ${TRAIN_LABEL_VOCABULARY_PATH} \
 --val_label_vocabulary_path ${VAL_LABEL_VOCABULARY_PATH} \
 --task ${TASK} \
---top_a ${TOP_A} --num_conv ${NUM_CONV} \
+--top_a ${TOP_A} --output_size ${OUTPUT_SIZE} --num_conv ${NUM_CONV} \
 --num_channel ${NUM_CHANNEL} --num_channel_dynamic_routing ${NUM_CHANNEL_DYNAMIC_ROUTING} --num_files_threshold ${NUM_FILES_THRESHOLD}

@@ -61,9 +61,12 @@ class TreeCapsModel():
         self.placeholders["labels"] = tf.placeholder(tf.float32, (None, self.label_size,))
         self.placeholders["alpha_IJ"] = tf.placeholder(tf.float32, shape=(None, None), name='alpha_IJ')
 
-        self.placeholders["w_t"] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_t')
-        self.placeholders["w_l"] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_l')
-        self.placeholders["w_r"] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_r')
+        for i in range(self.num_conv):
+            self.placeholders["w_t_" + str(i)] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_t_' + str(i))
+            self.placeholders["w_l_" + str(i)] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_l_' + str(i))
+            self.placeholders["w_r_" + str(i)] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_r_' + str(i))
+            self.placeholders["b_conv_" + str(i)] = tf.Variable(tf.zeros([self.output_size,]),name='b_conv_' + str(i))
+        
         self.placeholders['is_training'] = tf.placeholder(tf.bool, name="is_training")
 
         self.dynamic_routing_shape = [self.batch_size, self.num_caps_top_a, 1, self.num_channel,1]
@@ -74,8 +77,6 @@ class TreeCapsModel():
         self.placeholders["w_dynamic_routing"] = tf.Variable(tf.contrib.layers.xavier_initializer()(shape_of_weight_dynamic_routing), name='w_dynamic_routing')
         self.placeholders["b_dynamic_routing"] = tf.Variable(tf.zeros(shape_of_bias_dynamic_routing), name='b_dynamic_routing')
     
-        self.placeholders["b_conv"] = tf.Variable(tf.zeros([self.output_size,]),name='b_conv')
-
         self.label_embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([len(self.label_lookup.keys()), self.num_output_dynamic_routing]), name='label_embeddings')
         self.node_type_embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([len(self.node_type_lookup.keys()), self.node_type_dim]), name='node_type_embeddings')
         self.node_token_embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([len(self.node_token_lookup.keys()), self.node_token_dim]), name='node_token_embeddings')
@@ -117,7 +118,7 @@ class TreeCapsModel():
         """Tree based Convolutional Layer"""
         # Example with batch size = 12 and num_conv = 8: shape = (12, 48, 128, 8)
         # Example with batch size = 1 and num_conv = 8: shape = (1, 48, 128, 8)
-        self.conv_output = self.conv_layer(self.parent_node_embeddings, self.children_embeddings, self.placeholders["children_indices"], self.num_conv, self.output_size, self.node_dim)
+        self.conv_output = self.conv_layer(self.parent_node_embeddings, self.children_embeddings, self.placeholders["children_indices"], self.num_conv, self.node_dim)
 
         """The Primary Variable Capsule Layer."""
         # shape = (1, batch_size x max_tree_size, num_output, num_conv)
@@ -320,11 +321,11 @@ class TreeCapsModel():
         children_node_tokens_tensor = tf.reduce_mean(children_node_tokens_tensor, axis=3)
         return children_node_tokens_tensor
 
-    def conv_node(self, parent_node_embeddings, children_embeddings, children_indices, node_dim, output_size, layer):
+    def conv_node(self, parent_node_embeddings, children_embeddings, children_indices, node_dim, layer):
         """Perform convolutions over every batch sample."""
         with tf.name_scope('conv_node'):
-            w_t, w_l, w_r = self.placeholders["w_t"], self.placeholders["w_l"], self.placeholders["w_r"]
-            b_conv = self.placeholders["b_conv"]
+            w_t, w_l, w_r = self.placeholders["w_t_" + str(layer)], self.placeholders["w_l_" + str(layer)], self.placeholders["w_r_" + str(layer)]
+            b_conv = self.placeholders["b_conv_" + str(layer)]
        
             return self.conv_step(parent_node_embeddings, children_embeddings, children_indices, node_dim, w_t, w_r, w_l, b_conv)
 
@@ -364,10 +365,10 @@ class TreeCapsModel():
 
         return(v_J)
 
-    def conv_layer(self, parent_node_embeddings, children_embeddings, children_indices, num_conv, output_size, node_dim):
+    def conv_layer(self, parent_node_embeddings, children_embeddings, children_indices, num_conv, node_dim):
         with tf.name_scope('conv_layer'):
             nodes = [
-                tf.expand_dims(self.conv_node(parent_node_embeddings, children_embeddings, children_indices, node_dim, output_size, layer),axis=-1)
+                tf.expand_dims(self.conv_node(parent_node_embeddings, children_embeddings, children_indices, node_dim, layer),axis=-1)
                 for layer in range(num_conv)
             ] 
             return nodes 

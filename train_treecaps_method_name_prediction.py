@@ -259,7 +259,7 @@ def main(opt):
     primary_static_caps = treecaps.primary_static_caps
     code_caps = treecaps.code_caps
 
-    num_caps_top_a = int(opt.num_conv*(opt.node_type_dim + opt.node_token_dim)/opt.num_channel)*opt.top_a
+    num_caps_top_a = int(opt.num_conv*opt.output_size/opt.num_channel)*opt.top_a
     with tf.Session() as sess:
         sess.run(init)
         if ckpt and ckpt.model_checkpoint_path:
