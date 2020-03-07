@@ -248,8 +248,8 @@ def main(opt):
                 for train_step, train_batch_data in enumerate(train_batch_iterator):
                     print("-------------------------------------")
                     # print(train_batch_data['labels_index'])
-                    _, err, softmax_values_data = sess.run(
-                        [training_point, loss_node, softmax_values],
+                    _, err, scores = sess.run(
+                        [training_point, loss_node, logits],
                         feed_dict={
                             ggnn.placeholders["num_vertices"]: train_batch_data["num_vertices"],
                             ggnn.placeholders["adjacency_matrix"]:  train_batch_data['adjacency_matrix'],
@@ -260,6 +260,7 @@ def main(opt):
                         }
                     )
                     # print(softmax_values_data)
+                    print(scores)
                     print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "Current F1:", average_f1, "Best F1:", best_f1_score)
 
                     # print(label_embeddings_matrix.shape)
