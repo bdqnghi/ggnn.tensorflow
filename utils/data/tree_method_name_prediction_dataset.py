@@ -29,7 +29,7 @@ def process_token(token):
 
 class MethodNamePredictionData():
    
-    def __init__(self, opt, data_path, is_training=True, is_testing=False, is_validating=False,):
+    def __init__(self, opt, data_path, is_training=True, is_testing=False, is_validating=False):
         if is_training:
             print("Processing training data....")
            
@@ -39,7 +39,9 @@ class MethodNamePredictionData():
         if is_validating:
             print("Processing validation data....")
          
-
+        self.is_training = is_training
+        self.is_testing = is_testing
+        self.is_validating = is_validating
         self.batch_size = opt.batch_size
         self.node_type_lookup = opt.node_type_lookup
         self.node_token_lookup = opt.node_token_lookup
@@ -344,9 +346,14 @@ class MethodNamePredictionData():
             for i, tree_data in enumerate(bucket_data):
             
                 _, method_name, size = tree_data["tree"], tree_data["method_name"], tree_data["size"]
-                if size > self.tree_size_threshold_lower and size < self.tree_size_threshold_upper:
+                if self.is_training:
+                    if size > self.tree_size_threshold_lower and size < self.tree_size_threshold_upper:
+                        elements.append(tree_data)
+                        samples += 1
+                else:
                     elements.append(tree_data)
                     samples += 1
+
                     
                 if samples >= self.batch_size:
                 
