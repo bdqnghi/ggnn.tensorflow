@@ -330,12 +330,11 @@ class MethodNamePredictionData():
     def make_minibatch_iterator(self):
         
         (buckets, bucket_sizes) = self.data
-        
-        batch_nodes, batch_children, batch_labels = [], [], []
-
-
-        for bucket_idx, bucket_data in buckets.items():
-        # for tree_data in self.trees:
+        bucket_ids = list(buckets.keys())
+        random.shuffle(bucket_ids)
+        # for bucket_idx, bucket_data in buckets.items():
+        for bucket_idx in bucket_ids:
+            bucket_data = buckets[bucket_idx]
             # print(file)
             print("Shuffling data.....")
             random.shuffle(bucket_data)
