@@ -326,7 +326,7 @@ def main(opt):
                     # print(primary_variable_caps_scores.shape)
                     # print(primary_static_caps_scores.shape)
                     # print(logits_scores)
-                    print("Epoch:", epoch, "Step:", train_step, "Loss:", err)
+                    print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "Current F1:", average_f1, "Best F1:", best_f1_score)
 
                     if opt.validating == 0:
                         if train_step % opt.checkpoint_every == 0 and train_step > 0:
