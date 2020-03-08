@@ -223,7 +223,7 @@ class TreeCapsModel():
         u_i = tf.stop_gradient(u_i)
 
         
-        for rout in range(1):
+        for rout in range(3):
             # (12, 1920, 1280)
             u_produce_v = tf.matmul(u_i, v_J,transpose_b=True)
             # (12, 1920, 1280)
