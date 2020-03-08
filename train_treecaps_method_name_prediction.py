@@ -272,7 +272,7 @@ def main(opt):
         average_f1 = 0.0
         if opt.task == 1:
             for epoch in range(1,  opt.epochs + 1):
-                train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=20)
+                train_batch_iterator = ThreadedIterator(train_dataset.make_minibatch_iterator(), max_queue_size=1)
                 for train_step, train_batch_data in enumerate(train_batch_iterator):
                     print("--------------------------")
                     # print("Epoch:", epoch, "Step:", train_step)
