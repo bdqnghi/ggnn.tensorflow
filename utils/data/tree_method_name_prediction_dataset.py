@@ -97,7 +97,8 @@ class MethodNamePredictionData():
                                 tree_data = {
                                     "tree": tree,
                                     "method_name": method_name,
-                                    "size": size
+                                    "size": size,
+                                    "file_path": pkl_file_path
                                 }
                                 trees.append(tree_data)
                         except Exception as e:
@@ -202,10 +203,11 @@ class MethodNamePredictionData():
 
     def extract_training_data(self, tree_data):
         
-        tree, method_name, size = tree_data["tree"], tree_data["method_name"], tree_data["size"]
+        tree, method_name, size, file_path = tree_data["tree"], tree_data["method_name"], tree_data["size"], tree_data["file_path"]
         # print(tree)
         node_types = []
         node_tokens = []
+        node_indexes = []
         children_indices = []
         children_node_types = []
         children_node_tokens = []
@@ -236,9 +238,10 @@ class MethodNamePredictionData():
             
             node_type = node['node_type']
             node_token = node['node_token']
-
+            
             node_types.append(int(node_type))
             node_tokens.append(node_token)
+            node_indexes.append(node_ind)
 
         # print("-------------")
         # print(node_types)
@@ -247,10 +250,11 @@ class MethodNamePredictionData():
         # print(children_node_types)
         # print(children_node_tokens)
      
-        return node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label_one_hot, size
+        return node_indexes, node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label_one_hot, size, file_path
             
             
     def make_batch(self, batch_data):
+        batch_node_indexes = []
         batch_node_types = []
         batch_nodes_tokens = []
         batch_children_indices = []
@@ -258,8 +262,10 @@ class MethodNamePredictionData():
         batch_children_node_tokens = []
         batch_labels = []
         batch_tree_size = []
+        batch_file_path = []
         for tree_data in batch_data:
-            node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label, size = self.extract_training_data(tree_data)
+            node_indexes, node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label, size, file_path = self.extract_training_data(tree_data)
+            batch_node_indexes.append(node_indexes)
             batch_node_types.append(node_types)
             batch_nodes_tokens.append(node_tokens)
             batch_children_indices.append(children_indices)
@@ -267,8 +273,10 @@ class MethodNamePredictionData():
             batch_children_node_tokens.append(children_node_tokens)
             batch_labels.append(label)
             batch_tree_size.append(size)
+            batch_file_path.append(file_path)
         
-        return self._pad_batch(batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels, batch_tree_size)
+        batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens = self._pad_batch(batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens)
+        return batch_node_indexes, batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels, batch_tree_size, batch_file_path
 
     #  def _pad_batch(self, nodes, children, labels):
     #     if not nodes:
@@ -286,7 +294,7 @@ class MethodNamePredictionData():
 
     #     return nodes, children, labels
 
-    def _pad_batch(self, batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels, batch_tree_size):
+    def _pad_batch(self, batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens):
         # if not nodes:
             # return [], [], []
         # batch_node_types
@@ -322,7 +330,7 @@ class MethodNamePredictionData():
         batch_children_node_tokens = [[c + [[]] * (max_num_children_per_node - len(c)) for c in sample] for sample in batch_children_node_tokens]  
         batch_children_node_tokens = [[[s + [0] * (max_num_of_subtoken_per_children_per_node - len(s)) for s in c] for c in sample] for sample in batch_children_node_tokens]
       
-        return batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels, batch_tree_size
+        return batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens
 
     def _onehot(self, i, total):
         return [1.0 if j == i else 0.0 for j in range(total)]
@@ -356,11 +364,12 @@ class MethodNamePredictionData():
                     
                 if samples >= self.batch_size:
                 
-                    batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels , batch_tree_size = self.make_batch(elements)
+                    batch_node_indexes, batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels , batch_tree_size, batch_file_path = self.make_batch(elements)
                     
                     # for node in batch_nodes:
                     #     print(len(node))
                     batch = {}
+                    batch["batch_node_indexes"] = batch_node_indexes
                     batch["batch_node_types"] = np.asarray(batch_node_types)
                     batch["batch_nodes_tokens"] = np.asarray(batch_nodes_tokens)
                     batch["batch_children_indices"] = np.asarray(batch_children_indices)
@@ -368,6 +377,7 @@ class MethodNamePredictionData():
                     batch["batch_children_node_tokens"] = np.asarray(batch_children_node_tokens)
                     batch["batch_labels"] = np.asarray(batch_labels)
                     batch["batch_tree_size"] = batch_tree_size
+                    batch["batch_file_path"] = batch_file_path
             
                     yield batch
                     elements = []

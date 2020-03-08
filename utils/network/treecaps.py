@@ -59,7 +59,7 @@ class TreeCapsModel():
         self.placeholders["children_node_types"] = tf.placeholder(tf.int32, shape=(None, None, None), name='children_types') # batch_size x max_num_nodes x max_children
         self.placeholders["children_node_tokens"] = tf.placeholder(tf.int32, shape=(None, None, None, None), name='children_tokens') # batch_size x max_num_nodes x max_children x max_sub_tokens
         self.placeholders["labels"] = tf.placeholder(tf.float32, (None, self.label_size,))
-        self.placeholders["alpha_IJ"] = tf.placeholder(tf.float32, shape=(None, None), name='alpha_IJ')
+        self.placeholders["alpha_IJ"] = tf.placeholder(tf.float32, shape=(None, None, None), name='alpha_IJ')
 
         for i in range(self.num_conv):
             self.placeholders["w_t_" + str(i)] = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_dim, self.output_size]), name='w_t_' + str(i))
@@ -130,7 +130,7 @@ class TreeCapsModel():
         # shape = (1, num_output x top_a, num_conv, 1)
         # Example with batch size = 12 and top_a = 10: shape = (12, 1280, 8, 1)
         # Example with batch size = 12 and top_b = 1: shape = (1, 1280, 8, 1)
-        self.primary_static_caps = self.vts_routing(self.placeholders["alpha_IJ"], self.primary_variable_caps,self.top_a,self.num_caps_top_a,self.num_channel, self.num_conv, self.output_size)     
+        self.primary_static_caps, _ = self.vts_routing(self.placeholders["alpha_IJ"], self.primary_variable_caps,self.top_a,self.num_caps_top_a,self.num_channel, self.num_conv, self.output_size)     
         # self.primary_variable_caps = tf.reshape(self.primary_variable_caps,shape=(1,-1, self.output_size, self.num_conv))
         # self.primary_static_caps = self.vts_routing(self.primary_variable_caps,self.top_a,self.top_b,self.num_caps_top_a,self.num_channel)       
         # batch size = 1: (12, 1280, 1, 8, 1)
@@ -237,7 +237,7 @@ class TreeCapsModel():
         v_J = tf.reshape(v_J,(self.batch_size, num_outputs, num_dims, 1))
 
         # return primary_variable_caps_2
-        return self.squash(v_J)      
+        return self.squash(v_J), alpha_IJ  
     # return self.squash(v_J)
         # def vts_routing(self, input, top_a, top_b, num_outputs, num_dims):
     #     """The proposed Variable-to-Static Routing Algorithm."""
