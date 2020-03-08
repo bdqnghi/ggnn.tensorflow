@@ -147,6 +147,7 @@ class MethodNamePredictionData():
         root_json = {
             "node_type": str(root.srcml_kind),
             "node_token": root_sub_token_ids,
+            "node_token_text": str(root.text),
             "children": []
         }
 
@@ -177,6 +178,7 @@ class MethodNamePredictionData():
                 child_json = {
                     "node_type": str(child.srcml_kind),
                     "node_token": children_sub_token_ids,
+                    "node_token_text":str(child.text),
                     "children": []
                 }
 
@@ -207,6 +209,7 @@ class MethodNamePredictionData():
         # print(tree)
         node_types = []
         node_tokens = []
+        node_tokens_text = []
         node_indexes = []
         children_indices = []
         children_node_types = []
@@ -238,10 +241,12 @@ class MethodNamePredictionData():
             
             node_type = node['node_type']
             node_token = node['node_token']
-            
+            node_token_text = node["node_token_text"]
+
             node_types.append(int(node_type))
             node_tokens.append(node_token)
             node_indexes.append(node_ind)
+            node_tokens_text.append(node_token_text)
 
         # print("-------------")
         # print(node_types)
@@ -250,13 +255,14 @@ class MethodNamePredictionData():
         # print(children_node_types)
         # print(children_node_tokens)
      
-        return node_indexes, node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label_one_hot, size, file_path
+        return node_indexes, node_types, node_tokens, node_tokens_text, children_indices, children_node_types, children_node_tokens, label_one_hot, size, file_path
             
             
     def make_batch(self, batch_data):
         batch_node_indexes = []
         batch_node_types = []
-        batch_nodes_tokens = []
+        batch_node_tokens = []
+        batch_node_tokens_text = []
         batch_children_indices = []
         batch_children_node_types = []
         batch_children_node_tokens = []
@@ -264,10 +270,11 @@ class MethodNamePredictionData():
         batch_tree_size = []
         batch_file_path = []
         for tree_data in batch_data:
-            node_indexes, node_types, node_tokens, children_indices, children_node_types, children_node_tokens, label, size, file_path = self.extract_training_data(tree_data)
+            node_indexes, node_types, node_tokens, node_tokens_text, children_indices, children_node_types, children_node_tokens, label, size, file_path = self.extract_training_data(tree_data)
             batch_node_indexes.append(node_indexes)
             batch_node_types.append(node_types)
-            batch_nodes_tokens.append(node_tokens)
+            batch_node_tokens.append(node_tokens)
+            batch_node_tokens_text.append(node_tokens_text)
             batch_children_indices.append(children_indices)
             batch_children_node_types.append(children_node_types)
             batch_children_node_tokens.append(children_node_tokens)
@@ -275,8 +282,8 @@ class MethodNamePredictionData():
             batch_tree_size.append(size)
             batch_file_path.append(file_path)
         
-        batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens = self._pad_batch(batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens)
-        return batch_node_indexes, batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels, batch_tree_size, batch_file_path
+        batch_node_types, batch_node_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens = self._pad_batch(batch_node_types, batch_node_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens)
+        return batch_node_indexes, batch_node_types, batch_node_tokens, batch_node_tokens_text, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels, batch_tree_size, batch_file_path
 
     #  def _pad_batch(self, nodes, children, labels):
     #     if not nodes:
@@ -294,7 +301,7 @@ class MethodNamePredictionData():
 
     #     return nodes, children, labels
 
-    def _pad_batch(self, batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens):
+    def _pad_batch(self, batch_node_types, batch_node_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens):
         # if not nodes:
             # return [], [], []
         # batch_node_types
@@ -307,11 +314,11 @@ class MethodNamePredictionData():
         batch_children_indices = [n + ([[]] * (max_num_nodes - len(n))) for n in batch_children_indices]
         batch_children_indices = [[c + [0] * (max_num_children_per_node - len(c)) for c in sample] for sample in batch_children_indices]
         
-        # batch_nodes_tokens
-        max_num_nodes = max([len(x) for x in batch_nodes_tokens])
-        max_num_children_per_node = max([len(c) for n in batch_nodes_tokens for c in n])
-        batch_nodes_tokens = [n + ([[]] * (max_num_nodes - len(n))) for n in batch_nodes_tokens]
-        batch_nodes_tokens = [[c + [0] * (max_num_children_per_node - len(c)) for c in sample] for sample in batch_nodes_tokens]
+        # batch_node_tokens
+        max_num_nodes = max([len(x) for x in batch_node_tokens])
+        max_num_children_per_node = max([len(c) for n in batch_node_tokens for c in n])
+        batch_node_tokens = [n + ([[]] * (max_num_nodes - len(n))) for n in batch_node_tokens]
+        batch_node_tokens = [[c + [0] * (max_num_children_per_node - len(c)) for c in sample] for sample in batch_node_tokens]
 
         # batch_children_node_types
         max_num_nodes = max([len(x) for x in batch_children_node_types])
@@ -330,7 +337,7 @@ class MethodNamePredictionData():
         batch_children_node_tokens = [[c + [[]] * (max_num_children_per_node - len(c)) for c in sample] for sample in batch_children_node_tokens]  
         batch_children_node_tokens = [[[s + [0] * (max_num_of_subtoken_per_children_per_node - len(s)) for s in c] for c in sample] for sample in batch_children_node_tokens]
       
-        return batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens
+        return batch_node_types, batch_node_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens
 
     def _onehot(self, i, total):
         return [1.0 if j == i else 0.0 for j in range(total)]
@@ -364,14 +371,15 @@ class MethodNamePredictionData():
                     
                 if samples >= self.batch_size:
                 
-                    batch_node_indexes, batch_node_types, batch_nodes_tokens, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels , batch_tree_size, batch_file_path = self.make_batch(elements)
+                    batch_node_indexes, batch_node_types, batch_node_tokens, batch_node_tokens_text, batch_children_indices, batch_children_node_types, batch_children_node_tokens, batch_labels , batch_tree_size, batch_file_path = self.make_batch(elements)
                     
                     # for node in batch_nodes:
                     #     print(len(node))
                     batch = {}
                     batch["batch_node_indexes"] = batch_node_indexes
                     batch["batch_node_types"] = np.asarray(batch_node_types)
-                    batch["batch_nodes_tokens"] = np.asarray(batch_nodes_tokens)
+                    batch["batch_node_tokens"] = np.asarray(batch_node_tokens)
+                    batch["batch_node_tokens_text"] = batch_node_tokens_text
                     batch["batch_children_indices"] = np.asarray(batch_children_indices)
                     batch["batch_children_node_types"] = np.asarray(batch_children_node_types)
                     batch["batch_children_node_tokens"] = np.asarray(batch_children_node_tokens)
