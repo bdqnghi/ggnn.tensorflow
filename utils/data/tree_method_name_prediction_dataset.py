@@ -172,8 +172,8 @@ class MethodNamePredictionData():
 
                 # To limit the number of sub tokens to 5 to reduce computation intensity
                 children_sub_token_ids = list(set(children_sub_token_ids))
-                if len(children_sub_token_ids) > 5:
-                    children_sub_token_ids = random.sample(children_sub_token_ids, 5)
+                if len(children_sub_token_ids) > 8:
+                    children_sub_token_ids = random.sample(children_sub_token_ids, 8)
 
                 child_json = {
                     "node_type": str(child.srcml_kind),

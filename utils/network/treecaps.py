@@ -98,7 +98,8 @@ class TreeCapsModel():
         
         # shape = (batch_size, max_tree_size, max_children, node_token_dim)
         # Example with batch size = 12: shape = (12, 48, 7, 50)
-        self.children_node_tokens_tensor = self.compute_children_node_tokens_tensor(self.placeholders["children_node_tokens"])
+        # self.children_node_tokens_tensor = self.compute_children_node_tokens_tensor(self.placeholders["children_node_tokens"])
+        self.children_node_tokens_tensor = self.compute_children_node_tokens_tensor(self.placeholders["children_node_tokens"], self.node_token_dim)
 
         # Batch normalization for the inputs for regularization
         # self.parent_node_type_embeddings = tf.layers.batch_normalization(self.parent_node_type_embeddings, training=self.placeholders['is_training'])
@@ -223,7 +224,7 @@ class TreeCapsModel():
         u_i = tf.stop_gradient(u_i)
 
         
-        for rout in range(3):
+        for rout in range(1):
             # (12, 1920, 1280)
             u_produce_v = tf.matmul(u_i, v_J,transpose_b=True)
             # (12, 1920, 1280)
@@ -309,16 +310,19 @@ class TreeCapsModel():
     
     def compute_parent_node_tokens_tensor(self, parent_node_tokens_indices):
         parent_node_tokens_tensor = tf.nn.embedding_lookup(self.node_token_embeddings, parent_node_tokens_indices)
-        parent_node_tokens_tensor = tf.reduce_mean(parent_node_tokens_tensor, axis=2)
+        parent_node_tokens_tensor = tf.reduce_sum(parent_node_tokens_tensor, axis=2)
         return parent_node_tokens_tensor
 
     # def compute_children_node_types_tensor(self, children_node_types_indices):
     #     children_node_types_tensor =  tf.nn.embedding_lookup(self.node_type_embeddings, children_node_types_indices)
     #     return children_node_types_tensor
     
-    def compute_children_node_tokens_tensor(self, children_node_tokens_indices):
-        children_node_tokens_tensor = tf.nn.embedding_lookup(self.node_token_embeddings, children_node_tokens_indices)
-        children_node_tokens_tensor = tf.reduce_mean(children_node_tokens_tensor, axis=3)
+    def compute_children_node_tokens_tensor(self, children_node_tokens_indices, node_token_dim):
+        batch_size = tf.shape(children_node_tokens_indices)[0]
+        zero_vecs = tf.zeros((1, node_token_dim))
+        vector_lookup = tf.concat([zero_vecs, self.node_token_embeddings[1:, :]], axis=0)
+        children_node_tokens_tensor = tf.nn.embedding_lookup(vector_lookup, children_node_tokens_indices)
+        children_node_tokens_tensor = tf.reduce_sum(children_node_tokens_tensor, axis=3)
         return children_node_tokens_tensor
 
     def conv_node(self, parent_node_embeddings, children_embeddings, children_indices, node_dim, layer):

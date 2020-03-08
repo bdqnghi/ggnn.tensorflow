@@ -278,7 +278,7 @@ def main(opt):
                     # print("Epoch:", epoch, "Step:", train_step)
                     # print(train_step)
                     # print(train_batch_data["batch_node_types"].shape)
-                    # print(train_batch_data["batch_nodes_tokens"].shape)
+                    # print(train_batch_data["batch_node_tokens"].shape)
                     # print(train_batch_data["batch_children_indices"].shape)
                     # print(train_batch_data["batch_children_node_types"].shape)
                     # print(train_batch_data["batch_children_node_tokens"].shape)
@@ -292,7 +292,7 @@ def main(opt):
                             [training_point, loss_node, logits, code_caps],
                             feed_dict={
                                 treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
-                                treecaps.placeholders["node_tokens"]:  train_batch_data["batch_nodes_tokens"],
+                                treecaps.placeholders["node_tokens"]:  train_batch_data["batch_node_tokens"],
                                 treecaps.placeholders["children_indices"]:  train_batch_data["batch_children_indices"],
                                 treecaps.placeholders["children_node_types"]: train_batch_data["batch_children_node_types"],
                                 treecaps.placeholders["children_node_tokens"]: train_batch_data["batch_children_node_tokens"],
@@ -306,7 +306,7 @@ def main(opt):
                     #         [parent_node_type_embeddings, parent_node_token_embeddings, children_node_types_tensor, children_node_tokens_tensor, parent_node_embeddings, children_embeddings, conv_output, primary_variable_caps, primary_static_caps, code_caps],
                     #         feed_dict={
                     #             treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
-                    #             treecaps.placeholders["node_tokens"]:  train_batch_data["batch_nodes_tokens"],
+                    #             treecaps.placeholders["node_tokens"]:  train_batch_data["batch_node_tokens"],
                     #             treecaps.placeholders["children_indices"]:  train_batch_data["batch_children_indices"],
                     #             treecaps.placeholders["children_node_types"]: train_batch_data["batch_children_node_types"],
                     #             treecaps.placeholders["children_node_tokens"]: train_batch_data["batch_children_node_tokens"],
@@ -353,7 +353,7 @@ def main(opt):
                                     [logits],
                                     feed_dict={
                                         treecaps.placeholders["node_types"]: val_batch_data["batch_node_types"],
-                                        treecaps.placeholders["node_tokens"]:  val_batch_data["batch_nodes_tokens"],
+                                        treecaps.placeholders["node_tokens"]:  val_batch_data["batch_node_tokens"],
                                         treecaps.placeholders["children_indices"]:  val_batch_data["batch_children_indices"],
                                         treecaps.placeholders["children_node_types"]: val_batch_data["batch_children_node_types"],
                                         treecaps.placeholders["children_node_tokens"]: val_batch_data["batch_children_node_tokens"],
@@ -415,7 +415,7 @@ def main(opt):
                     [logits],
                     feed_dict={
                         treecaps.placeholders["node_types"]: val_batch_data["batch_node_types"],
-                        treecaps.placeholders["node_tokens"]:  val_batch_data["batch_nodes_tokens"],
+                        treecaps.placeholders["node_tokens"]:  val_batch_data["batch_node_tokens"],
                         treecaps.placeholders["children_indices"]:  val_batch_data["batch_children_indices"],
                         treecaps.placeholders["children_node_types"]: val_batch_data["batch_children_node_types"],
                         treecaps.placeholders["children_node_tokens"]: val_batch_data["batch_children_node_tokens"],
