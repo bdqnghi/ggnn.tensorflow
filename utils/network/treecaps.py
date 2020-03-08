@@ -130,7 +130,7 @@ class TreeCapsModel():
         # shape = (1, num_output x top_a, num_conv, 1)
         # Example with batch size = 12 and top_a = 10: shape = (12, 1280, 8, 1)
         # Example with batch size = 12 and top_b = 1: shape = (1, 1280, 8, 1)
-        self.primary_static_caps, _ = self.vts_routing(self.placeholders["alpha_IJ"], self.primary_variable_caps,self.top_a,self.num_caps_top_a,self.num_channel, self.num_conv, self.output_size)     
+        self.primary_static_caps, self.alpha_IJ = self.vts_routing(self.placeholders["alpha_IJ"], self.primary_variable_caps,self.top_a,self.num_caps_top_a,self.num_channel, self.num_conv, self.output_size)     
         # self.primary_variable_caps = tf.reshape(self.primary_variable_caps,shape=(1,-1, self.output_size, self.num_conv))
         # self.primary_static_caps = self.vts_routing(self.primary_variable_caps,self.top_a,self.top_b,self.num_caps_top_a,self.num_channel)       
         # batch size = 1: (12, 1280, 1, 8, 1)
@@ -579,4 +579,29 @@ class TreeCapsModel():
         scalar_factor = vec_squared_norm / (1 + vec_squared_norm) / tf.sqrt(vec_squared_norm + 1e-9)
         vec_squashed = scalar_factor * vector  # element-wise
         return(vec_squashed)
+
+    # def dynamic_routing_2(self, dynamic_routing_shape, primary_variable_caps, output_size, num_outputs=10, num_dims=16):
+    #     """The Dynamic Routing Algorithm proposed by Sabour et al."""
+    #     # primary_variable_caps = (12, 48, 128, 1)
+    #     # (1, 128, 8, 8, 1)
+    #     w_dynamic_routing = self.placeholders["w_dynamic_routing"]
+        
+    #     # (48, 128, 8, 8, 1)
+    #     w_dynamic_routing = tf.tile(w_dynamic_routing, tf.shape(self.placeholders["dr_tile_shape"]))
+    #     # # (1, 1, 80, 8, 1)
+    #     b_dynamic_routing = self.placeholders["b_dynamic_routing"]
+        
+    #     # (12, 128, 80, 1, 1)
+    #     delta_IJ = tf.zeros([self.batch_size, output_size, num_outputs, 1, 1], dtype=tf.dtypes.float32)
+
+    #     # # (12, 1280, 80, 8, 1)
+    #     # primary_variable_caps = tf.tile(primary_variable_caps, [1, 1, num_dims * num_outputs, 1, 1])
+    #     primary_variable_caps = tf.transpose(primary_variable_caps, perm=[0,1,3,2])
+    #     # (12, 48, 8, 128, 8)
+    #     primary_variable_caps = tf.stack([primary_variable_caps] * self.num_channel_dynamic_routing, axis=2)
+
+    #     # (48, 128, 8, 8, 1) x (12, 48, 8, 128, 8)
+    #     u_hat = w_dynamic_routing * primary_variable_caps
+
+    #     return u_hat
 
