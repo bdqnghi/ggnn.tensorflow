@@ -307,7 +307,7 @@ def main(opt):
             print(predicted_labels)
             print("F1:", f1_score, "Step:", val_step)
 
-            if f1_score == 0:
+            if f1_score > 0:
         
                 node_types = val_batch_data["batch_node_types"][0]
                 node_tokens_text = val_batch_data["batch_node_tokens_text"][0]
