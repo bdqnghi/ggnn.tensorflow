@@ -282,7 +282,7 @@ def main(opt):
                     # print(train_batch_data["batch_children_indices"].shape)
                     # print(train_batch_data["batch_children_node_types"].shape)
                     # print(train_batch_data["batch_children_node_tokens"].shape)
-                    print(train_batch_data["batch_node_indexes"])
+                    # print(train_batch_data["batch_node_indexes"])
                     print(train_batch_data["batch_tree_size"])
                     
                     alpha_IJ_shape = (opt.batch_size, int(num_caps_top_a/opt.top_a*train_batch_data["batch_node_types"].shape[1]), num_caps_top_a)
