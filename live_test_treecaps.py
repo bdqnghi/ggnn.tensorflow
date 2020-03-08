@@ -125,7 +125,7 @@ def form_model_path(opt):
     model_traits["num_channel"] = str(opt.num_channel)
     model_traits["num_channel_dynamic_routing"] = str(opt.num_channel_dynamic_routing)
     model_traits["num_conv"] = str(opt.num_conv)
-    
+    model_traits["sub_token_aggregation"] = "reduce_sum"
 
     model_path = []
     for k, v in model_traits.items():
