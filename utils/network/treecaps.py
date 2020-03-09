@@ -238,7 +238,7 @@ class TreeCapsModel():
         v_J = tf.reshape(v_J,(self.batch_size, num_outputs, num_dims, 1))
 
         # return primary_variable_caps_2
-        return self.squash(v_J), alpha_IJ  
+        return self.squash(v_J), beta_IJ  
     # return self.squash(v_J)
         # def vts_routing(self, input, top_a, top_b, num_outputs, num_dims):
     #     """The proposed Variable-to-Static Routing Algorithm."""
