@@ -121,7 +121,6 @@ def form_model_path(opt):
     model_traits["node_type_dim"] = str(opt.node_type_dim)
     model_traits["node_token_dim"] = str(opt.node_token_dim)
     model_traits["output_size"] = str(opt.output_size)
-    model_traits["top_a"] = str(opt.top_a)
     model_traits["num_channel"] = str(opt.num_channel)
     model_traits["num_channel_dynamic_routing"] = str(opt.num_channel_dynamic_routing)
     model_traits["num_conv"] = str(opt.num_conv)
