@@ -41,9 +41,6 @@ class TreeCapsModel():
      
         self.num_conv = opt.num_conv
         self.output_size = opt.output_size # should change to the name conv_output_size
-        self.num_channel = opt.num_channel
-        # Num set of capsules 
-        self.num_caps_top_a = int(self.num_conv*self.output_size/self.num_channel)*self.top_a
         # self.num_output_dynamic_routing = self.node_dim
         self.num_output_dynamic_routing = self.node_dim
         self.num_channel_dynamic_routing = opt.num_channel_dynamic_routing
