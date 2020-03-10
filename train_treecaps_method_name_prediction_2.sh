@@ -19,7 +19,6 @@ NODE_TYPE_DIM=30
 NODE_TOKEN_DIM=50
 NUM_CONV=1
 OUTPUT_SIZE=80
-NUM_CHANNEL=8
 NUM_CHANNEL_DYNAMIC_ROUTING=8
 NUM_FILES_THRESHOLD=20000
 TASK=1
@@ -38,4 +37,4 @@ ${CHECKPOINT_EVERY} --cuda ${CUDA} --validating ${VALIDATING} \
 --val_label_vocabulary_path ${VAL_LABEL_VOCABULARY_PATH} \
 --task ${TASK} \
 --top_a ${TOP_A} --output_size ${OUTPUT_SIZE} --num_conv ${NUM_CONV} \
---num_channel ${NUM_CHANNEL} --num_channel_dynamic_routing ${NUM_CHANNEL_DYNAMIC_ROUTING} --num_files_threshold ${NUM_FILES_THRESHOLD}
+--num_channel_dynamic_routing ${NUM_CHANNEL_DYNAMIC_ROUTING} --num_files_threshold ${NUM_FILES_THRESHOLD}
