@@ -36,5 +36,5 @@ ${CHECKPOINT_EVERY} --cuda ${CUDA} --validating ${VALIDATING} \
 --train_label_vocabulary_path ${TRAIN_LABEL_VOCABULARY_PATH} \
 --val_label_vocabulary_path ${VAL_LABEL_VOCABULARY_PATH} \
 --task ${TASK} \
---top_a ${TOP_A} --output_size ${OUTPUT_SIZE} --num_conv ${NUM_CONV} \
+--output_size ${OUTPUT_SIZE} --num_conv ${NUM_CONV} \
 --num_channel_dynamic_routing ${NUM_CHANNEL_DYNAMIC_ROUTING} --num_files_threshold ${NUM_FILES_THRESHOLD}
