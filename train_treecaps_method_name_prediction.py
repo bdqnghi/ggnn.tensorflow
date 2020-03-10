@@ -272,10 +272,7 @@ def main(opt):
                     # print(train_batch_data["batch_children_node_tokens"].shape)
                     # print(train_batch_data["batch_node_indexes"])
                     print(train_batch_data["batch_tree_size"])
-                    max_nodes = train_batch_data["batch_node_types"].shape[1]
-                    alpha_IJ_shape = (opt.batch_size, int(num_caps_top_a/opt.top_a*max_nodes), num_caps_top_a)
-                    alpha_IJ = np.zeros(alpha_IJ_shape)
-
+            
                 
                     # delta_IJ_shape = (opt.batch_size, opt.output_size*max_nodes, num_outputs, 1, 1)
                     # alpha_IJ = np.zeros(alpha_IJ_shape)
@@ -340,9 +337,7 @@ def main(opt):
 
                             for val_step, val_batch_data in enumerate(validation_batch_iterator):
                                 
-                                alpha_IJ_shape = (opt.batch_size, int(num_caps_top_a/opt.top_a*val_batch_data["batch_node_types"].shape[1]), num_caps_top_a)
-                                alpha_IJ = np.zeros(alpha_IJ_shape)
-                                
+                               
                                 scores = sess.run(
                                     [treecaps.logits],
                                     feed_dict={
@@ -352,7 +347,6 @@ def main(opt):
                                         treecaps.placeholders["children_node_types"]: val_batch_data["batch_children_node_types"],
                                         treecaps.placeholders["children_node_tokens"]: val_batch_data["batch_children_node_tokens"],
                                         treecaps.placeholders["labels"]: val_batch_data["batch_labels"],
-                                        treecaps.placeholders["alpha_IJ"]: alpha_IJ,
                                         treecaps.placeholders["is_training"]: False
                                     }
                                 )
@@ -402,9 +396,7 @@ def main(opt):
             all_ground_truth_labels = []
 
             for val_step, val_batch_data in enumerate(validation_batch_iterator):
-                alpha_IJ_shape = (opt.batch_size, int(num_caps_top_a/opt.top_a*val_batch_data["batch_node_types"].shape[1]), num_caps_top_a)
-                alpha_IJ = np.zeros(alpha_IJ_shape)
-                            
+               
                 scores = sess.run(
                     [treecaps.logits],
                     feed_dict={
@@ -414,7 +406,6 @@ def main(opt):
                         treecaps.placeholders["children_node_types"]: val_batch_data["batch_children_node_types"],
                         treecaps.placeholders["children_node_tokens"]: val_batch_data["batch_children_node_tokens"],
                         treecaps.placeholders["labels"]: val_batch_data["batch_labels"],
-                        treecaps.placeholders["alpha_IJ"]: alpha_IJ,
                         treecaps.placeholders["is_training"]: False
                     }
                 )
