@@ -7,7 +7,7 @@ import tensorflow as tf
 from utils.data.tree_method_name_prediction_dataset import MethodNamePredictionData
 from utils.utils import ThreadedIterator
 # from utils.network.dense_ggnn_method_name_prediction import DenseGGNNModel
-from utils.network.treecaps import TreeCapsModel
+from utils.network.treecaps_2 import TreeCapsModel
 # import utils.network.treecaps_2 as network
 import os
 import sys
@@ -125,7 +125,9 @@ def form_model_path(opt):
     model_traits["num_channel"] = str(opt.num_channel)
     model_traits["num_channel_dynamic_routing"] = str(opt.num_channel_dynamic_routing)
     model_traits["num_conv"] = str(opt.num_conv)
-    model_traits["sub_token_aggregation"] = "reduce_sum"
+    model_traits["sub_token_aggregation"] = "reduce-sum"
+    model_traits["version"] = "direct-routing"
+    
     
     model_path = []
     for k, v in model_traits.items():
@@ -230,12 +232,9 @@ def main(opt):
     # network.init_net_treecaps(30,30)
     print("Finished initializing tree caps model...........")
 
-    code_caps = treecaps.code_caps
+
     loss_node = treecaps.loss
-    softmax_values = treecaps.softmax_values
-    logits = treecaps.logits
     optimizer = RAdamOptimizer(opt.lr)
-    # optimizer = tf.compat.v1.train.AdamOptimizer(opt.lr)
 
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
@@ -247,17 +246,6 @@ def main(opt):
     best_f1_score = get_best_f1_score(opt)
     print("Best f1 score : " + str(best_f1_score))
 
-    parent_node_type_embeddings = treecaps.parent_node_type_embeddings
-    parent_node_token_embeddings = treecaps.parent_node_token_embeddings
-    children_node_types_tensor = treecaps.children_node_types_tensor
-    children_node_tokens_tensor = treecaps.children_node_tokens_tensor
-    parent_node_embeddings = treecaps.parent_node_embeddings
-    children_embeddings = treecaps.children_embeddings
-
-    conv_output = treecaps.conv_output
-    primary_variable_caps = treecaps.primary_variable_caps
-    primary_static_caps = treecaps.primary_static_caps
-    code_caps = treecaps.code_caps
 
     num_caps_top_a = int(opt.num_conv*opt.output_size/opt.num_channel)*opt.top_a
     with tf.Session() as sess:
@@ -284,12 +272,17 @@ def main(opt):
                     # print(train_batch_data["batch_children_node_tokens"].shape)
                     # print(train_batch_data["batch_node_indexes"])
                     print(train_batch_data["batch_tree_size"])
-                    
-                    alpha_IJ_shape = (opt.batch_size, int(num_caps_top_a/opt.top_a*train_batch_data["batch_node_types"].shape[1]), num_caps_top_a)
+                    max_nodes = train_batch_data["batch_node_types"].shape[1]
+                    alpha_IJ_shape = (opt.batch_size, int(num_caps_top_a/opt.top_a*max_nodes), num_caps_top_a)
                     alpha_IJ = np.zeros(alpha_IJ_shape)
 
+                
+                    # delta_IJ_shape = (opt.batch_size, opt.output_size*max_nodes, num_outputs, 1, 1)
+                    # alpha_IJ = np.zeros(alpha_IJ_shape)
+
+
                     _, err, logits_scores, code_caps_scores = sess.run(
-                            [training_point, loss_node, logits, code_caps],
+                            [training_point, treecaps.loss, treecaps.logits, treecaps.code_caps],
                             feed_dict={
                                 treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
                                 treecaps.placeholders["node_tokens"]:  train_batch_data["batch_node_tokens"],
@@ -297,13 +290,12 @@ def main(opt):
                                 treecaps.placeholders["children_node_types"]: train_batch_data["batch_children_node_types"],
                                 treecaps.placeholders["children_node_tokens"]: train_batch_data["batch_children_node_tokens"],
                                 treecaps.placeholders["labels"]: train_batch_data["batch_labels"],
-                                treecaps.placeholders["alpha_IJ"]: alpha_IJ,
                                 treecaps.placeholders["is_training"]: True
                             }
                         )
                     
-                    # parent_node_type_embeddings_scores, parent_node_token_embeddings_scores, children_node_types_tensor_scores, children_node_tokens_tensor_scores, parent_node_embeddings_scores, children_embeddings_scores, conv_output_scores, primary_variable_caps_scores, primary_static_caps_scores, code_caps_scores = sess.run(
-                    #         [parent_node_type_embeddings, parent_node_token_embeddings, children_node_types_tensor, children_node_tokens_tensor, parent_node_embeddings, children_embeddings, conv_output, primary_variable_caps, primary_static_caps, code_caps],
+                    # code_caps_scores = sess.run(
+                    #         [treecaps.code_caps],
                     #         feed_dict={
                     #             treecaps.placeholders["node_types"]: train_batch_data["batch_node_types"],
                     #             treecaps.placeholders["node_tokens"]:  train_batch_data["batch_node_tokens"],
@@ -311,6 +303,7 @@ def main(opt):
                     #             treecaps.placeholders["children_node_types"]: train_batch_data["batch_children_node_types"],
                     #             treecaps.placeholders["children_node_tokens"]: train_batch_data["batch_children_node_tokens"],
                     #             treecaps.placeholders["labels"]: train_batch_data["batch_labels"],
+                    #             treecaps.placeholders["w_dr_tile"]: w_dr_tile, 
                     #             treecaps.placeholders["is_training"]: True
                     #         }
                     #     )
@@ -326,6 +319,7 @@ def main(opt):
                     # print(primary_variable_caps_scores.shape)
                     # print(primary_static_caps_scores.shape)
                     # print(logits_scores)
+                    # print(code_caps_scores[0].shape)
                     print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "Current F1:", average_f1, "Best F1:", best_f1_score)
 
                     if opt.validating == 0:
@@ -350,7 +344,7 @@ def main(opt):
                                 alpha_IJ = np.zeros(alpha_IJ_shape)
                                 
                                 scores = sess.run(
-                                    [logits],
+                                    [treecaps.logits],
                                     feed_dict={
                                         treecaps.placeholders["node_types"]: val_batch_data["batch_node_types"],
                                         treecaps.placeholders["node_tokens"]:  val_batch_data["batch_node_tokens"],
@@ -412,7 +406,7 @@ def main(opt):
                 alpha_IJ = np.zeros(alpha_IJ_shape)
                             
                 scores = sess.run(
-                    [logits],
+                    [treecaps.logits],
                     feed_dict={
                         treecaps.placeholders["node_types"]: val_batch_data["batch_node_types"],
                         treecaps.placeholders["node_tokens"]:  val_batch_data["batch_node_tokens"],
