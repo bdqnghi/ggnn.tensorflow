@@ -90,6 +90,7 @@ parser.add_argument('--val_label_vocabulary_path', default="preprocessed_data/va
                     help='name of dataset')
 parser.add_argument('--task', type=int, default=0,
                     choices=range(0, 2), help='0 for training, 1 for testing')
+parser.add_argument('--transformation', default="BooleanExchange")
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
 opt = parser.parse_args()
@@ -181,6 +182,10 @@ def get_best_f1_score(opt):
     return best_f1_score
     
 def main(opt):
+    from pathlib import Path
+    mis_prediction_path = os.path.join("mis_prediction",opt.transformation)
+    Path(mis_prediction_path).mkdir(parents=True, exist_ok=True)
+
     opt.model_path = os.path.join(opt.model_path, form_model_path(opt))
     checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
     ckpt = tf.train.get_checkpoint_state(opt.model_path)
@@ -235,114 +240,8 @@ def main(opt):
             saver.restore(sess, ckpt.model_checkpoint_path)
             for i, var in enumerate(saver._var_list):
                 print('Var {}: {}'.format(i, var))
-
-        if opt.task == 1:
-            print("Training model.............")
-            average_f1 = 0.0
-        
-            for epoch in range(1,  opt.epochs + 1):
-
-                t0_train = time.time()
-                train_batch_iterator = ThreadedIterator(
-                    train_dataset.make_minibatch_iterator(), max_queue_size=1)
-                for train_step, train_batch_data in enumerate(train_batch_iterator):
-                    print("-------------------------------------")
-                    # print(train_batch_data['labels_index'])
-                    _, err, softmax_values_data = sess.run(
-                        [training_point, loss_node, softmax_values],
-                        feed_dict={
-                            ggnn.placeholders["num_vertices"]: train_batch_data["num_vertices"],
-                            ggnn.placeholders["adjacency_matrix"]:  train_batch_data['adjacency_matrix'],
-                            ggnn.placeholders["labels"]:  train_batch_data['labels'],
-                            ggnn.placeholders["node_type_indices"]: train_batch_data["node_type_indices"],
-                            ggnn.placeholders["node_token_indices"]: train_batch_data["node_token_indices"],
-                            ggnn.placeholders["is_training"]: True
-                        }
-                    )
-                    # print(softmax_values_data)
-                    print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "Current F1:", average_f1, "Best F1:", best_f1_score)
-
-                    # print(label_embeddings_matrix.shape)
-                    
-
-                    # if train_step % opt.checkpoint_every == 0 and train_step > 0:
-                    #     saver.save(sess, checkfile)                  
-                    #     print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
-
-                # --------------------------------------
-                    if opt.validating == 0:
-                        if train_step % opt.checkpoint_every == 0 and train_step > 0:
-                            saver.save(sess, checkfile)                  
-                            print('Checkpoint saved, epoch:' + str(epoch) + ', step: ' + str(train_step) + ', loss: ' + str(err) + '.')
                 
-                    if opt.validating == 1:
-                        if train_step % opt.checkpoint_every == 0 and train_step > 0:
-                            print("Validating at epoch:", epoch)
-                            # predictions = []
-                            validation_batch_iterator = ThreadedIterator(
-                                validation_dataset.make_minibatch_iterator(), max_queue_size=5)
-                            
-                            # f1_scores_of_val_data = []
-                            all_predicted_labels = []
-                            all_ground_truth_labels = []
-
-                            for val_step, val_batch_data in enumerate(validation_batch_iterator):
-                        
-                                label_embeddings_matrix, scores = sess.run(
-                                    [label_embeddings, logits],
-                                    feed_dict={
-                                        ggnn.placeholders["num_vertices"]: val_batch_data["num_vertices"],
-                                        ggnn.placeholders["adjacency_matrix"]:  val_batch_data['adjacency_matrix'],
-                                        ggnn.placeholders["node_type_indices"]: val_batch_data["node_type_indices"],
-                                        ggnn.placeholders["node_token_indices"]: val_batch_data["node_token_indices"],
-                        
-                                        ggnn.placeholders["is_training"]: False
-                                    }
-                                )
-
-                                
-                                predictions = np.argmax(scores, axis=1)
-                            
-                                ground_truths = np.argmax(val_batch_data['labels'], axis=1)
-                            
-                                predicted_labels = []
-                                for prediction in predictions:
-                                    predicted_labels.append(train_label_lookup.inverse[prediction])
-
-                                ground_truth_labels = []
-                                for ground_truth in ground_truths:
-                                    ground_truth_labels.append(
-                                        val_label_lookup.inverse[ground_truth])
-                                
-                                # print("Predicted : " + str(predicted_labels))
-                                # print("Ground truth : " + str(ground_truth_labels))
-                                f1_score = evaluation.calculate_f1_scores(predicted_labels, ground_truth_labels)
-                                print(ground_truth_labels)
-                                print(predicted_labels)
-                                print("F1:", f1_score, "Step:", val_step)
-                                all_predicted_labels.extend(predicted_labels)
-                                all_ground_truth_labels.extend(ground_truth_labels)
-
-                            average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
-                            # print("F1 score : " + str(f1_score))
-                            print("Validation with F1 score ", average_f1)
-                            if average_f1 > best_f1_score:
-                                best_f1_score = average_f1
-
-                                checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
-                                saver.save(sess, checkfile)
-
-                                checkfile = os.path.join(opt.model_path + "_" + str(datetime.utcnow().timestamp()), 'cnn_tree.ckpt')
-                                saver.save(sess, checkfile)
-
-                                print('Checkpoint saved, epoch:' + str(epoch) + ', loss: ' + str(err) + '.')
-                                with open(opt.model_accuracy_path,"w") as f1:
-                                    f1.write(str(best_f1_score))
-                t1_train = time.time()
-                total_train = t1_train-t0_train
-                print("Epoch:", epoch, "Execution time:", str(total_train))
-
-        if opt.task == 0:
+        
             print("Testing model.............")
             average_f1 = 0.0
             validation_batch_iterator = ThreadedIterator(
@@ -350,8 +249,10 @@ def main(opt):
             
             all_predicted_labels = []
             all_ground_truth_labels = []
+            all_paths = []
             for val_step, val_batch_data in enumerate(validation_batch_iterator):
                 print("----------------------------------------")
+                
                 label_embeddings_matrix, scores = sess.run(
                     [label_embeddings, logits],
                     feed_dict={
@@ -375,18 +276,22 @@ def main(opt):
                     ground_truth_labels.append(
                         val_label_lookup.inverse[ground_truth])
                 
-                f1_score = evaluation.calculate_f1_scores(predicted_labels, ground_truth_labels)
-                print(ground_truth_labels)
-                print(predicted_labels)
-                print("F1:", f1_score, "Step:", val_step)
-                all_predicted_labels.extend(predicted_labels)
-                all_ground_truth_labels.extend(ground_truth_labels)
-                        
-            average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
-            average_precision = evaluation.calculate_precisions(all_predicted_labels, all_ground_truth_labels)
-            average_recall = evaluation.calculate_recalls(all_predicted_labels, all_ground_truth_labels)
-            # print("F1 score : " + str(f1_score))
-            print("F1:", average_f1, "Precision:", average_precision, "Recall:", average_recall)
+          
+                # all_predicted_labels.extend(predicted_labels)
+                # all_ground_truth_labels.extend(ground_truth_labels)
+          
+                for i, file_path in enumerate(val_batch_data["paths"]):
+                    ground_truth = ground_truth_labels[i]
+                    predicted = predicted_labels[i]
+
+                    with open(mis_prediction_path, "a") as f10:
+                        line = file_path + "," + ground_truth + "," + predicted
+                        f10.write(line)
+                        f10.write("\n")
+
+
+
+
 
 if __name__ == "__main__":
     main(opt)

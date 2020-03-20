@@ -67,8 +67,10 @@ parser.add_argument('--checkpoint_every', type=int,
                     default=500, help='check point to save model')
 parser.add_argument('--validating', type=int,
                     default=1, help='validating or not')
-parser.add_argument('--tree_size_threshold', type=int,
+parser.add_argument('--tree_size_threshold_upper', type=int,
                     default=1000, help='tree size threshold')
+parser.add_argument('--tree_size_threshold_lower', type=int,
+                    default=30, help='tree size threshold')    
 parser.add_argument('--sampling_size', type=int,
                     default=60, help='sampling size for each epoch')
 parser.add_argument('--best_f1', type=float,
@@ -234,8 +236,6 @@ def main(opt):
         training_point = optimizer.minimize(loss_node)
     saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
   
-
-
     init = tf.global_variables_initializer()
 
     best_f1_score = get_best_f1_score(opt)
@@ -280,7 +280,7 @@ def main(opt):
                         )
                     
                     # print(scores[0].shape)
-                    print("Epoch:", epoch, "Step:", train_step, "Loss:", err)
+                    print("Epoch:", epoch, "Step:", train_step, "Loss:", err, "Current F1:", average_f1, "Best F1:", best_f1_score)
 
                     if opt.validating == 0:
                         if train_step % opt.checkpoint_every == 0 and train_step > 0:
@@ -352,7 +352,68 @@ def main(opt):
                                 print('Checkpoint saved, epoch:' + str(epoch) + ', loss: ' + str(err) + '.')
                                 with open(opt.model_accuracy_path,"w") as f1:
                                     f1.write(str(best_f1_score))
+        if opt.task == 0:
+            validation_batch_iterator = ThreadedIterator(
+                validation_dataset.make_minibatch_iterator(), max_queue_size=5)
+            
+            # f1_scores_of_val_data = []
+            all_predicted_labels = []
+            all_ground_truth_labels = []
 
+            for val_step, val_batch_data in enumerate(validation_batch_iterator):
+                
+                
+                scores = sess.run(
+                    [logits],
+                    feed_dict={
+                        tbcnn.placeholders["node_types"]: val_batch_data["batch_node_types"],
+                        tbcnn.placeholders["node_tokens"]:  val_batch_data["batch_nodes_tokens"],
+                        tbcnn.placeholders["children_indices"]:  val_batch_data["batch_children_indices"],
+                        tbcnn.placeholders["children_node_types"]: val_batch_data["batch_children_node_types"],
+                        tbcnn.placeholders["children_node_tokens"]: val_batch_data["batch_children_node_tokens"],
+                        tbcnn.placeholders["labels"]: val_batch_data["batch_labels"],
+                        tbcnn.placeholders["is_training"]: False
+                    }
+                )
+                # print(scores[0])
+                
+                predictions = np.argmax(scores[0], axis=1)
+            
+                ground_truths = np.argmax(val_batch_data['batch_labels'], axis=1)
+            
+                predicted_labels = []
+                for prediction in predictions:
+                    predicted_labels.append(train_label_lookup.inverse[prediction])
+
+                ground_truth_labels = []
+                for ground_truth in ground_truths:
+                    ground_truth_labels.append(
+                        val_label_lookup.inverse[ground_truth])
+                
+                # print("Predicted : " + str(predicted_labels))
+                # print("Ground truth : " + str(ground_truth_labels))
+                f1_score = evaluation.calculate_f1_scores(predicted_labels, ground_truth_labels)
+                print(ground_truth_labels)
+                print(predicted_labels)
+                print("F1:", f1_score, "Step:", val_step)
+                all_predicted_labels.extend(predicted_labels)
+                all_ground_truth_labels.extend(ground_truth_labels)
+
+            average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
+            # print("F1 score : " + str(f1_score))
+            print("Validation with F1 score ", average_f1)
+            if average_f1 > best_f1_score:
+                best_f1_score = average_f1
+
+                checkfile = os.path.join(opt.model_path, 'cnn_tree.ckpt')
+                saver.save(sess, checkfile)
+
+                checkfile = os.path.join(opt.model_path + "_" + str(datetime.utcnow().timestamp()), 'cnn_tree.ckpt')
+                saver.save(sess, checkfile)
+
+                print('Checkpoint saved, epoch:' + str(epoch) + ', loss: ' + str(err) + '.')
+                with open(opt.model_accuracy_path,"w") as f1:
+                    f1.write(str(best_f1_score))
 if __name__ == "__main__":
     main(opt)
    

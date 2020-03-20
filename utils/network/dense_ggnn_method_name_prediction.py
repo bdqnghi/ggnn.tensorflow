@@ -110,7 +110,7 @@ class DenseGGNNModel():
         self.__adjacency_matrix = tf.transpose(self.placeholders['adjacency_matrix'], [1, 0, 2, 3])                    # [e, b, v, v]
         
         # batch normalization
-        self.placeholders['is_training'] = tf.placeholder(tf.bool, name="is_train");
+        self.placeholders['is_training'] = tf.placeholder(tf.bool, name="is_train")
         self.node_type_representations = tf.layers.batch_normalization(self.node_type_representations, training=self.placeholders['is_training'])
         self.node_token_representations = tf.layers.batch_normalization(self.node_token_representations, training=self.placeholders['is_training'])
     
