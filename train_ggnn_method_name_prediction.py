@@ -393,7 +393,7 @@ def main(opt):
             
             print("F1:", average_f1, "Precision:", average_precision, "Recall:", average_recall)
     
-    if opt.task == 2:
+        if opt.task == 2:
             print("Testing model.............")
             try:
                 os.mkdir("predictions")
