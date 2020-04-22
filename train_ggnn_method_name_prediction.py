@@ -391,7 +391,7 @@ def main(opt):
                 for i, predicted_label in enumerate(predicted_labels):
                     ground_truth_label = ground_truth_labels[i]
                     path = val_batch_data["paths"][i]
-                    with open("analysis/" + "original_predictions.txt", "a") as f20:
+                    with open("predictions/" + "original_predictions.txt", "a") as f20:
                         line = str(path) + "," + ground_truth_label + "," + predicted_label
                         f20.write(line)
                         f20.write("\n")
