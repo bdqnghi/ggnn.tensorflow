@@ -345,6 +345,11 @@ def main(opt):
 
         if opt.task == 0:
             print("Testing model.............")
+            try:
+                os.mkdir("analysis")
+            except Exception as e:
+                print(e)
+
             average_f1 = 0.0
             validation_batch_iterator = ThreadedIterator(
                 validation_dataset.make_minibatch_iterator(), max_queue_size=5)
@@ -382,6 +387,15 @@ def main(opt):
                 print("F1:", f1_score, "Step:", val_step)
                 all_predicted_labels.extend(predicted_labels)
                 all_ground_truth_labels.extend(ground_truth_labels)
+
+                for i, predicted_label in enumerate(predicted_labels):
+                    ground_truth_label = ground_truth_labels[i]
+                    path = val_batch_data[i]
+                    with open("analysis/" + "original_predictions.txt", "w") as f20:
+                        line = str(path) + "," + ground_truth_label + "," + predicted_label
+                        f20.write(line)
+                        f20.write("\n")
+
                         
             average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
             average_precision = evaluation.calculate_precisions(all_predicted_labels, all_ground_truth_labels)
@@ -390,13 +404,8 @@ def main(opt):
             
             print("F1:", average_f1, "Precision:", average_precision, "Recall:", average_recall)
 
-            for i, predicted_label in enumerate(all_predicted_labels):
-                ground_truth_label = all_ground_truth_labels[i]
-                path = val_batch_data[i]
-                with open("original_predictions.txt", "w") as f20:
-                    line = path + "," + ground_truth_label + "," + predicted_label
-                    f20.write(line)
-                    f20.write("\n")
+         
+          
 
 if __name__ == "__main__":
     main(opt)
