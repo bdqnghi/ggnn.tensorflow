@@ -1,11 +1,12 @@
 DATA=sample_data
 DATASET=java-small
-DATASET_TRANSFORMED=java-small-graph-transformed
+DATASET_TRANSFORMED=${DATASET}-graph-transformed
 VAL_PATH=${DATA}/${DATASET_TRANSFORMED}/testing
 NODE_TYPE_VOCABULARY_PATH=preprocessed_data/node_type_vocab.txt
 TOKEN_VOCABULARY_PATH=preprocessed_data/ggnn/${DATASET}/token_vocab.txt
 TRAIN_LABEL_VOCABULARY_PATH=preprocessed_data/ggnn/${DATASET}/train_label_vocab.txt
 VAL_LABEL_VOCABULARY_PATH=preprocessed_data/ggnn/${DATASET}/test_label_vocab.txt
+PREDICTIONS_OUTPUT=predictions/original_predictions.txt
 BATCH_SIZE=32
 VAL_BATCH_SIZE=10
 GRAPH_SIZE_THRESHOLD_LOWER=1500
@@ -24,4 +25,4 @@ ${PYTHON} train_ggnn_method_name_prediction.py --val_path ${VAL_PATH} --batch_si
 --token_vocabulary_path ${TOKEN_VOCABULARY_PATH} \
 --train_label_vocabulary_path ${TRAIN_LABEL_VOCABULARY_PATH} \
 --val_label_vocabulary_path ${VAL_LABEL_VOCABULARY_PATH} \
---task ${TASK}
+--task ${TASK} --predictions_ouput ${PREDICTIONS_OUTPUT}

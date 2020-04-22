@@ -90,6 +90,9 @@ parser.add_argument('--val_label_vocabulary_path', default="preprocessed_data/va
                     help='name of dataset')
 parser.add_argument('--task', type=int, default=0,
                     choices=range(0, 2), help='0 for training, 1 for testing')
+parser.add_argument('--predictions_ouput', default="predictions/original_predictions.txt",
+                    help='name of dataset')          
+
 # parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretrained_vectors.pkl", help='pretrained embeddings url, there are 2 objects in this file, the first object is the embedding matrix, the other is the lookup dictionary')
 
 opt = parser.parse_args()
@@ -344,6 +347,53 @@ def main(opt):
                 print("Epoch:", epoch, "Execution time:", str(total_train))
 
         if opt.task == 0:
+            average_f1 = 0.0
+            validation_batch_iterator = ThreadedIterator(
+                validation_dataset.make_minibatch_iterator(), max_queue_size=5)
+            
+            all_predicted_labels = []
+            all_ground_truth_labels = []
+            for val_step, val_batch_data in enumerate(validation_batch_iterator):
+                print("----------------------------------------")
+                label_embeddings_matrix, scores = sess.run(
+                    [label_embeddings, logits],
+                    feed_dict={
+                        ggnn.placeholders["num_vertices"]: val_batch_data["num_vertices"],
+                        ggnn.placeholders["adjacency_matrix"]:  val_batch_data['adjacency_matrix'],
+                        ggnn.placeholders["node_type_indices"]: val_batch_data["node_type_indices"],
+                        ggnn.placeholders["node_token_indices"]: val_batch_data["node_token_indices"],
+                        ggnn.placeholders["is_training"]: False
+                    }
+                )
+
+                predictions = np.argmax(scores, axis=1)
+                ground_truths = np.argmax(val_batch_data['labels'], axis=1)
+                
+                predicted_labels = []
+                for prediction in predictions:
+                    predicted_labels.append(train_label_lookup.inverse[prediction])
+
+                ground_truth_labels = []
+                for ground_truth in ground_truths:
+                    ground_truth_labels.append(
+                        val_label_lookup.inverse[ground_truth])
+                
+                f1_score = evaluation.calculate_f1_scores(predicted_labels, ground_truth_labels)
+                print(ground_truth_labels)
+                print(predicted_labels)
+                print("F1:", f1_score, "Step:", val_step)
+                all_predicted_labels.extend(predicted_labels)
+                all_ground_truth_labels.extend(ground_truth_labels)
+
+                        
+            average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
+            average_precision = evaluation.calculate_precisions(all_predicted_labels, all_ground_truth_labels)
+            average_recall = evaluation.calculate_recalls(all_predicted_labels, all_ground_truth_labels)
+            # print("F1 score : " + str(f1_score))
+            
+            print("F1:", average_f1, "Precision:", average_precision, "Recall:", average_recall)
+    
+    if opt.task == 2:
             print("Testing model.............")
             try:
                 os.mkdir("predictions")
@@ -391,18 +441,10 @@ def main(opt):
                 for i, predicted_label in enumerate(predicted_labels):
                     ground_truth_label = ground_truth_labels[i]
                     path = val_batch_data["paths"][i]
-                    with open("predictions/" + "original_predictions.txt", "a") as f20:
+                    with open(opt.predictions_ouput, "a") as f20:
                         line = str(path) + "," + ground_truth_label + "," + predicted_label
                         f20.write(line)
                         f20.write("\n")
-
-                        
-            average_f1 = evaluation.calculate_f1_scores(all_predicted_labels, all_ground_truth_labels)
-            average_precision = evaluation.calculate_precisions(all_predicted_labels, all_ground_truth_labels)
-            average_recall = evaluation.calculate_recalls(all_predicted_labels, all_ground_truth_labels)
-            # print("F1 score : " + str(f1_score))
-            
-            print("F1:", average_f1, "Precision:", average_precision, "Recall:", average_recall)
 
          
           
