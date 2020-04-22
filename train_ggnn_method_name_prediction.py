@@ -387,7 +387,16 @@ def main(opt):
             average_precision = evaluation.calculate_precisions(all_predicted_labels, all_ground_truth_labels)
             average_recall = evaluation.calculate_recalls(all_predicted_labels, all_ground_truth_labels)
             # print("F1 score : " + str(f1_score))
+            
             print("F1:", average_f1, "Precision:", average_precision, "Recall:", average_recall)
+
+            for i, predicted_label in enumerate(all_predicted_labels):
+                ground_truth_label = all_ground_truth_labels[i]
+                path = val_batch_data[i]
+                with open("original_predictions.txt", "w") as f20:
+                    line = path + "," + ground_truth_label + "," + predicted_label
+                    f20.write(line)
+                    f20.write("\n")
 
 if __name__ == "__main__":
     main(opt)
