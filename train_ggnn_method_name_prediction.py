@@ -89,7 +89,7 @@ parser.add_argument('--train_label_vocabulary_path', default="preprocessed_data/
 parser.add_argument('--val_label_vocabulary_path', default="preprocessed_data/val_label_vocab.txt",
                     help='name of dataset')
 parser.add_argument('--task', type=int, default=0,
-                    choices=range(0, 2), help='0 for training, 1 for testing')
+                    choices=range(0, 3), help='0 for training, 1 for testing')
 parser.add_argument('--predictions_ouput', default="predictions/original_predictions.txt",
                     help='name of dataset')          
 
