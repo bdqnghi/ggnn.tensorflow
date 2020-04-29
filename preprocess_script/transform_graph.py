@@ -177,7 +177,7 @@ def main():
                                 single_graph_file.append("? " + str(method_name_index))
 
                                 file_name = file_name.replace(".java",".txt")
-                                file_name_with_project = project_name + "_" + file_name
+                                file_name_with_project = project_name + "**" + file_name
                                 new_file_path = os.path.join(output_path,file_name_with_project)
                                 print(new_file_path)
                                 try:
