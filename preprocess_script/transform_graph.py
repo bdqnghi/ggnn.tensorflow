@@ -85,6 +85,7 @@ def main():
 
                 single_graph_file = []
                 with open(graphs_path, "r") as f:
+                    print("-----------------------")
                     lines = f.readlines()
                     for line in lines:
                        
@@ -163,8 +164,9 @@ def main():
                                     single_graph_file.append(",".join(new_line_arr))
                         else:
                             # ? e/sample_data/java-small/training/project_2/Actor_getParent.java
+                            print(line)
                             splits = line.split(" ")
-                            print(splits)
+                            # print(splits)
                             file_path_splits = splits[1].split("/")
                             print("File path : " + str(file_path_splits))
                             file_name = file_path_splits[len(file_path_splits)-1]
