@@ -165,7 +165,7 @@ def main():
                             # ? e/sample_data/java-small/training/project_2/Actor_getParent.java
                             splits = line.split(" ")
                             file_path_splits = splits[1].split("/")
-                            print("File path : " + str(splits[1]))
+                            print("File path : " + str(file_path_splits))
                             file_name = file_path_splits[len(file_path_splits)-1]
                             project_name = file_path_splits[len(file_path_splits)-2]
                             file_name_splits = file_name.split("_")
