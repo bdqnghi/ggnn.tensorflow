@@ -1,6 +1,6 @@
 DATASET=java-med
 DATASET_OUTPUT=${DATASET}-graph-transformed
-NODE_TYPE_PATH=../preprocessed_data/${DATASET}/node_type_vocab.txt
+NODE_TYPE_PATH=../preprocessed_data/node_type_vocab.txt
 NODE_TOKEN_PATH=../preprocessed_data/ggnn/${DATASET}/token_vocab.txt
 TEST_LABEL_PATH=../preprocessed_data/ggnn/${DATASET}/test_label_vocab.txt
 PYTHON=python3
