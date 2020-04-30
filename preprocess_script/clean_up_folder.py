@@ -5,21 +5,40 @@ import argparse
 
 # N = 60  # the number of files in seach subfolder folder
 parser = argparse.ArgumentParser()
-parser.add_argument("--path", default="../sample_data_2/java-small/training", type=str, help="Path")
+parser.add_argument("--path", default="../sample_data_3/java-small/training", type=str, help="Path")
 args = parser.parse_args()
 
 
 def clean_up(path):
     for project in os.listdir(path):
         project_path = os.path.join(path,project)
-        print(project_path)
+
+        print("Project path : " + str(project_path))
+        project_path_splits = project_path.split("/")
+        project_name = project_path_splits[-1]
+        print(project_name)
         for root, dirs, files in os.walk(project_path):  
             for file in files: 
                 if file.endswith(".java"):
-                    path_file = os.path.join(root,file)
-                    print(path_file)
+                    print("-----------------------")
+                    file_path = os.path.join(root,file)
+                    print("Old path : " + str(file_path))
+                    file_path_splits = file_path.split("/")
+                    
+                    print(file_path_splits)
+                    upper_folder = file_path_splits[-2]
+                    print(upper_folder)
+                    project_name_index = 0
+                    for i, split in enumerate(file_path_splits):
+                        if split == project_name:
+                            project_name_index = i
                     try:
-                        shutil.copy2(path_file,project_path) # change you destination dir
+                        
+                        if upper_folder != project_name:
+                            new_file_path = "**".join(file_path_splits[(project_name_index+1):(len(file_path_splits))])
+                            new_file_path = os.path.join(project_path, new_file_path)
+                            print("New path : " + str(new_file_path))
+                            shutil.copy(file_path, new_file_path)
                     except Exception as e:
                         print(e)
 
