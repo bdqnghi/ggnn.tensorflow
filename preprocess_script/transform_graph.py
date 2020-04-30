@@ -172,8 +172,8 @@ def main():
                             file_name = file_path_splits[len(file_path_splits)-1]
                             # project_name = file_path_splits[5]
                             # sub_dir_name = "_".join(file_path_splits[6:len(file_path_splits)-2])
-                            if not sub_dir_name:
-                                sub_dir_name = "-"
+                            # if not sub_dir_name:
+                                # sub_dir_name = "-"
                             file_name_splits = file_name.split("_")
                             print(file_name_splits)
                             if len(file_name_splits) > 1:
