@@ -170,8 +170,8 @@ def main():
                             file_path_splits = splits[1].split("/")
                             print("File path : " + str(file_path_splits))
                             file_name = file_path_splits[len(file_path_splits)-1]
-                            project_name = file_path_splits[5]
-                            sub_dir_name = "_".join(file_path_splits[6:len(file_path_splits)-2])
+                            # project_name = file_path_splits[5]
+                            # sub_dir_name = "_".join(file_path_splits[6:len(file_path_splits)-2])
                             if not sub_dir_name:
                                 sub_dir_name = "-"
                             file_name_splits = file_name.split("_")
@@ -184,7 +184,7 @@ def main():
                                 single_graph_file.append("? " + str(method_name_index))
 
                                 file_name = file_name.replace(".java",".txt")
-                                file_name_with_project = project_name + "**" + sub_dir_name + "**" + file_name
+                                file_name_with_project =  "**".join(file_path_splits[4:len(file_path_splits)-2]) + "**" + file_name
                                 new_file_path = os.path.join(output_path,file_name_with_project)
                                 print(new_file_path)
                                 try:
