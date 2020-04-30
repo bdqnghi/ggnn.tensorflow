@@ -185,7 +185,7 @@ def main():
 
                                 file_name = file_name.replace(".java",".txt")
                                 print("Dir path : " + str(file_path_splits[4:len(file_path_splits)-1]))
-                                file_name_with_project =  "**".join(file_path_splits[4:len(file_path_splits)-2]) + "**" + file_name
+                                file_name_with_project =  "**".join(file_path_splits[4:len(file_path_splits)-1]) + "**" + file_name
                                 new_file_path = os.path.join(output_path,file_name_with_project)
                                 print(new_file_path)
                                 try:
