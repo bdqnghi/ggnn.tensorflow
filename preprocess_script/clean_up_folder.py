@@ -21,6 +21,7 @@ def clean_up(path):
             for file in files: 
                 if file.endswith(".java"):
                     print("-----------------------")
+                    print("Project path : " + str(project_path))
                     file_path = os.path.join(root,file)
                     print("Old path : " + str(file_path))
                     file_path_splits = file_path.split("/")
