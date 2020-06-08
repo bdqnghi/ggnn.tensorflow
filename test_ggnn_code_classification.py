@@ -4,9 +4,9 @@ import random
 import pickle
 
 import tensorflow as tf
-from utils.data.dataset import MonoLanguageProgramData
+from utils.data.code_classification_dataset import MonoLanguageProgramData
 from utils.utils import ThreadedIterator
-from utils.dense_ggnn_code_classification import DenseGGNNModel
+from utils.network.dense_ggnn_code_classification import DenseGGNNModel
 import os
 import sys
 
@@ -28,7 +28,7 @@ parser.add_argument('--verbal', type=bool, default=True, help='print training in
 parser.add_argument('--manualSeed', type=int, help='manual seed')
 parser.add_argument('--n_classes', type=int, default=10, help='manual seed')
 parser.add_argument('--path', default="program_data/github_java_sort_function_babi", help='program data')
-parser.add_argument('--model_path', default="model", help='path to save the model')
+parser.add_argument('--model_path', default="model/ggnn_code_classification", help='path to save the model')
 parser.add_argument('--n_hidden', type=int, default=50, help='number of hidden layers')
 parser.add_argument('--size_vocabulary', type=int, default=59, help='maximum number of node types')
 parser.add_argument('--log_path', default="logs/" ,help='log path for tensorboard')
@@ -39,8 +39,7 @@ parser.add_argument('--pretrained_embeddings_url', default="embedding/fast_pretr
 opt = parser.parse_args()
 
 
-opt.model_path = os.path.join(opt.model_path,"sum_softmax" + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer)) + "_node_dim_" + str(opt.node_dim)
-
+# opt.model_path = os.path.join(opt.model_path,"sum_softmax" + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer)) + "_node_dim_" + str(opt.node_dim)
 
 def main(opt):
     with open(opt.pretrained_embeddings_url, 'rb') as fh:
@@ -56,6 +55,7 @@ def main(opt):
     test_dataset = MonoLanguageProgramData(opt, False, True)
     opt.n_edge_types = test_dataset.n_edge_types
 
+    print("Num edge types : " + str(opt.n_edge_types))
     ggnn = DenseGGNNModel(opt)
 
     # For debugging purpose
@@ -66,7 +66,7 @@ def main(opt):
 
     saver = tf.train.Saver(save_relative_paths=True, max_to_keep=5)
     init = tf.global_variables_initializer()
-   
+    
     with tf.Session() as sess:
         sess.run(init)
 
@@ -95,19 +95,12 @@ def main(opt):
                 }
             )
 
-            # print("------")
-            # print(batch_data['labels'].shape)
-            # print(softmax_values_data[0].shape)
-            # print(softmax_values_data[0])
-
-            # print(np.argmax(batch_data['labels'], axis=1))
-            # print(np.argmax(softmax_values_data[0],axis=1))
             correct_labels.extend(np.argmax(batch_data['labels'],axis=1))
             predictions.extend(np.argmax(softmax_values_data[0],axis=1))
 
         print("Num target : " + str(len(correct_labels)))
-        print(correct_labels)
-        print(predictions)
+        # print(correct_labels)
+        # print(predictions)
         target_names = [str(i) for i in range(1,11)]
         print('Accuracy:', accuracy_score(correct_labels, predictions))
         print(classification_report(correct_labels, predictions, target_names=target_names))
