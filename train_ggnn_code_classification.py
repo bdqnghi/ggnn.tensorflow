@@ -45,7 +45,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = opt.cuda
 
 print(opt)
 
-opt.model_path = os.path.join(opt.model_path,"sum_softmax" + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer)) + "_node_dim_" + str(opt.node_dim)
+# opt.model_path = os.path.join(opt.model_path,"sum_softmax" + "_hidden_layer_size_" + str(opt.hidden_layer_size) + "_num_hidden_layer_"  + str(opt.num_hidden_layer)) + "_node_dim_" + str(opt.node_dim)
 
 def main(opt):
     with open(opt.pretrained_embeddings_url, 'rb') as fh:
