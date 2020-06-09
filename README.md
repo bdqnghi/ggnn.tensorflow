@@ -8,6 +8,11 @@ Tricks to improve training time and faster convergence:
 
 We parse the files into the graph representation based on the details of the paper [Learning to Represent Programs with Graphs, ICLR 2017](https://arxiv.org/abs/1711.00740).
 
+## What is GGNN?
+- Solve graph-structured data and problems
+- A gated propagation model (same idea as GRU) to compute node representations
+- Unroll recurrence for a fixed number of steps and use backpropagation through time
+
 # Tasks
 
 ## Code Classification
@@ -15,10 +20,9 @@ We parse the files into the graph representation based on the details of the pap
 
 - Peking University Dataset (OJ Dataset): 104 programming problems, which comprises of 52000 cpp files from the paper [Convolutional Neural Networks over Tree Structures for Programming Language Processing, AAAI 2015](https://arxiv.org/abs/1409.5718).
 
-## What is GGNN?
-- Solve graph-structured data and problems
-- A gated propagation model (same idea as GRU) to compute node representations
-- Unroll recurrence for a fixed number of steps and use backpropagation through time
+## APIs to parse code into Graph format
+- Please refer to this repository to see how one can parse code snippets into graphs: https://github.com/bdqnghi/graph-ast
+
 
 ## Requirements
 - python==3.6
