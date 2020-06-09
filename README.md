@@ -11,18 +11,9 @@ We parse the files into the graph representation based on the details of the pap
 # Tasks
 
 ## Code Classification
-- Dataset 1: 10 sorting problems, collected from Github, which are: insertion-sort, merge-sort, topological-sort, heap-sort, bubble-sort, radix-sort, shell-sort, quick-sort, selection-sort, bucket-sort
+- Sorting Algorithms (SA Dataset): 10 sorting problems, collected from Github, which are: insertion-sort, merge-sort, topological-sort, heap-sort, bubble-sort, radix-sort, shell-sort, quick-sort, selection-sort, bucket-sort
 
-- Dataset 2: 104 programming problems, which comprises of 52000 cpp files from the paper [Convolutional Neural Networks over Tree Structures for Programming Language Processing, AAAI 2015](https://arxiv.org/abs/1409.5718).
-
-## Method's Name Prediction
-
-- Java small: This dataset is based on the dataset of Allamanis et al. (ICML'2016), with the difference that training/validation/test is split by-project rather than by-file. This dataset contains 9 Java projects for training, 1 for validation and 1 for testing. Overall, it contains about 700K examples.
-
-- Java medium: A dataset of the 1000 top-starred Java projects from GitHub. It contains 800 projects for training, 100 for validation and 100 for testing. Overall, it contains about 4M examples.
-
-- Java large:  A dataset of the 9500 top-starred Java projects from GitHub that were created since January 2007. It contains 9000 projects for training, 200 for validation and 300 for testing. Overall, it contains about 16M examples.
-
+- Peking University Dataset (OJ Dataset): 104 programming problems, which comprises of 52000 cpp files from the paper [Convolutional Neural Networks over Tree Structures for Programming Language Processing, AAAI 2015](https://arxiv.org/abs/1409.5718).
 
 ## What is GGNN?
 - Solve graph-structured data and problems
@@ -36,9 +27,29 @@ We parse the files into the graph representation based on the details of the pap
 ## Run 
 Train and test the GGNN:
 ```
-python3 main_ggnn.py
-python3 test_ggnn.py
+python3 train_ggnn_code_classification.py
+python3 test_ggnn_code_classification
 ```
+
+There is already a pretrained-model on the SA Dataset stored in model/, by simply running ```python3 test_ggnn_code_classification```, you can get the result like this: 
+
+Accuracy: 0.8514285714285714
+
+             precision    recall  f1-score   support
+
+          1       0.71      0.62      0.67        16
+          2       0.89      1.00      0.94        17
+          3       0.78      0.93      0.85        15
+          4       0.80      0.89      0.84        18
+          5       0.76      0.80      0.78        20
+          6       0.85      0.81      0.83        21
+          7       0.91      1.00      0.95        20
+          8       0.94      1.00      0.97        17
+          9       1.00      0.67      0.80        15
+         10       0.92      0.75      0.83        16
+
+avg / total       0.86      0.85      0.85       175
+
 
 ## References
 - [GGNN Implementation for learning properties of chemical molecules](https://github.com/Microsoft/gated-graph-neural-network-samples)
