@@ -1,3 +1,0 @@
-void onOK() {
-    setVisible(false);
-}

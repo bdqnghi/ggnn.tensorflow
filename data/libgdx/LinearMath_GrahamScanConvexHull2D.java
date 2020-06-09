@@ -1,3 +1,0 @@
-public static void GrahamScanConvexHull2D(SWIGTYPE_p_btAlignedObjectArrayT_GrahamVector3_t originalPoints, SWIGTYPE_p_btAlignedObjectArrayT_GrahamVector3_t hull, Vector3 normalAxis) {
-    LinearMathJNI.GrahamScanConvexHull2D(SWIGTYPE_p_btAlignedObjectArrayT_GrahamVector3_t.getCPtr(originalPoints), SWIGTYPE_p_btAlignedObjectArrayT_GrahamVector3_t.getCPtr(hull), normalAxis);
-}

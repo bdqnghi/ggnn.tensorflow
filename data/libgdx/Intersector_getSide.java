@@ -1,3 +1,0 @@
-boolean getSide() {
-    return frontCurrent;
-}
