@@ -1,4 +1,4 @@
-# A Tensorflow Implementation of Gated Graph Neural Networks (GGNN) for Graph Classification
+# A Tensorflow Implementation of Gated Graph Neural Networks (GGNN) for Source Code Classification
 
 This is a Tensorflow implementation of the Gated Graph Neural Networks (GGNN) as described in the paper [Gated Graph Sequence Neural Networks, ICLR 2016](https://arxiv.org/abs/1511.05493) by Y. Li, D. Tarlow, M. Brockschmidt, and R. Zemel.
 
@@ -7,6 +7,8 @@ Tricks to improve training time and faster convergence:
 - Use dense graph representation for small graphs, and sparse graph representation for large graphs.
 
 We parse the files into the graph representation based on the details of the paper [Learning to Represent Programs with Graphs, ICLR 2017](https://arxiv.org/abs/1711.00740).
+
+For a version implemented for method name prediction, please refer to this repo: https://github.com/bdqnghi/ggnn.method_name_prediction
 
 ## What is GGNN?
 - Solve graph-structured data and problems
