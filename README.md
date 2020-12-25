@@ -34,7 +34,7 @@ For a version implemented for method name prediction, please refer to this repo:
 Train and test the GGNN:
 ```
 python3 train_ggnn_code_classification.py
-python3 test_ggnn_code_classification
+python3 test_ggnn_code_classification.py
 ```
 
 There is already a pretrained-model on the SA Dataset stored in model/, by simply running ```python3 test_ggnn_code_classification```, you can get the result like this: 
